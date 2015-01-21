@@ -1,0 +1,58 @@
+<div class="row">
+    <div class="col-lg-12">
+        <h1 class="page-header"> QL query processing </h1>
+    </div>
+</div>
+<!-- /.row -->
+<div class="row">
+    <div class="col-lg-6">
+
+        <form id="parseform"role="form">
+            <div class="form-group">
+                <label>QL query</label>
+                <textarea class="form-control"  placeholder="Enter QL query"rows="4"></textarea>
+                <p class="help-block">Enter your QL query. Check syntax here.</p>
+            </div>           
+            <button type="button" class="btn btn-primary parse-btn ">Parse query</button>
+            <button type="reset" class="btn btn-default">Reset</button>
+        </form>
+    <div class="alert alert-success" style="display: none"></div>
+    <div class="alert alert-warning" style="display: none">
+        <strong>
+            Warning!
+        </strong>
+         Enter a QL query to parse.
+    </div>
+    <div class="alert alert-danger" style="display: none"></div>
+
+    {{#section 'jquery'}}
+    <script>
+      $(document).ready(function () {
+
+         console.log("ready");
+       // $('.parse-btn').click(function () {
+         $('.parse-btn').on ("click",(function () {
+            $('.alert-danger').hide();
+            $('.alert-success').hide();
+            $('.alert-warning').hide();
+            console.log("click");
+            var query = $('.form-control').val();
+            if (query){
+              try {
+                var parser = new qljs.Parser();
+                var result = parser.parse(query);
+                $('.alert-success').html(JSON.stringify(result));
+                $('.alert-success').show();
+              } catch (e) {
+                $('.alert-danger').html(String(e));
+                $('.alert-danger').show();
+              }
+            } else{
+                $('.alert-warning').show();
+            }
+        }
+        ));
+      });
+    </script>  
+    {{/section}}
+

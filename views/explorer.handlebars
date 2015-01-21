@@ -1,0 +1,77 @@
+<!doctype html>
+<!-- Page Heading -->
+<div class="row">
+    <div class="col-lg-12">
+        <h1 class="page-header"> Cube Explorer </h1>
+    </div>
+</div>
+<!-- /.row -->
+
+<div class="row">
+    <div class="col-lg-6">
+        <form role="form" method="post" action="/getcubes">
+            <div class="form-group">
+                <label>1. Enter SPARQL endpoint URL</label>
+                <input class="form-control" name="endpoint" placeholder="http://www.fing.edu.uy/inco/grupos/csi/sparql"></input>
+            </div>
+            <button type="submit" class="btn btn-primary getcubes-btn">Get cubes</button>
+        </form>
+          
+        {{#if cubes}}
+        <form role="form" >
+            <div class="form-group">
+                <label> 2. Select a datacube </label>
+                <select class="form-control" name="cube">
+                    {{#each cubes}}
+                        <option value="{{cube.value}}">{{cube.value}}</option>
+                    {{/each}}    
+                </select>
+            </div>
+            <button type="button" class="btn btn-primary getstructure-btn">Get cube structure</button>
+        </form>
+        {{/if}}
+                
+    </div>
+</div>
+<!-- /.row -->
+{{#section 'jquery'}}
+    <script>
+      $(document).ready(function () {
+            $('.getstructure-btn').on ("click",(function () {
+
+                var jsondataResource = JSON.stringify({cubeurl: $('#cube').val(), endpoint: $('#endpoint').val()});
+                
+                $.post("/getcubestructure",{cubeurl: $('#cube').val(), endpoint: $('#endpoint').val()}, function(data){
+                    if(data==='done')
+                    {
+                    alert("success");
+                    }
+                })
+
+/*
+                // Use AJAX to post the object to our adduser service
+                $.ajax({
+                    type: 'POST',
+                    data: jsondataResource,
+                    url: '/getcubestructure',
+                    dataType: 'json',
+                    processdata: true, //True or False
+                    contentType: "application/json",
+                    cache: false,
+                    complete: function() {
+                        //called when complete
+                        console.log('process complete');
+                    },
+                    success: function(data) {
+                      console.log(data);
+                      console.log('process sucess');
+                   },
+                    error: function() {
+                      console.log('process error');
+                    }
+                });
+*/                
+            }));
+    });
+    </script>  
+    {{/section}}
