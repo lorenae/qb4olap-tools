@@ -1,17 +1,92 @@
 <!doctype html>
 <html>
 <head>
-	<title>Meadowlark Travel</title>
+	<title>QB4OLAP explorer</title>
 	{{{_sections.head}}}
+	<!-- Bootstrap Core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="css/sb-admin.css" rel="stylesheet">
+
+    <!-- Morris Charts CSS -->
+    <link href="css/plugins/morris.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="font-awesome-4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
 	{{#if showTests}}
 	<link rel="stylesheet" href="/vendor/mocha.css">
 	{{/if}}
-	<script src="//code.jquery.com/jquery-2.0.2.min.js"></script>
+	
 </head>
 
 <body>
-	<header><img src="/img/logo.png" alt="Meadowlark Travel Logo"></header>
-	{{{body}}}
+	
+	<div id="wrapper">
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/">QB4OLAP explorer</a>
+            </div>
+            <!-- Top Menu Items -->
+            
+            <!-- Sidebar Menu Items - These collapse to the responsive navigation menu on small screens -->
+            <div class="collapse navbar-collapse navbar-ex1-collapse">
+                <ul class="nav navbar-nav side-nav">
+                    <li class="active">
+                        <a href="explorer"><i class="fa fa-fw fa-table"></i>Cube Explorer</a>
+                    </li>
+                    <li>
+                        <a href="sparql"><i class="fa fa-fw fa-dashboard"></i> SPARQL test</a>
+                    </li>
+                    <li>
+                        <a href="query"><i class="fa fa-fw fa-table"></i>QL queries processing</a>
+                    </li>
+                    <li>
+                        <a href="forms.html"><i class="fa fa-fw fa-edit"></i> Forms</a>
+                    </li>
+                    <li>
+                        <a href="bootstrap-elements.html"><i class="fa fa-fw fa-desktop"></i> Bootstrap Elements</a>
+                    </li>
+                    <li>
+                        <a href="bootstrap-grid.html"><i class="fa fa-fw fa-wrench"></i> Bootstrap Grid</a>
+                    </li>
+                    <li>
+                        <a href="javascript:;" data-toggle="collapse" data-target="#demo"><i class="fa fa-fw fa-arrows-v"></i> Dropdown <i class="fa fa-fw fa-caret-down"></i></a>
+                        <ul id="demo" class="collapse">
+                            <li>
+                                <a href="#">Dropdown Item</a>
+                            </li>
+                            <li>
+                                <a href="#">Dropdown Item</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="blank-page.html"><i class="fa fa-fw fa-file"></i> Blank Page</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </nav>
+        <div id="page-wrapper">
+        	<div class="container-fluid">
+			{{{body}}}
+			</div>
+			<!-- /.container-fluid -->
+		</div>
+        <!-- /#page-wrapper -->
+
+    </div>
+    <!-- /#wrapper -->
 
 	<script src="http://code.jquery.com/jquery-2.0.2.min.js"></script>
 	{{{_sections.jquery}}}
@@ -30,6 +105,19 @@
 		{{/if}}
 		<script>mocha.run();</script>
 	{{/if}}
+<!-- jQuery -->
+    <script src="js/jquery.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="js/bootstrap.min.js"></script>
+
+    <!-- Morris Charts JavaScript -->
+    <script src="js/plugins/morris/raphael.min.js"></script>
+    <script src="js/plugins/morris/morris.min.js"></script>
+    <script src="js/plugins/morris/morris-data.js"></script>
+
+    <!-- client side scripts qb4olap explorer -->
+    <script src="js/qlparser-browser.js"></script>
 
 </body>
 </html>

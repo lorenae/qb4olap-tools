@@ -1,25 +1,30 @@
 {
-  "name": "meadowlark",
+  "name": "QB4OLAP",
   "version": "0.0.0",
-  "description": "meadowlark sample",
-  "main": "meadowlark.js",
+  "description": "QB4OLAP tools",
+  "main": "qb4olap.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/lorenae/meadowlark.git"
+    "url": "https://github.com/lorenae/qb4olap.git"
   },
   "author": "lorenae",
   "license": "BSD-2-Clause",
   "bugs": {
-    "url": "https://github.com/lorenae/meadowlark/issues"
+    "url": "https://github.com/lorenae/qb4olap/issues"
   },
   "dependencies": {
+    "body-parser": "^1.10.1",
+    "connect-rest": "~1.5.1",
+    "cors": "~2.5.2",
     "express": "~4.10.3",
     "express-handlebars": "~1.1.0",
-    "cors": "~2.5.2",
-    "mongoose": "~3.8.20"
+    "express-session": "^1.10.1",
+    "rdflib": "0.0.2",
+    "request": "~2.50.0",
+    "sparql-client": "^0.2.0"
   },
   "devDependencies": {
     "chai": "^1.10.0",
@@ -28,6 +33,7 @@
     "grunt": "~0.4.5",
     "grunt-cafe-mocha": "~0.1.13",
     "grunt-contrib-jshint": "~0.10.0",
-    "grunt-link-checker": "0.0.6"
+    "grunt-link-checker": "0.0.6",
+    "restler": "~3.2.2"
   }
 }
