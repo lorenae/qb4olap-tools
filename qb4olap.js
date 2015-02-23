@@ -3,7 +3,7 @@
 var express = require('express');
 var session = require('express-session');
 var bodyParser = require('body-parser');
-var credentials = require('./credentials.js');
+//var credentials = require('./credentials.js');
 var backend = require('./models/sparql-backend.js');
 var operators = require('./models/qb4olap-operators.js');
 
