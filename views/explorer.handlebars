@@ -2,76 +2,221 @@
 <!-- Page Heading -->
 <div class="row">
     <div class="col-lg-12">
-        <h1 class="page-header"> Cube Explorer </h1>
+        <h1 class="page-header">
+        <span class="toggle-button bs-tooltip" style="display: inline-block; cursor: pointer"
+        data-toggle="tooltip" data-placement="right" title="Click to toggle sidebar"><i class="fa fa-cog"></i>
+        </span>
+         Cube Explorer </h1>
     </div>
 </div>
 <!-- /.row -->
 
-<div class="row">
-    <div class="col-lg-6">
+<div class="row" id="newwrapper">
+    <div id="sidebar-wrapper" style="background-color: #E7E7E7;" class="col-lg-4">
         <form role="form" method="post" action="/getcubes">
-            <div class="form-group">
-                <label>1. Enter SPARQL endpoint URL</label>
-                <input class="form-control" name="endpoint" placeholder="http://www.fing.edu.uy/inco/grupos/csi/sparql"></input>
+            <label>Select a SPARQL endpoint</label>
+            <div class="form-group form-inline">
+                <select class="form-control" name="endpoint">
+                    <option>http://www.fing.edu.uy/inco/grupos/csi/sparql</option>
+                </select>
+                <button type="submit" class="btn btn-xs btn-primary getcubes-btn">Use endpoint</button>
             </div>
-            <button type="submit" class="btn btn-primary getcubes-btn">Get cubes</button>
         </form>
           
-        {{#if cubes}}
-        <form role="form" >
-            <div class="form-group">
-                <label> 2. Select a datacube </label>
-                <select class="form-control" name="cube">
-                    {{#each cubes}}
-                        <option value="{{cube.value}}">{{cube.value}}</option>
-                    {{/each}}    
-                </select>
-            </div>
-            <button type="button" class="btn btn-primary getstructure-btn">Get cube structure</button>
+        {{#if session.cubes}}
+        <form role="form" method="post" action="/getcubestructure">
+                <label>Select a cube </label>
+                <div class="form-group form-inline">
+                    <select class="form-control" name="cubeselect">
+                        {{#each session.cubes}}
+                            <option value="{{uri}},{{dataset}}">{{dataset}}</option>
+                        {{/each}}    
+                    </select>
+                    <button type="submit" class="btn btn-xs btn-primary getstructure-btn">Explore!</button>
+                </div>
         </form>
         {{/if}}
-                
+
+        {{#if session.schema}}
+        <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">
+                <i class="fa fa-cube fa-fw"></i>
+                {{session.state.dataset}}
+            </h3>
+        </div>
+        <div class="panel-body">
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <h5 class="list-group-item-heading">Dimensions</h5>
+                    <p class="list-group-item-text">
+                    {{#showDimensions session.schema.dimensions}}
+                    {{uri}}
+                    {{/showDimensions}}
+                    </p>
+                </li>
+                <li class="list-group-item">
+                    <h5 class="list-group-item-heading">Measures</h5>
+                    <p class="list-group-item-text">
+                    {{#showMeasures session.schema.measures}}
+                    {{uri}}
+                    {{/showMeasures}}          
+                </li>
+            </ul>
+        </div>
+        </div>
+        {{/if}}
+
     </div>
-</div>
+
+    <!-- /.col -->
+    <div id="main-wrapper" class="col-lg-8">
+        {{#if session.schema}}
+        <div class="row">
+        
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title"><i class="fa fa-cogs fa-fw"></i> Sample queries</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="list-group">
+                        {{#each session.queries}}
+                        <a href="#{{queryid}}" id="{{queryid}}" value="{{query}}" class="list-group-item query-list">
+                            <i class="fa fa-fw fa-hand-o-right"></i>{{querydesc}}
+                        </a>
+                        {{/each}}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        
+        <form id="queryform" role="form" method="post" action="/simplifyquery">    
+            <div class="form-group">
+                <label>QL query editor</label>
+                <textarea class="form-control" id="querypanel" name="querypanel"  placeholder="Enter QL query"rows="6">
+                    {{#if session.querytext}}{{session.querytext}}{{/if}}
+                </textarea>
+                <p class="help-block">Enter your QL query. Check syntax here.</p>
+            </div>           
+            <input type="hidden" name="parsedquery" id="parsedquery">
+            <button type="button" class="btn btn-xs btn-success simplify-btn">Simplify query</button>
+            <button type="reset" class="btn btn-xs btn-default reset-btn ">Reset editor</button>
+        </form>
+        {{#if session.simplequery}}
+        <div class="alert alert-success">
+            {{#showQuery session.simplequery}}
+            {{/showQuery}}
+        </div>
+        {{/if}}
+        
+        <div class="alert alert-warning" style="display: none">
+        <strong>
+            Warning!
+        </strong>
+         Enter a QL query to parse.
+        </div>
+        <div class="alert alert-danger" style="display: none"></div>
+        {{/if}}
+    </div>
+
+  
 <!-- /.row -->
-{{#section 'jquery'}}
+
+   {{#section 'jquery'}}
     <script>
       $(document).ready(function () {
-            $('.getstructure-btn').on ("click",(function () {
 
-                var jsondataResource = JSON.stringify({cubeurl: $('#cube').val(), endpoint: $('#endpoint').val()});
-                
-                $.post("/getcubestructure",{cubeurl: $('#cube').val(), endpoint: $('#endpoint').val()}, function(data){
-                    if(data==='done')
-                    {
-                    alert("success");
-                    }
-                })
+        //simplify query on the client side
+         $('.simplify-btn').on ("click",(function () {
+            $('.alert-danger').hide();
+            $('.alert-success').hide();
+            $('.alert-warning').hide();
+            var originalQuery = $('#querypanel').val();
+            if (originalQuery){
+              try {
+                var parser = new qljs.Parser();
+                var result = parser.parse(originalQuery);
+                //now simplify it
 
-/*
-                // Use AJAX to post the object to our adduser service
-                $.ajax({
-                    type: 'POST',
-                    data: jsondataResource,
-                    url: '/getcubestructure',
-                    dataType: 'json',
-                    processdata: true, //True or False
-                    contentType: "application/json",
-                    cache: false,
-                    complete: function() {
-                        //called when complete
-                        console.log('process complete');
-                    },
-                    success: function(data) {
-                      console.log(data);
-                      console.log('process sucess');
-                   },
-                    error: function() {
-                      console.log('process error');
-                    }
+                //$('.alert-success').html(JSON.stringify(result));
+                //$('.alert-success').show();
+                //$('#parsedquery').val(result);
+                $('#parsedquery').val(JSON.stringify(result));
+                $('#queryform').submit();    
+              } catch (e) {
+                $('.alert-danger').html(String(e));
+                $('.alert-danger').show();
+              }
+            } else{
+                $('.alert-warning').show();
+            }
+        }
+        )); 
+
+         //reset query editor
+        $('.reset-btn').on ("click",(function () {
+            $('#querypanel').val();
+            $('.alert-danger').hide();
+            $('.alert-success').hide();
+            $('.alert-warning').hide(); 
+        }
+        ));
+
+        //load sample queries
+        $('.query-list').click(function() {
+            $('#querypanel').val($(this).attr("value"));
+        });
+
+       
+
+        //hide side menu
+        var $menu = $('#sidebar-wrapper');
+        var $content = $('#main-wrapper');
+        if ($.cookie('offcanvas') == 'hide') {
+            $content.addClass('no-transition');
+            $menu.hide();
+            $menu.css('left', -($menu.outerWidth() + 10));
+            $content.addClass('col-lg-12');
+        }
+        else if ($.cookie('offcanvas') == 'show') {
+            $menu.show(1000).animate({ left: 0 });
+            //  $menu.show();
+            $content.removeClass('no-transition');
+            $content.removeClass('col-lg-12');
+        }
+
+        $('.toggle-button').click(function () {
+            $content.removeClass('no-transition');
+            if ($menu.is(':visible')) {
+                // Slide out
+                $menu.animate({
+                    left: -($menu.outerWidth() + 10)
+                }, function () {
+                    $menu.hide(1000);
                 });
-*/                
-            }));
-    });
+                $content.addClass('col-lg-12');
+                $.cookie('offcanvas', 'hide');
+            }
+            else {
+                // Slide in
+                $menu.show(1000).animate({ left: 0 });
+                $content.removeClass('col-lg-12');
+                $.cookie('offcanvas', 'show');
+            }
+            if($content.hasClass('col-lg-12') && $menu.is(':hidden')) {
+            $menu.animate({
+                    left: 0
+                }, function () {
+                    $menu.show(1000);
+                });
+            //  $menu.show();
+            $content.removeClass('no-transition');
+            $content.removeClass('col-lg-12');
+            }
+        });
+        $('.bs-tooltip').tooltip();
+
+      });
     </script>  
     {{/section}}
