@@ -4,18 +4,18 @@
             "cube": "http://eurostat.linked-statistics.org/data/migr_asyappctzm",
             "queryid": 1,
             "querydesc": "Asylum applications by month (sex, time, age, citizenship, destination, application type)",
-            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>; \r\nQUERY\r\n$C1 = ROLLUP (<http://eurostat.linked-statistics.org/data/migr_asyappctzm>, schema:citizenshipDim,schema:continent);\r\n$C2 = ROLLUP ($C1, schema:citizenshipDim,schema:citAll);\r\n$C3 = ROLLUP ($C2, schema:timeDim, schema:year);\r\n$C4 = DRILLDOWN ($C3, schema:citizenshipDim,schema:continent);"
+            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>; \r\nQUERY\r\n$C1 := ROLLUP (<http://eurostat.linked-statistics.org/data/migr_asyappctzm>, schema:citizenshipDim,schema:continent);\r\n$C2 := ROLLUP ($C1, schema:citizenshipDim,schema:citAll);\r\n$C3 := ROLLUP ($C2, schema:timeDim, schema:year);\r\n$C4 := DRILLDOWN ($C3, schema:citizenshipDim,schema:continent);"
         },
         {
             "cube": "http://eurostat.linked-statistics.org/data/migr_asyappctzm",
             "queryid": 2,
             "querydesc": "Asylum applications by year (sex, time, age, destination, application type)",
-            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>; \r\nQUERY\r\n$C1 = ROLLUP (<http://eurostat.linked-statistics.org/data/migr_asyappctzm>, schema:citizenshipDim,schema:continent);\r\n$C2 = SLICE ($C1, D(schema:citizenshipDim));\r\n$C3 = ROLLUP ($C2, schema:timeDim, schema:year);"
+            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>; \r\nQUERY\r\n$C1 := ROLLUP (<http://eurostat.linked-statistics.org/data/migr_asyappctzm>, schema:citizenshipDim,schema:continent);\r\n$C2 := SLICE ($C1, schema:citizenshipDim);\r\n$C3 := ROLLUP ($C2, schema:timeDim, schema:year);"
         },
         {   "cube": "http://eurostat.linked-statistics.org/data/migr_asyappctzm",
             "queryid": 3,
             "querydesc": "Asylum applications by year submitted by African citizens, where applications count > 5000 and destination is France or Belgium (sex, time, age, citizenship, destination, application type)",
-            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>;\r\nPREFIX sdmx-measure: <http://purl.org/linked-data/sdmx/2009/measure#>;\r\nPREFIX sdmx-dimension: <http://purl.org/linked-data/sdmx/2009/dimension#>;\r\nPREFIX property: <http://eurostat.linked-statistics.org/property#>;\r\nPREFIX geo: <http://eurostat.linked-statistics.org/dic/geo#>;\r\nPREFIX citizen: <http://eurostat.linked-statistics.org/dic/citizen#>;\r\nQUERY\r\n$C1 = ROLLUP (<http://eurostat.linked-statistics.org/data/migr_asyappctzm>, schema:citizenshipDim,schema:continent);\r\n$C2 = ROLLUP ($C1, schema:timeDim, schema:year);\r\n$C3 = DICE ($C2, ( L(schema:continent)= citizen:AF));\r\n$C4 = DICE ($C3, ( M(sdmx-measure:obsValue) > 5000 && (L(property:geo)= geo:BE) || L(property:geo)= geo:FR));\r\n$C5 = DRILLDOWN ($C4, schema:citizenshipDim, property:citizen);"
+            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>;\r\nPREFIX sdmx-measure: <http://purl.org/linked-data/sdmx/2009/measure#>;\r\nPREFIX sdmx-dimension: <http://purl.org/linked-data/sdmx/2009/dimension#>;\r\nPREFIX property: <http://eurostat.linked-statistics.org/property#>;\r\nPREFIX geo: <http://eurostat.linked-statistics.org/dic/geo#>;\r\nPREFIX citizen: <http://eurostat.linked-statistics.org/dic/citizen#>;\r\nQUERY\r\n$C1 := ROLLUP (<http://eurostat.linked-statistics.org/data/migr_asyappctzm>, schema:citizenshipDim,schema:continent);\r\n$C2 := ROLLUP ($C1, schema:timeDim, schema:year);\r\n$C3 := DICE ($C2, ( schema:citizenshipDim.schema:continent.schema:continentName = );\r\n$C4 := DICE ($C3, ( M(sdmx-measure:obsValue) > 5000 && (L(property:geo):= geo:BE) || L(property:geo):= geo:FR));\r\n$C5 := DRILLDOWN ($C4, schema:citizenshipDim, property:citizen);"
         }
     ]
 }

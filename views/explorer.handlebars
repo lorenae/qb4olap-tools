@@ -13,7 +13,7 @@
 
 <div class="row" id="newwrapper">
     <div id="sidebar-wrapper" style="background-color: #E7E7E7;" class="col-lg-4">
-        <form role="form" method="post" action="/getcubes">
+        <form role="form" method="post" action="getcubes">
             <label>Select a SPARQL endpoint</label>
             <div class="form-group form-inline">
                 <select class="form-control" name="endpoint">
@@ -24,7 +24,7 @@
         </form>
           
         {{#if session.cubes}}
-        <form role="form" method="post" action="/getcubestructure">
+        <form role="form" method="post" action="getcubestructure">
                 <label>Select a cube </label>
                 <div class="form-group form-inline">
                     <select class="form-control" name="cubeselect">
@@ -91,7 +91,7 @@
 
         </div>
         
-        <form id="queryform" role="form" method="post" action="/simplifyquery">    
+        <form id="queryform" role="form" method="post" action="simplifyquery">    
             <div class="form-group">
                 <label>QL query editor</label>
                 <textarea class="form-control" id="querypanel" name="querypanel"  placeholder="Enter QL query"rows="6">

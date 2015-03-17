@@ -4,7 +4,7 @@ var util = require('util');
 var SparqlClient = require('sparql-client');
 
 // if set to true uses proxySrv as proxy
-var withProxy=true;
+var withProxy= false;
 var proxySrv = "http://httpproxy.fing.edu.uy:3128";
 
 
@@ -68,6 +68,28 @@ exports.getCubes = function(endpoint, callback){
     callback(error, cubelist);    
     });
 };
+
+//pre: childlevel and parentlevel are the URIs of levels in the same hierarchy, parentlevelmember is a member of parentlevel
+//post: returns the set of childlevel members that can reach parentlevelmember
+
+exports.getChildLevelMembers = function(endpoint,childlevel,parentlevel,parentlevelmember, callback){
+    var query = "PREFIX qb4o: <http://purl.org/qb4olap/cubes#> \
+                 PREFIX skos: <http://www.w3.org/2004/02/skos/core#> \
+                select ?clm \
+                where { ?clm qb4o:inLevel <"+childlevel+">. \
+                        ?clm skos:broader+ <"+parentlevelmember+">.\
+                        <"+parentlevelmember+"> qb4o:inLevel <"+parentlevel+">.}";
+    return this.runSparql(endpoint, query, function processChilds(error,content){
+        var childlist = [];
+        content.results.bindings.forEach(function(row){
+            childlist.push({level:childlevel, value:row.clm.value});
+        });
+    callback(error, childlist);    
+    });
+};
+
+
+
 
 // pre: endpoint is the URL of a SPARQL endpoint, cubeuri is the URI of a datacube in the endpoint
 // post: returns a Datacube and a Cuboid object that represents the structure of the datacube.
