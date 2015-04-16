@@ -7,11 +7,11 @@
 // Constructor
 
 //pre: levels is a set of Levels, hierarchies is a set of Hierarchy.
-function Dimension(uri, name){
+function Dimension(uri, name, levels, hierarchies){
     this.uri = uri;
     this.name = name;
-    this.levels = [];
-    this.hierarchies = [];
+    this.levels = levels;
+    this.hierarchies = hierarchies;
 }
 
 //adds a hierarchy 
@@ -32,6 +32,14 @@ Dimension.prototype.getHierarchy = function(huri){
         return h.uri == huri;}
         )[0];
 }
+
+//pre: the level exists
+Dimension.prototype.getLevel = function(luri){
+    return this.levels.filter(function(l){
+        return l.uri == luri;}
+        )[0];
+}
+
 
 Dimension.prototype.existsHierarchy = function(huri){
     return this.hierarchies.filter(function(h) {

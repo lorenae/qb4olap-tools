@@ -4,7 +4,7 @@ var util = require('util');
 var SparqlClient = require('sparql-client');
 
 // if set to true uses proxySrv as proxy
-var withProxy= false;
+var withProxy= true;
 var proxySrv = "http://httpproxy.fing.edu.uy:3128";
 
 
@@ -53,17 +53,20 @@ exports.runSparql = function(endpoint, query, callback){
 // post: returns the list of URIs of the datacubes (qb:DataSetStructure) in the endpoint
 exports.getCubes = function(endpoint, callback){
     var query = "PREFIX qb: <http://purl.org/linked-data/cube#> \
-                select ?dataset ?cubeuri ?cname \
-                where {?cubeuri a qb:DataStructureDefinition. \
-                       ?dataset qb:structure ?cubeuri. \
-                OPTIONAL {?cubeuri rdfs:label ?cname}}";
+                select ?schemagraph ?cubeuri ?cname  ?dataset \
+                where {GRAPH ?schemagraph { \
+                        ?cubeuri a qb:DataStructureDefinition.\
+                        ?dataset qb:structure ?cubeuri. \
+                        OPTIONAL {?cubeuri rdfs:label ?cname}}}";
+       
     return this.runSparql(endpoint, query, function processCubes(error,content){
         var cubelist = [];
         content.results.bindings.forEach(function(row){
+            var schemagraph = row.schemagraph.value;
             var dataset =  row.dataset.value;
             var cubeuri  = row.cubeuri.value;
             var cubename = row.hasOwnProperty('cname') ? row.cname.value : parseURL(cubeuri).hash;
-            cubelist.push({dataset:dataset, uri:cubeuri, name:cubename});
+            cubelist.push({schemagraph:schemagraph,dataset:dataset, uri:cubeuri, name:cubename, selected:false});
         });
     callback(error, cubelist);    
     });
@@ -91,21 +94,20 @@ exports.getChildLevelMembers = function(endpoint,childlevel,parentlevel,parentle
 
 
 
-// pre: endpoint is the URL of a SPARQL endpoint, cubeuri is the URI of a datacube in the endpoint
+// pre: endpoint is the URL of a SPARQL endpoint, cubeuri is the URI of a datacube in the endpoint, schemagraph is the named graph where the schema is stored
 // post: returns a Datacube and a Cuboid object that represents the structure of the datacube.
 
-exports.getCubeSchema = function(endpoint, cubeuri, callback){
+exports.getCubeSchema = function(endpoint, cubeuri, schemagraph, callback){
     var query = "prefix qb: <http://purl.org/linked-data/cube#> prefix qb4o: <http://purl.org/qb4olap/cubes#> \
                 SELECT ?cname ?d ?dname ?h ?hname ?l1 ?l1name ?l2 ?l2name ?card ?m ?f\
+                FROM <"+schemagraph+"> \
                 WHERE { <"+cubeuri+"> qb:component ?c1,?c2. \
                 ?c1 qb4o:level ?l.\
-                ?c2 qb:measure ?m.\
-                ?ih1 a qb4o:LevelInHierarchy; qb4o:levelComponent ?l; qb4o:hierarchyComponent ?h.\
-                ?ih2 a qb4o:LevelInHierarchy; qb4o:levelComponent ?l1; qb4o:hierarchyComponent ?h.\
-                ?ih3 a qb4o:LevelInHierarchy; qb4o:levelComponent ?l2; qb4o:hierarchyComponent ?h.\
-                ?h qb4o:inDimension ?d.\
-                ?pl a qb4o:HierarchyStep; qb4o:childLevel ?ih2; qb4o:parentLevel ?ih3.\
-                ?pl qb4o:cardinality ?card.\
+                ?c2 qb:measure ?m. \
+                ?h qb4o:hasLevel ?l. \
+                ?h qb4o:inDimension ?d. \
+                ?ih1 a qb4o:HierarchyStep;qb4o:inHierarchy ?h.\
+                ?ih1 a qb4o:HierarchyStep; qb4o:childLevel ?l1; qb4o:parentLevel ?l2 ; qb4o:cardinality ?card.\
                 OPTIONAL { <"+cubeuri+"> rdfs:label ?cname }\
                 OPTIONAL { ?d rdfs:label ?dname }\
                 OPTIONAL { ?h rdfs:label ?hname }\
@@ -113,10 +115,8 @@ exports.getCubeSchema = function(endpoint, cubeuri, callback){
                 OPTIONAL { ?l2 rdfs:label ?l2name }\
                 OPTIONAL { ?c2 qb4o:aggregateFunction ?f }\
                 }\
-                order by ?d ?h" ;
-
-    //console.log(query);
-    //return this.runSparql(endpoint, query, callback);            
+                order by ?d ?h";
+                
     return this.runSparql(endpoint, query, function processStructure(error,content){
         // assign values to empty variables
         var cubename = content.results.bindings[0].hasOwnProperty('cname') ? content.results.bindings[0].cname.value : parseURL(cubeuri).hash;             
@@ -163,42 +163,160 @@ exports.getCubeSchema = function(endpoint, cubeuri, callback){
             //if dimension does not exist create it
             var dimension;
             if (!dc.existsDimension(duri)){
-                //console.log("voy a crear Dimension: ");
-                dimension = new Dimension(duri,dname);
+                dimension = new Dimension(duri,dname,[],[]);
                 dc.addDimension(dimension);
-                //console.log("creo DIM y la agrego: ");
-                //console.log(dc);
             }         
             dimension = dc.getDimension(duri);
-
-            //console.log("dim: ");
-            //console.log(dimension);
-
             //add levels to the dimension
             if (!dimension.existsLevel(child.uri)) {dimension.addLevel(child);}
             if (!dimension.existsLevel(parent.uri)) {dimension.addLevel(parent);}
-            
             //if hierarchy does not exist in dimension, create it
             var hierarchy;
             if (!dimension.existsHierarchy(huri)){
-                //console.log("voy a crear Jerarquia: ");
-                hierarchy = new Hierarchy(huri,hname);
+                hierarchy = new Hierarchy(huri,hname,[]);
                 dimension.addHierarchy(hierarchy);
-                //console.log("creo jerarquia y la agrego: ");
-                //console.log(dimension);
-                //console.log(dc);
             } 
             hierarchy = dimension.getHierarchy(huri);
-            //console.log("voy a crear el arco en el lattice: ");
             //add a new edge to the hierarchy lattice
             hierarchy.addEdgeToLattice(child, parent, cardinality);
-            //console.log("volvi: ");
         });
-    //console.log("DATACUBE en el server: ");
-    //console.log(dc);
+
     callback(error, dc);
     });              
 }
+
+
+// pre: endpoint is the URL of a SPARQL endpoint, cubeuri is the URI of a datacube in the endpoint,schemagraph is the named graph where the schema is stored
+// post: returns a Datacube and a Cuboid object that represents the structure of the datacube.
+
+exports.getCubeInstances = function(endpoint, cubeuri, schemagraph, callback){
+    var query = "prefix qb: <http://purl.org/linked-data/cube#> prefix qb4o: <http://purl.org/qb4olap/cubes#> \
+                SELECT ?d ?dname ?h ?hname ?l1 ?l1name ?l2 ?l2name ?lm1 ?lm1name ?lm2 ?lm2name \
+                WHERE { \
+                    ?lm1 qb4o:memberOf ?l1.\
+                    ?lm1 skos:broader ?lm2.\
+                    ?lm2 qb4o:memberOf ?l2.\
+                    {\
+                        SELECT ?d ?dname ?h ?hname ?l1 ?l1name ?l2 ?l2name \
+                        FROM <"+schemagraph+"> \
+                        WHERE { <"+cubeuri+"> qb:component ?c1.\
+                        ?c1 qb4o:level ?l.\
+                        ?h qb4o:hasLevel ?l.\
+                        ?h qb4o:inDimension ?d. \
+                        ?ih1 a qb4o:HierarchyStep;qb4o:inHierarchy ?h.\
+                        ?ih1 a qb4o:HierarchyStep; qb4o:childLevel ?l1; qb4o:parentLevel ?l2. \
+                        OPTIONAL { ?d rdfs:label ?dname }\
+                        OPTIONAL { ?h rdfs:label ?hname }\
+                        OPTIONAL { ?l1 rdfs:label ?l1name }\
+                        OPTIONAL { ?l1 skos:prefLabel ?l1name }\
+                        OPTIONAL { ?l2 rdfs:label ?l2name }\
+                        OPTIONAL { ?l2 skos:prefLabel ?l2name }\
+                        }\
+                    }\
+                OPTIONAL{?lm1 skos:prefLabel ?lm1name}\
+                OPTIONAL{?lm2 skos:prefLabel ?lm2name}\
+                FILTER(lang(?lm1name) = \"en\")\
+                FILTER(lang(?lm2name) = \"en\")\
+                }\
+                order by ?d ?h";
+    
+    return this.runSparql(endpoint, query, function processInstances(error,content){
+                          
+        var instances = {
+            nodes:[],
+            links:[]
+        };
+
+        //aux structure to map URIs into integer IDs
+        var nodesMap= [], memberCount = 0;
+
+        content.results.bindings.forEach(function(row){
+            var duri = row.d.value;
+            var dname = row.hasOwnProperty('dname') ? row.dname.value : this.parseURL(duri).hash;             
+            var huri = row.h.value;
+            var hname = row.hasOwnProperty('hname') ? row.hname.value : this.parseURL(huri).hash;             
+            var l1uri = row.l1.value;
+            var l1name = row.hasOwnProperty('l1name') ? row.l1name.value : this.parseURL(l1uri).hash;                   
+            var l2uri = row.l2.value;
+            var l2name = row.hasOwnProperty('l2name') ? row.l2name.value : this.parseURL(l2uri).hash;
+            var lm1uri = row.lm1.value;
+            var lm1name = row.hasOwnProperty('lm1name') ? row.lm1name.value : this.parseURL(lm1uri).hash;                   
+            var lm2uri = row.lm2.value;
+            var lm2name = row.hasOwnProperty('lm2name') ? row.lm2name.value : this.parseURL(lm2uri).hash;
+
+
+            var childmap = nodesMap.filter(function(map) {
+                return (map.member == lm1uri && map.level == l1uri && map.hierarchy == huri);
+                //return (map.member == lm1uri && map.level == l1uri );
+                });
+
+            //if the node does not exist
+            if (childmap.length == 0) {
+                idchild = memberCount++;
+                nodesMap.push({
+                    member:lm1uri, 
+                    level:l1uri,
+                    hierarchy:huri,
+                    id:idchild
+                });
+
+                var childnode = {
+                id:idchild,
+                uri:lm1uri,
+                name:lm1name, 
+                level:l1name, 
+                hierarchy:hname,
+                dimension:dname
+                };
+                instances.nodes.push(childnode);
+
+            } else{
+                idchild = childmap[0].id;
+            }
+
+
+            var parentmap = nodesMap.filter(function(map) {
+                return (map.member == lm2uri && map.level == l2uri && map.hierarchy == huri);
+                //return (map.member == lm2uri && map.level == l2uri );
+                });
+
+            if (parentmap.length == 0) {
+                idparent = memberCount++;
+                nodesMap.push({
+                    member:lm2uri, 
+                    level:l2uri,
+                    hierarchy:huri,
+                    id:idparent
+                });
+
+                var parentnode = {
+                id:idparent,
+                uri:lm2uri,
+                name:lm2name, 
+                level:l2name, 
+                hierarchy:hname,
+                dimension:dname
+                };
+
+                instances.nodes.push(parentnode);
+            } else{
+                idparent = parentmap[0].id;
+            }
+
+            
+         
+         instances.links.push({
+                source:idchild,
+                target:idparent
+            });   
+        });
+
+    //console.log("INSTANCES en el server: ");
+    //console.log(instances);
+    callback(error, instances);
+    });              
+}
+
 
 
 

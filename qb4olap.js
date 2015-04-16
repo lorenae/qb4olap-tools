@@ -14,6 +14,9 @@ var Handlebars = require('handlebars');
 
 
 var Datacube = require('./models/Datacube');
+var Hierarchy = require('./models/Hierarchy');
+var Dimension = require('./models/Dimension');
+
 var sampleQueries = require('./models/sample-queries.json');
 
 
@@ -49,23 +52,48 @@ var hbs = expressHandlebars.create({
 
 		var renderDimension = function(dimension, dimordinal ,options) {
 			var danchor = "dim"+dimordinal;
+
+			var d = new Dimension (dimension.uri, dimension.name, dimension.levels, dimension.hierarchies);
+			var hordinal = 0
 			var out = "<li><a class=\"collapsed\" data-toggle=\"collapse\" data-target=\"#"+danchor+"\" aria-expanded=\"false\" href=\"javascript:;\">";                  
-			out += "<i class=\"fa fa-fw fa-sitemap\"></i>";
-			out += options.fn(dimension);
+			out += "<i class=\"fa fa-fw fa-circle\"></i>";
+			out += options.fn(d);
 			out +="<i class=\"fa fa-fw fa-caret-down\"></i></a>";
-			out += "<ul id=\""+danchor+"\" class=\"collapse\" style=\"height: 0px;\" aria-expanded=\"false\">";
-			dimension.levels.forEach( function(level) {
-				out += "<li>";
-				out += options.fn(level);
-				out += "</li>";
-			});
+			out += "<ul id=\""+danchor+"\" class=\"collapse\" style=\"height: 0px; list-style: none; padding-left: 1;\" aria-expanded=\"false\">";
+
+			dimension.hierarchies.forEach(function (hierarchy){
+
+				var h = new Hierarchy(hierarchy.uri, hierarchy.name, hierarchy.lattice);
+
+				var orderedLevels = h.traverse();
+				var hanchor = "hier"+dimordinal*10+hordinal;
+				hordinal++;
+
+				out += "<li><a class=\"collapsed\" data-toggle=\"collapse\" data-target=\"#"+hanchor+"\" aria-expanded=\"false\" href=\"javascript:;\">";
+				out += "<i class=\"fa fa-fw fa-sitemap\"></i>";
+				out += options.fn(h);
+				out +="<i class=\"fa fa-fw fa-caret-down\"></i></a>";
+				out += "<ul id=\""+hanchor+"\" class=\"collapse\" style=\"height: 0px; list-style: none; padding-left: 2;\" aria-expanded=\"false\">";
+
+				orderedLevels.forEach(function (ol){
+					out += "<li>";
+					for (var p = 0; p < ol.pos; p++) {
+						out += "<i class=\"fa fa-fw fa-square\"></i>";
+					}
+					var level = d.getLevel(ol.level);
+					out += options.fn(level);
+					out += "</li>";
+				})
+				//close level list
+				out += "</ul></li>";
+			})
+			
 			out += "</ul></li>";
-			//console.log(util.inspect(out, { showHidden: false, depth: null, colors:true }));	
 			return out;
 		};
 		var dims = "<ul style=\"list-style: none; padding-left: 0;\">";
-		for (var d = 0; d < dimensions.length; d++) {
-		   dims += renderDimension (dimensions[d],d,options);
+		for (var i = 0; i < dimensions.length; i++) {
+		   dims += renderDimension (dimensions[i],i,options);
 		}
 		dims += "</ul>";
 		return new Handlebars.SafeString(dims);
@@ -86,6 +114,18 @@ var hbs = expressHandlebars.create({
 		})
 		meas += "</ul>";
 		return new Handlebars.SafeString(meas);
+	},
+
+	saveInstance: function(instance, options){
+		instanceJSON = JSON.stringify(instance);
+		//console.log("INSTANCES en el server: "+instanceJSON);
+
+		script = "<script type='text/javascript'> var cubeinstance="+instanceJSON+"</script>";
+		return new Handlebars.SafeString(script);	
+
+
+//		hidden = "<input id=\"instancejson\" type=\"hidden\" value=\""+instanceJSON+"\">";
+//		return new Handlebars.SafeString(hidden);	
 	},
 
 	showQuery: function(query, options) {
@@ -129,7 +169,6 @@ app.set('view engine', 'handlebars');
 
 app.enable('view cache');
 
-
 app.set('port', process.env.PORT || 3000);
 app.use(express.static(__dirname + '/public'));
 
@@ -138,7 +177,7 @@ app.use(require('cors')());
 app.use('/api', require('cors')());
 
 app.use(function(req, res, next){
-	res.locals.showTests = app.get('env') !== 'production' && req.query.test === '1';
+	//res.locals.showTests = app.get('env') !== 'production' && req.query.test === '1';
 	//this allows handlebars to access session
 	res.locals.session = req.session;
 	next();
@@ -160,20 +199,33 @@ app.get('/about', function(req, res) {
 
 
 app.get('/explorer', function(req, res){
-	/*
-	sess=req.session;
-	var state = {};
-	sess.state = state;
-	*/
-	req.session.state = {};
+	
+	if(typeof req.session.state === 'undefined'){
+   		req.session.state = {};
+ 	};
+
+	
 	res.render('explorer');
 });
 
-app.post('/getcubes', function(req, res) {
+
+app.get('/queries', function(req, res){
+
+	if(typeof req.session.state === 'undefined'){
+   		req.session.state = {};
+ 	};
+	res.render('queries');
+});
+
+
+app.get('/getcubes', function(req, res) {
 	//default endpoint
 	var endpoint = "http://www.fing.edu.uy/inco/grupos/csi/sparql";
-	if(req.body.endpoint) 
-		{endpoint = req.body.endpoint;
+
+	var target = req.query.target;
+
+	if(req.query.endpoint) 
+		{endpoint = req.query.endpoint;
 	}
 	sess=req.session;
 	sess.state.endpoint = endpoint;
@@ -183,33 +235,76 @@ app.post('/getcubes', function(req, res) {
 		{	
 			//console.log(util.inspect(cubelist, { showHidden: false, depth: null, colors:true }));
 			sess.cubes = cubelist;
-			res.render('explorer');
+			res.render(target);
 		}
 		else
-		{	res.render('explorer', {error:err});
+		{	res.render(target, {error:err});
 		}
 	});
 });
 
 
-app.post('/getcubestructure', function(req, res) {
-	//pair schema-dataset
-	var pair = req.body.cubeselect;
-	var cube = pair.split(',')[0];
-	var dataset = pair.split(',')[1];
+app.get('/getcubestructure', function(req, res) {
 	sess=req.session;
-	sess.state.cube = cube;
+	var cubeuri = req.query.cubeselect;
+
+	sess.cubes.forEach(function(cube){
+		cube.selected = (cube.uri == cubeuri);
+	})
+
+	var selectedcube = sess.cubes.filter(function(c){
+        return c.selected;});  
+	var dataset = selectedcube[0].dataset;
+	var schemagraph = selectedcube[0].schemagraph; 
+	
+	sess=req.session;
+	sess.state.cube = cubeuri;
 	sess.state.dataset = dataset;
+	sess.state.schemagraph = schemagraph;
 	if(sess.state.endpoint && sess.state.cube)
-    {	backend.getCubeSchema(sess.state.endpoint, sess.state.cube, function (err, datacube) {
+    {	backend.getCubeSchema(sess.state.endpoint, sess.state.cube,sess.state.schemagraph, function (err, datacube) {
    		sess.schema = datacube;
    		sess.queries = getSampleQueries(dataset);
-    	res.render('explorer');
+   		console.log(req.originalUrl);
+    	res.render('queries');
 	});
 	}	
 });
 
-app.post('/simplifyquery', function(req, res) {
+
+app.get('/getcompletecube', function(req, res) {
+	sess=req.session;
+
+	var cubeuri = req.query.cubeselect;
+	var target = req.query.target;
+	
+	sess.cubes.forEach(function(cube){
+		cube.selected = (cube.uri == cubeuri);
+	})
+
+	var selectedcube = sess.cubes.filter(function(c){
+        return c.selected;});  
+	var dataset = selectedcube[0].dataset;
+	var schemagraph = selectedcube[0].schemagraph; 
+	
+	sess=req.session;
+	sess.state.cube = cubeuri;
+	sess.state.dataset = dataset;
+	sess.state.schemagraph = schemagraph;
+	if(sess.state.endpoint && sess.state.cube)
+    {	backend.getCubeSchema(sess.state.endpoint, sess.state.cube,sess.state.schemagraph, function (err, cubeschema) {
+   		sess.schema = cubeschema;
+   		backend.getCubeInstances(sess.state.endpoint, sess.state.cube,sess.state.schemagraph, function (err, cubeinstances) {
+   			sess.instances = cubeinstances;
+	    	res.render(target);
+			});
+   		});
+	}	
+});
+
+
+
+app.get('/runquery', function(req, res) {
 
 	var querytext = req.body.querypanel;
 	var query = req.body.parsedquery;
@@ -222,11 +317,18 @@ app.post('/simplifyquery', function(req, res) {
    		console.log(querytext);
    		sess.querytext = querytext;
     	sess.originalquery = query;
-    	operators.getSimplifiedQuery(sess.schema, query, function (err, simplified) {
+    	operators.getSimplifiedQuery(sess.state.endpoint, sess.schema, query, function (err, simplified) {
    		sess.simplequery = simplified;
    		console.log("simplified query: ")
    		console.log(util.inspect(simplified, { showHidden: false, depth: null, colors:true }));
-    	res.render('explorer');
+   			operators.getSparqlQuery(sess.schema, simplified, function(err, spquery){
+   				session.sparqlquery = spquery;
+   				backend.runSparql(sess.state.endpoint,spquery, function (err, content) {
+        			res.render('sparql', {data:content});
+				});
+   			} );
+
+    	//res.render('explorer');
 	});
 	} else{
 		res.render('explorer');
