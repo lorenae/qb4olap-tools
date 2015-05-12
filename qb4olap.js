@@ -130,6 +130,37 @@ var hbs = expressHandlebars.create({
 
 	showQuery: function(query, options) {
 
+			var querytext = "";
+			
+			querytext += "QUERY \n";
+
+			query.query.forEach(function(operation){
+				if ( (operation.qloperator=="ROLLUP") || (operation.qloperator=="DRILLDOWN")){
+				querytext += operation.statement+"="+operation.qloperator+"("+operation.source+","+operation.dimension+","+operation.level+");\n";
+				}
+				if(operation.qloperator=="SLICE"){
+					if(operation.condType == "dimension"){
+						querytext += operation.statement+"= SLICE("+operation.source+",D("+operation.dimension+"));\n";
+					}else{
+						querytext += operation.statement+"= SLICE("+operation.source+",M("+operation.measure+"));\n";
+					}
+				}
+				if(operation.qloperator=="DICE"){
+					// TODO aux function that turns the condition tree into a string
+					querytext += operation.statement+"= DICE("+operation.source+","+operation.dicecondition.operator+");\n";
+				}
+
+
+			});
+
+			//console.log("simple to text"+querytext);
+			return new Handlebars.SafeString(querytext);
+			//return new Handlebars.SafeString(JSON.stringify(query));
+		}
+	  }
+/*
+	showQuery: function(query, options) {
+
 		var querytext = "";
 		Object.keys(query.prefixes).forEach(function(prefix){
 			querytext += "<p> PREFIX "+prefix+": "+query.prefixes[prefix] +"</p>";
@@ -160,6 +191,8 @@ var hbs = expressHandlebars.create({
 		//return new Handlebars.SafeString(JSON.stringify(query));
 	}
   }
+*/
+
 });
 
 // Register `hbs` as our view engine using its bound `engine()` function.
@@ -291,9 +324,11 @@ app.get('/getcompletecube', function(req, res) {
 	sess.state.cube = cubeuri;
 	sess.state.dataset = dataset;
 	sess.state.schemagraph = schemagraph;
+
 	if(sess.state.endpoint && sess.state.cube)
     {	backend.getCubeSchema(sess.state.endpoint, sess.state.cube,sess.state.schemagraph, function (err, cubeschema) {
    		sess.schema = cubeschema;
+   		sess.queries = getSampleQueries(cubeuri);
    		backend.getCubeInstances(sess.state.endpoint, sess.state.cube,sess.state.schemagraph, function (err, cubeinstances) {
    			sess.instances = cubeinstances;
 	    	res.render(target);
@@ -302,36 +337,45 @@ app.get('/getcompletecube', function(req, res) {
 	}	
 });
 
+app.get('/simplifyquery', function(req, res) {
 
-
-app.get('/runquery', function(req, res) {
-
-	var querytext = req.body.querypanel;
-	var query = req.body.parsedquery;
+	var querytext = req.query.querypanel;
+	var query = req.query.parsedquery;
 	
 	sess=req.session;
 	if(sess.schema)
 
     {	
-    	console.log("query text: ")
-   		console.log(querytext);
    		sess.querytext = querytext;
     	sess.originalquery = query;
     	operators.getSimplifiedQuery(sess.state.endpoint, sess.schema, query, function (err, simplified) {
    		sess.simplequery = simplified;
-   		console.log("simplified query: ")
-   		console.log(util.inspect(simplified, { showHidden: false, depth: null, colors:true }));
-   			operators.getSparqlQuery(sess.schema, simplified, function(err, spquery){
-   				session.sparqlquery = spquery;
-   				backend.runSparql(sess.state.endpoint,spquery, function (err, content) {
-        			res.render('sparql', {data:content});
-				});
-   			} );
-
-    	//res.render('explorer');
+   		res.render('queries');
 	});
 	} else{
-		res.render('explorer');
+		res.render('queries');
+	}	
+});
+
+
+app.get('/runquery', function(req, res) {
+
+	//var querytext = req.query.simplequerypanel;
+		
+	sess=req.session;
+	console.log('RUNQUERY');
+	if(sess.schema && sess.simplequery)
+    {	
+		operators.getSparqlQuery(sess.schema, sess.simplequery, function(err, spquery){
+			session.sparqlquery = spquery;
+			backend.runSparql(sess.state.endpoint,spquery, function (err, content) {
+    			res.render('sparql', {data:content});
+			});
+		});
+
+    	
+	} else{
+		res.render('queries');
 	}	
 });
 

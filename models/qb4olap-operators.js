@@ -176,9 +176,6 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
 */                         
                     });
                         
-
-
-
                     //If there is no DICE condition over a measure, IPO simplification is possible.
                     if (dicesOnMeasures.length < -1){
                         //simplify IPOs as usual
@@ -197,21 +194,22 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
 }
 
 
-//
+
 
 //pre: datacube is the cube structure, query is a simplified QL query
 //post: returns a SPARQL query equivalent to QL query
 exports.getSparqlQuery = function(datacube, query, callback){
     var sparqlquery = '';    
+    var stubquery = "SELECT *  WHERE { ?s ?p ?o } LIMIT 2";
 
     switch(query.type){
         //IPO only
-        case 1: 
+        case 1: sparqlquery = stubquery;
         break;
         //IPO + SLICE
-        case 2:
+        case 2: sparqlquery = stubquery;
         break;
-        default:
+        default: sparqlquery = stubquery;
     }
 
     callback('', sparqlquery);
