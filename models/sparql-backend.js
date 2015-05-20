@@ -4,7 +4,7 @@ var util = require('util');
 var SparqlClient = require('sparql-client');
 
 // if set to true uses proxySrv as proxy
-var withProxy= true;
+var withProxy= false;
 var proxySrv = "http://httpproxy.fing.edu.uy:3128";
 
 
@@ -35,13 +35,13 @@ var AVG ="AVG";
 // wrapper to sparql-client execute method.
 // pre: query is a SPARQL query, endpoint is the URL of a SPARQL endpoint
 // post: returns JSON as provided by method execute in sparql-client module
-exports.runSparql = function(endpoint, query, callback){
+exports.runSparql = function(endpoint, query, timeout, callback){
     var client;
     if(withProxy){
         //console.log("with proxy. endpoint: "+endpoint);
-        client = new SparqlClient(endpoint,{proxy:proxySrv});
+        client = new SparqlClient(endpoint,{proxy:proxySrv, timeout:timeout});
     }else{
-        client = new SparqlClient(endpoint);
+        client = new SparqlClient(endpoint,{timeout:timeout});
     }
   
     client.query(query).execute(function (error, content) {
@@ -59,7 +59,7 @@ exports.getCubes = function(endpoint, callback){
                         ?dataset qb:structure ?cubeuri. \
                         OPTIONAL {?cubeuri rdfs:label ?cname}}}";
        
-    return this.runSparql(endpoint, query, function processCubes(error,content){
+    return this.runSparql(endpoint, query, 0,function processCubes(error,content){
         var cubelist = [];
         content.results.bindings.forEach(function(row){
             var schemagraph = row.schemagraph.value;
@@ -82,7 +82,7 @@ exports.getChildLevelMembers = function(endpoint,childlevel,parentlevel,parentle
                 where { ?clm qb4o:inLevel <"+childlevel+">. \
                         ?clm skos:broader+ <"+parentlevelmember+">.\
                         <"+parentlevelmember+"> qb4o:inLevel <"+parentlevel+">.}";
-    return this.runSparql(endpoint, query, function processChilds(error,content){
+    return this.runSparql(endpoint, query, 0,function processChilds(error,content){
         var childlist = [];
         content.results.bindings.forEach(function(row){
             childlist.push({level:childlevel, value:row.clm.value});
@@ -97,7 +97,7 @@ exports.getChildLevelMembers = function(endpoint,childlevel,parentlevel,parentle
 // pre: endpoint is the URL of a SPARQL endpoint, cubeuri is the URI of a datacube in the endpoint, schemagraph is the named graph where the schema is stored
 // post: returns a Datacube and a Cuboid object that represents the structure of the datacube.
 
-exports.getCubeSchema = function(endpoint, cubeuri, schemagraph, callback){
+exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callback){
     var query = "prefix qb: <http://purl.org/linked-data/cube#> prefix qb4o: <http://purl.org/qb4olap/cubes#> \
                 SELECT ?cname ?d ?dname ?h ?hname ?l1 ?l1name ?l2 ?l2name ?card ?m ?f\
                 FROM <"+schemagraph+"> \
@@ -107,7 +107,7 @@ exports.getCubeSchema = function(endpoint, cubeuri, schemagraph, callback){
                 ?h qb4o:hasLevel ?l. \
                 ?h qb4o:inDimension ?d. \
                 ?ih1 a qb4o:HierarchyStep;qb4o:inHierarchy ?h.\
-                ?ih1 a qb4o:HierarchyStep; qb4o:childLevel ?l1; qb4o:parentLevel ?l2 ; qb4o:cardinality ?card.\
+                ?ih1 a qb4o:HierarchyStep; qb4o:childLevel ?l1; qb4o:parentLevel ?l2 ; qb4o:pcCardinality ?card.\
                 OPTIONAL { <"+cubeuri+"> rdfs:label ?cname }\
                 OPTIONAL { ?d rdfs:label ?dname }\
                 OPTIONAL { ?h rdfs:label ?hname }\
@@ -116,11 +116,11 @@ exports.getCubeSchema = function(endpoint, cubeuri, schemagraph, callback){
                 OPTIONAL { ?c2 qb4o:aggregateFunction ?f }\
                 }\
                 order by ?d ?h";
-                
-    return this.runSparql(endpoint, query, function processStructure(error,content){
+    
+    return this.runSparql(endpoint, query, 0, function processStructure(error,content){
         // assign values to empty variables
         var cubename = content.results.bindings[0].hasOwnProperty('cname') ? content.results.bindings[0].cname.value : parseURL(cubeuri).hash;             
-        var dc = new Datacube(cubename,cubeuri);
+        var dc = new Datacube(cubename,cubeuri,dataset);
 
         content.results.bindings.forEach(function(row){
             var duri = row.d.value;
@@ -145,7 +145,7 @@ exports.getCubeSchema = function(endpoint, cubeuri, schemagraph, callback){
             }
             //if measure does not exist create it
             if (!dc.existsMeasure(muri)){
-                 var mname = parseURL(muri).hash;
+                var mname = parseURL(muri).hash;
                 var measure = new Measure(muri, mname,aggfunc);
                 dc.addMeasure(measure);
             }          
@@ -220,7 +220,7 @@ exports.getCubeInstances = function(endpoint, cubeuri, schemagraph, callback){
                 }\
                 order by ?d ?h";
     
-    return this.runSparql(endpoint, query, function processInstances(error,content){
+    return this.runSparql(endpoint, query, 0,function processInstances(error,content){
                           
         var instances = {
             nodes:[],
@@ -301,10 +301,7 @@ exports.getCubeInstances = function(endpoint, cubeuri, schemagraph, callback){
                 instances.nodes.push(parentnode);
             } else{
                 idparent = parentmap[0].id;
-            }
-
-            
-         
+            }         
          instances.links.push({
                 source:idchild,
                 target:idparent

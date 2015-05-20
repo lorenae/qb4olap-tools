@@ -2,8 +2,14 @@
     "queries": [
         {
             "cube": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#migr_asyappctzmQB4O",
+            "queryid": 11,
+            "querydesc": "Asylum applications by all citizenships (sex, time, age, citizenship, destination, application type)",
+            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>; \r\nQUERY\r\n$C1 := ROLLUP (<http://eurostat.linked-statistics.org/data/migr_asyappctzm>, schema:citizenshipDim,schema:citAll);"
+        },    
+        {
+            "cube": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#migr_asyappctzmQB4O",
             "queryid": 1,
-            "querydesc": "Asylum applications by month (sex, time, age, citizenship, destination, application type)",
+            "querydesc": "Asylum applications by year and continent (sex, time, age, citizenship, destination, application type)",
             "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>; \r\nQUERY\r\n$C1 := ROLLUP (<http://eurostat.linked-statistics.org/data/migr_asyappctzm>, schema:citizenshipDim,schema:continent);\r\n$C2 := ROLLUP ($C1, schema:citizenshipDim,schema:citAll);\r\n$C3 := ROLLUP ($C2, schema:timeDim, schema:year);\r\n$C4 := DRILLDOWN ($C3, schema:citizenshipDim,schema:continent);"
         },
         {

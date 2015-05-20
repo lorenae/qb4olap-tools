@@ -14,7 +14,8 @@
 <div class="row" id="newwrapper">
     <div id="sidebar-wrapper"  class="col-lg-4">
         <form role="form" method="get" action="getcubes">
-            <label>Select SPARQL endpoint</label>
+            <i class="fa fa-shield fa-rotate-270"></i>
+            <label>Pick a SPARQL endpoint</label>
             <div class="form-group form-inline">
                 <select class="form-control" name="endpoint">
                     <option>http://www.fing.edu.uy/inco/grupos/csi/sparql</option>
@@ -27,7 +28,7 @@
         {{#if session.cubes}}
         <form role="form" method="get" action="getcompletecube">
                 <i class="fa fa-cubes fa-fw"></i>
-                <label> Available cubes </label>
+                <label>Pick a QB4OLAP cube to explore</label>
                 <div class="form-group form-inline">
                     <select class="form-control" name="cubeselect">
                         {{#each session.cubes}}

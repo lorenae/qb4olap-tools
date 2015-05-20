@@ -41,14 +41,14 @@ Hierarchy.prototype.addEdgeToLattice = function(childLevel, parentLevel, cardina
 
 Hierarchy.prototype.existsLevelNode = function(luri){
     return this.lattice.filter(function(node){
-        return node.childuri == luri;}
+        return node.childuri === luri;}
         ).length > 0;
 }
 
 //pre: the hierarchy exists
 Hierarchy.prototype.getLevelNode = function(luri){
     return this.lattice.filter(function(node){
-        return node.childuri == luri;}
+        return node.childuri === luri;}
         )[0];
 }
 
@@ -79,7 +79,7 @@ Hierarchy.prototype.getTopLevel = function(){
 
 //pre: the hierarchy exists
 //post: returns the levels in the lattice from bottom to top, associated with their relative position
-//ex: bottom relative position is 0, parents of bottom have relative position 1, etc.
+//ex: bottom relative position is 1, parents of bottom have relative position 2, etc.
 
 Hierarchy.prototype.traverse = function(){
     
@@ -96,7 +96,7 @@ Hierarchy.prototype.traverse = function(){
             });
             if (toProcess.length>0){
                 listin = listin.diff(toProcess);        
-                listout.unshift({level:actuallevel, pos:actualpos});
+                listout.push({level:actuallevel, pos:actualpos});
                 actualpos++;
                 for (var pc = 0; pc < toProcess[0].pclist.length; pc++) {
                     traverseLevel(listin,toProcess[0].pclist[pc].parenturi,actualpos,listout);
@@ -109,7 +109,7 @@ Hierarchy.prototype.traverse = function(){
 
     var lat = this.lattice.slice();
     traverseLevel(lat,actualevel,position,bylevels);
-    bylevels.unshift({level:toplevel, pos:bylevels[0].pos+1});
+    bylevels.push({level:toplevel, pos:bylevels[0].pos+1});
     return  bylevels;    
 }
 

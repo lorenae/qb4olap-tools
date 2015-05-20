@@ -14,7 +14,8 @@
 <div class="row" id="newwrapper">
     <div id="sidebar-wrapper"  class="col-lg-4">
         <form role="form" method="get" action="getcubes">
-            <label>Select SPARQL endpoint</label>
+            <i class="fa fa-shield fa-rotate-270"></i>
+            <label>Pick a SPARQL endpoint</label>
             <div class="form-group form-inline">
                 <select class="form-control" name="endpoint">
                     <option>http://www.fing.edu.uy/inco/grupos/csi/sparql</option>
@@ -27,7 +28,7 @@
         {{#if session.cubes}}
         <form role="form" method="get" action="getcompletecube">
                 <i class="fa fa-cubes fa-fw"></i>
-                <label> Available cubes </label>
+                <label>Pick a QB4OLAP cube to query</label>
                 <div class="form-group form-inline">
                     <select class="form-control" name="cubeselect">
                         {{#each session.cubes}}
@@ -76,66 +77,129 @@
     </div>
 
     <!-- /.col -->
+     {{#if session.schema}}
     <div id="main-wrapper" class="col-lg-8">
-        {{#if session.schema}}
-        
-        
+        <div class="panel-group" id="accordionQL">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3 class="panel-title"><i class="fa fa-cogs fa-fw"></i> Sample queries</h3>
-                </div>
-                <div class="panel-body">
-                    <div class="list-group">
-                        {{#each session.queries}}
-                        <a href="#{{queryid}}" id="{{queryid}}" value="{{query}}" class="list-group-item query-list">
-                            <i class="fa fa-fw fa-hand-o-right"></i>{{querydesc}}
+                    <h3 class="panel-title">
+                        <a data-toggle="collapse" data-parent="#accordionQL" href="#collapseQueries">
+                            <i class="fa fa-cogs fa-fw"></i> 
+                            Pick a sample QL query
+                            <i class="fa fa-fw fa-chevron-down"></i>
                         </a>
-                        {{/each}}
+                    </h3>
+                </div>
+                <div id="collapseQueries" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <div class="list-group">
+                            {{#each session.queries}}
+                            <a href="#{{queryid}}" id="{{queryid}}" value="{{query}}" class="list-group-item query-list">
+                                <i class="fa fa-fw fa-hand-o-right"></i>{{querydesc}}
+                            </a>
+                            {{/each}}
+                        </div>
                     </div>
                 </div>
             </div>
-
-
-        <div id="queries-wrapper" class="col-lg-6">
-                <form id="queryform" role="form" method="get" action="simplifyquery">    
-                    <div class="form-group">
-                        <label>QL query editor</label>
-                        <textarea class="form-control" id="querypanel" name="querypanel"  placeholder="Enter QL query" rows="12">
-                            {{#if session.querytext}}
-                                {{session.querytext}}
-                            {{/if}}
-                        </textarea>
-                        <p class="help-block">Enter your QL query or select a sample query.</p>
-                    </div>           
-                    <input type="hidden" name="parsedquery" id="parsedquery">
-                    <button type="button" class="btn btn-xs btn-success simplify-btn">Simplify query!</button>
-                </form>
-                <button type="reset" class="btn btn-xs btn-default reset-btn">Reset editor</button>
-                <div class="alert alert-warning" id="alertsimplify"  style="display: none">
-                    <strong> Warning! </strong> Enter a QL query to simplify.
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <a data-toggle="collapse" data-parent="#accordionQL" href="#collapseQLEditor">
+                                <i class="fa fa-pencil-square-o fa-fw"></i> 
+                               QL editor
+                                <i class="fa fa-fw fa-chevron-down"></i>
+                            </a>
+                        </h3>
                 </div>
-                <div class="alert alert-danger" style="display: none"></div>
-        </div>  
+                {{#if editoraccordion}}
+                <div id="collapseQLEditor" class="panel-collapse collapse in">
+                {{else}}
+                <div id="collapseQLEditor" class="panel-collapse collapse">
+                {{/if}}
+                    <div class="panel-body">
+                        <div id="editor-wrapper" class="col-lg-6">
+                            <form id="queryform" role="form" method="get" action="simplifyquery">    
+                                <div class="form-group">
+                                    <label>QL query editor</label>
+                                    <button type="reset" class="btn btn-xs btn-default reset-btn">Reset editor</button>
+                                    <textarea class="form-control" id="querypanel" name="querypanel"  placeholder="Enter QL query" rows="9">
+                                        {{#if session.querytext}}
+                                            {{session.querytext}}
+                                        {{/if}}
+                                    </textarea>
+                                </div>           
+                                <input type="hidden" name="parsedquery" id="parsedquery">
+                                <button type="button" class="btn btn-xs btn-success simplify-btn">Simplify query!</button>
+                            </form>
+                            
+                            <div class="alert alert-warning" id="alertsimplify"  style="display: none">
+                                <strong> Warning! </strong> Enter a QL query to simplify.
+                            </div>
+                            <div class="alert alert-danger" style="display: none"></div>
+                        </div>  
 
-        <div id="simplified-wrapper" class="col-lg-6">
-            <form id="runqueryform" role="form" method="get" action="runquery">    
-                <div class="form-group">
-                    <label>Simplified QL query</label>
-                    <textarea class="form-control" id="simplequerypanel" name="simplequerypanel" disabled="" placeholder="Simplified QL query" rows="12">                
-                    {{#if session.simplequery}}
-                        {{#showQuery session.simplequery}}
-                        {{/showQuery}}
-                    {{/if}}
-                    </textarea>
-                </div>
-                <button type="button" class="btn btn-xs btn-success runquery-btn">Run query!</button>
-                <div class="alert alert-warning" id="alertrun" style="display: none">
-                    <strong> Warning! </strong> There is no query to run.
+                        <div id="simplified-wrapper" class="col-lg-6">
+                            <form id="getsparqlqueryform" role="form" method="get" action="getsparqlquery">    
+                                <div class="form-group">
+                                    <label>Simplified QL query</label>
+                                    <textarea class="form-control" id="simplequerypanel" name="simplequerypanel" disabled="" placeholder="Simplified QL query" rows="9">                
+                                    {{#if session.simplequery}}
+                                        {{#showQuery session.simplequery}}
+                                        {{/showQuery}}
+                                    {{/if}}
+                                    </textarea>
+                                </div>
+                                <button type="button" class="btn btn-xs btn-success sparqlquery-btn">Get SPARQL query!</button>
+                                <div class="alert alert-warning" id="alertget" style="display: none">
+                                    <strong> Warning! </strong> There is no QL query run.
+                                </div>    
+                            </form>
+                        </div>
+                    </div>
                 </div>    
-            </form>
+            </div>                    
         </div>
-        {{/if}}
-    </div>
+        <div class="panel-group" id="accordionSPARQL">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <a data-toggle="collapse" data-parent="#accordionSPARQL" href="#collapseSparql">
+                            <i class="fa fa-share-alt fa-fw"></i> 
+                            SPARQL queries
+                            <i class="fa fa-fw fa-chevron-down"></i>
+                        </a>
+                    </h3>
+                </div>
+                 {{#if sparqlaccordion}}
+                <div id="collapseSparql" class="panel-collapse collapse in">
+                {{else}}
+                <div id="collapseSparql" class="panel-collapse collapse">
+                {{/if}}
+                    <div class="panel-body">
+                        <form id="runqueryform" role="form" method="get" action="runsparqlquery">    
+                            <div class="form-group">
+                                <label>SPARQL query</label>
+                                <textarea class="form-control" id="sparqlquerypanel" name="sparqlquerypanel" placeholder="SPARQL query" rows="15">
+                                {{#if session.sparqlquery}}
+                                 {{#showSparqlQuery session.sparqlquery}}
+                                        {{/showSparqlQuery}}
+                                {{/if}}
+                                </textarea>
+                            </div>
+                            <button type="button" class="btn btn-xs btn-success runquery-btn">Run SPARQL query!</button>
+                            <div class="alert alert-warning" id="alertrun" style="display: none">
+                                <strong> Warning! </strong> There is no query to run.
+                            </div>    
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>  
+     {{/if}}
+
 
   
 <!-- /.row -->
@@ -167,13 +231,32 @@
         }
         )); 
 
-        //run query 
-         $('.runquery-btn').on ("click",(function () {
+        //get sparql query 
+        $('.sparqlquery-btn').on ("click",(function () {
             $('.alert-danger').hide();
             $('.alert-success').hide();
             $('.alert-warning').hide();
             var simpleQuery = $('#simplequerypanel').val();
             if (simpleQuery){
+              try {
+                $('#getsparqlqueryform').submit();    
+              } catch (e) {
+                $('.alert-danger').html(String(e));
+                $('.alert-danger').show();
+              }
+            } else{
+                $('#alertget').show();
+            }
+        }
+        )); 
+
+        //run sparql query
+         $('.runquery-btn').on ("click",(function () {
+            $('.alert-danger').hide();
+            $('.alert-success').hide();
+            $('.alert-warning').hide();
+            var sparqlQuery = $('#sparqlquerypanel').val();
+            if (sparqlQuery){
               try {
                 $('#runqueryform').submit();    
               } catch (e) {
@@ -196,10 +279,14 @@
         }
         ));
 
-        //load sample queries
+        //load sample query
         $('.query-list').click(function() {
             $('#querypanel').val($(this).attr("value"));
             $('#simplequerypanel').val('');
+            //expand QL editor panel in accordion and collapse sample queries panel
+            $('#collapseQueries').collapse('hide');
+            $('#collapseQLEditor').collapse('show');
+
             $('.alert-danger').hide();
             $('.alert-success').hide();
             $('.alert-warning').hide();

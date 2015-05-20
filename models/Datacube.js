@@ -4,9 +4,10 @@
 //pre: dimensions is a set of Dimension, measures is a set of Measure
 // represents the data cube schema 
 
-function Datacube(name, uri){
+function Datacube(name, uri, dataset){
     this.name = name;
     this.uri = uri;
+    this.dataset = dataset;
     this.dimensions = [];
     this.measures = [];
 }
