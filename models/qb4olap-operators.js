@@ -28,8 +28,6 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
     //apply simplification rules in each case
     var queryType = getQueryType(inputquery);
     simplequery.type = queryType;
-    
-
     switch(queryType){
                 //IPO only
                 case 1: 
@@ -115,6 +113,8 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
                                     newIPO.statement = "$C"+stcount++;
                                     newIPO.qloperator = "ROLLUP";
                                     newIPO.dimension = dim.uri;
+                                    newIPO.bottomLevel = bottomLevel;
+                                    newIPO.targetLevel = targetLevel;
                                     newIPO.level = targetLevel;
                                     if(simplequery.query.length==0){
                                         newIPO.source = source;
@@ -146,30 +146,36 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
 //pre: datacube is the cube structure, query is a simplified QL query
 //post: returns a SPARQL query equivalent to QL query
 exports.getSparqlQuery = function(endpoint, datacube, simplequery, callback){
-        
+    
+    var variables =[];    
     var sparqlquery = '';
+    var query = {sparqlquery:stubquery, variables:variables};
+
     var stubquery = "SELECT *  WHERE { ?s ?p ?o } LIMIT 2";
 
     switch(simplequery.type){
         //IPO only
         case 1:
-        sparqlquery = getIPOSparqlQuery(endpoint, datacube, simplequery);
+        query = getNoDiceSparqlQuery(endpoint, datacube, simplequery);
         //sparqlquery = stubquery;
         break;
         //IPO + SLICE
-        case 2: sparqlquery = stubquery;
+        case 2:
+        query = getNoDiceSparqlQuery(endpoint, datacube, simplequery);
         break;
-        default: sparqlquery = stubquery;
+        default:
     }
-    callback('', sparqlquery);
+    callback('', query);
 };
 
-//pre: datacube is the cube structure, simplequery is a simplified QL query
-//post: returns a SPARQL query that implements a QL query only composed by IPO operations
-function getIPOSparqlQuery(endpoint, datacube, simplequery){
+//pre: datacube is the cube structure, simplequery is a simplified QL query that does not contain DICE ops.
+//post: returns a SPARQL query that implements a QL query 
+function getNoDiceSparqlQuery(endpoint, datacube, simplequery){
     
     var sparqlIPO =  new SPARQLquery([],"select",[],[],[],[],'');
     var sparqlStr;
+    var meascolumns = [];
+    var varcolumns = [];
 
    //the seeds for variable generation and the counters
     var levelMemSeed = "lm";
@@ -190,7 +196,11 @@ function getIPOSparqlQuery(endpoint, datacube, simplequery){
     sparqlIPO.addPattern("?o","a","qb:Observation");
     sparqlIPO.addPattern("?o","qb:dataSet",escapeAbsoluteIRI(datacube.dataset));
 
+    sparqlIPO.addFrom(datacube.instancegraph);                      
+    sparqlIPO.addFrom(datacube.schemagraph);
+
     //PROCESS MEASURES
+    //TODO if there is no rollup do not aggregate
     datacube.measures.forEach(function(m){
         var mi = sparqlIPO.getNewVariable(measureSeed, measureCounter);
         measureCounter++;
@@ -199,7 +209,9 @@ function getIPOSparqlQuery(endpoint, datacube, simplequery){
         //link observations with measure values
         sparqlIPO.addPattern("?o",escapeAbsoluteIRI(m.uri),mi);
         //add the aggregation function to the result
-        sparqlIPO.addExpresionToResult("("+m.aggfunc+"("+mi+" as "+agi+"))");
+        sparqlIPO.addExpresionToResult("("+m.aggfunc+"("+mi+") as "+agi+")");
+        //associate the variable with the expresion to generate the table
+        meascolumns.push({colvar:agi.substr(1), colname:m.aggfunc+"("+m.name+")"});
     });
 
 
@@ -213,17 +225,24 @@ function getIPOSparqlQuery(endpoint, datacube, simplequery){
         var dimBottomLevel = dim.getBottomLevel().uri;
         //link observations with values at the bottomLevel
         sparqlIPO.addPattern("?o",escapeAbsoluteIRI(dimBottomLevel),lmi);
-        sparqlIPO.addPattern(lmi,"qb4o:memberOf",escapeAbsoluteIRI(dimBottomLevel));
+        
         //if exists, get the only ROLLUP on that dimension
         var r = simplequery.query.filter(function(oper){
-            return oper.dimension == dim.uri;
+            return (oper.dimension == dim.uri && oper.qloperator == "ROLLUP");
         });
 
-        //exists a rollup on this dimension
-        if (r.length>0){
+        //if exists, get the only SLICE on that dimension
+        var s = simplequery.query.filter(function(oper){
+            return (oper.dimension == dim.uri && oper.qloperator == "SLICE");
+        });
+
+        //exists a rollup on this dimension and not exists slice
+        if (r.length>0 && s.length==0){
             var rollup = r[0];
+            //console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
             var targetLevel = rollup.targetLevel;
             var bottomLevel = rollup.bottomLevel.uri;
+            sparqlIPO.addPattern(lmi,"qb4o:memberOf",escapeAbsoluteIRI(dimBottomLevel));
             //find the shortest between this 2 levels
             var levelPath = dim.getShortestPath(bottomLevel, targetLevel);
             levelPath.path.forEach(function(actual){
@@ -238,19 +257,26 @@ function getIPOSparqlQuery(endpoint, datacube, simplequery){
                 if(actualLevel == targetLevel){
                     sparqlIPO.addVariableToResult(plmi);
                     sparqlIPO.addVariableToGroupBy(plmi);
+                    //associate the variable with the expresion to generate the table
+                    varcolumns.push({colvar:plmi.substr(1), colname:dim.getLevel(actualLevel).name});
                 }
             });
         //doesnt exist a rollup on this dimension    
-        }else{
+        }else if (s.length==0){
             sparqlIPO.addVariableToResult(lmi);
+            //associate the variable with the expresion to generate the table
+            varcolumns.push({colvar:lmi.substr(1), colname:dim.getBottomLevel().name});
             sparqlIPO.addVariableToGroupBy(lmi);
         }
     });//end processing dimensions
-    sparqlStr = sparqlIPO.toString();
-    console.log("QUERY in qb4olap-operators: "+sparqlStr);
+    sparqlstr = sparqlIPO.toString();
+    //console.log("QUERY in qb4olap-operators: "+sparqlStr);
 
-    return sparqlStr;
+    var query = {sparqlquery:sparqlstr, columns:varcolumns.concat(meascolumns)};
+
+    return query;
 }
+
 
 
 function escapeAbsoluteIRI(iri){
@@ -262,8 +288,8 @@ function escapeAbsoluteIRI(iri){
 function existsConditionOverMeasure(dicecondition) {
   
     var result= false;
-        console.log("dicecondition en existsConditionOverMeasure");
-        console.log(util.inspect(dicecondition, { showHidden: false, depth: null, colors:true }));
+        //console.log("dicecondition en existsConditionOverMeasure");
+        //console.log(util.inspect(dicecondition, { showHidden: false, depth: null, colors:true }));
 
     if (dicecondition.nodetype == "internal"){
         var recCall = dicecondition.args.map(existsConditionOverMeasure);
@@ -290,9 +316,7 @@ function splitDiceAnd(dicecondition, originalstatement, dicemeasurelist, dicelev
     var newDICE = new Object();
         newDICE.qloperator = "DICE";    
         newDICE.statement = originalstatement;
-        newDICE.source = "";
-
- 
+        newDICE.source = ""; 
     if (dicecondition.operator=='AND'){     
         newDICE.dicecondition = dicecondition.args[0];
         splitDiceAnd(dicecondition.args[1], originalstatement, dicemeasurelist, dicelevellist);

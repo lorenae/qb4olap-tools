@@ -37,20 +37,33 @@ Hierarchy.prototype.addEdgeToLattice = function(childLevel, parentLevel, cardina
         node.pclist.push(newPair);
         //console.log('agrego un nodo a un hijo existente');
     }
-}
+};
 
 Hierarchy.prototype.existsLevelNode = function(luri){
-    return this.lattice.filter(function(node){
-        return node.childuri === luri;}
+    return this.lattice.filter(function(node){       
+        return node.childuri === luri;
+        }
         ).length > 0;
-}
+};
+
+
+Hierarchy.prototype.existsLevel = function(luri){
+    return this.lattice.filter(function(node){
+
+        var isparent = node.pclist.filter(function(parent){
+                return parent.parenturi === luri;}
+                ).length >0;
+        return node.childuri === luri|| isparent;
+        }
+        ).length > 0;
+};
 
 //pre: the hierarchy exists
 Hierarchy.prototype.getLevelNode = function(luri){
     return this.lattice.filter(function(node){
         return node.childuri === luri;}
         )[0];
-}
+};
 
 
 //pre: the hierarchy exists

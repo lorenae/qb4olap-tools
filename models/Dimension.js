@@ -61,23 +61,36 @@ Dimension.prototype.existsLevel = function(luri){
 //the lattice of hierarchy in this dimension
 Dimension.prototype.getShortestPath = function(originLevel, targetLevel){
 
+    var debug = false;
+
     var results = [];
+    if (debug){
+        console.log("bottom "+originLevel);
+        console.log("target "+targetLevel);
+            
+    }
     
-    console.log("bottom "+originLevel);
-    console.log("target "+targetLevel);
-    console.log("DIMENSION hier");
-    console.log(util.inspect(this.hierarchies, { showHidden: false, depth: null, colors:true }));
 
     this.hierarchies.forEach(function(hier){
         var h = new Hierarchy(hier.uri, hier.name, hier.lattice);
         var result = [];
-        if (h.existsLevelNode(originLevel) && h.existsLevelNode(targetLevel)){
+
+        if (debug){
+            console.log("hierarchy:"+hier.uri);
+            console.log(util.inspect(hier.lattice, { showHidden: false, depth: null, colors:true }));
+            console.log("exists "+originLevel+"="+h.existsLevel(originLevel) );
+            console.log("exists "+targetLevel+"="+h.existsLevel(targetLevel) );
+        }
+
+        if (h.existsLevel(originLevel) && h.existsLevel(targetLevel)){
             var start = 0;
             var end = 0;
             all = h.traverse();
             all.forEach(function(l){
-                console.log("l");
-                console.log(util.inspect(l, { showHidden: false, depth: null, colors:true }));
+                if (debug){
+                    console.log("l");
+                    console.log(util.inspect(l, { showHidden: false, depth: null, colors:true }));    
+                }
 
                 if(l.level == originLevel){
                     start = l.pos;
@@ -89,10 +102,12 @@ Dimension.prototype.getShortestPath = function(originLevel, targetLevel){
                     start = l.pos;
                     result.push(l);
                 }
-                console.log("start: "+start);
-                console.log("end: "+end);
-                console.log("result ");
-                console.log(util.inspect(result, { showHidden: false, depth: null, colors:true }));
+                if (debug){
+                    console.log("start: "+start);
+                    console.log("end: "+end);
+                    console.log("result ");
+                    console.log(util.inspect(result, { showHidden: false, depth: null, colors:true }));    
+                }
             });
             results.push({hierarchy:h.getUri, path:result});
         }

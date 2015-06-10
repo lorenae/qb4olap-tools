@@ -13,7 +13,7 @@
 
 <div class="row" id="newwrapper">
     <div id="sidebar-wrapper"  class="col-lg-4">
-        <form role="form" method="get" action="getcubes">
+        <form role="form" id="getcubes" method="get" action="getcubes">
             <i class="fa fa-shield fa-rotate-270"></i>
             <label>Pick a SPARQL endpoint</label>
             <div class="form-group form-inline">
@@ -21,27 +21,21 @@
                     <option>http://www.fing.edu.uy/inco/grupos/csi/sparql</option>
                 </select>
                 <input type="hidden" name="target" value="queries"></input>
-                <button type="submit" class="btn btn-xs btn-primary getcubes-btn">Use endpoint</button>
+                <button type="submit" class="btn btn-xs btn-primary getcubes-btn">Get cubes</button>
             </div>
         </form>
+
+        <div class="working" id="working" style="display: none">
+            <i class="fa fa-refresh fa-spin fa-5x"></i>                          
+        </div>
           
         {{#if session.cubes}}
         <form role="form" method="get" action="getcompletecube">
-                <i class="fa fa-cubes fa-fw"></i>
-                <label>Pick a QB4OLAP cube to query</label>
-                <div class="form-group form-inline">
-                    <select class="form-control" name="cubeselect">
-                        {{#each session.cubes}}
-                            {{#if selected}}
-                             <option value="{{uri}}" selected="selected">{{dataset}}</option>
-                             {{else}}
-                             <option value="{{uri}}">{{dataset}}</option>
-                             {{/if}}
-                        {{/each}}    
-                    </select>
-                    <input type="hidden" name="target" value="queries"></input>
-                    <button type="submit" class="btn btn-xs btn-primary getstructure-btn">Select!</button>
-                </div>
+                <i class="fa fa-cubes fa-fw"></i>   
+                <label>Pick a QB4OLAP cube to explore</label>
+                {{#showCubes session.cubes "queries"}}
+                    {{name}}
+                {{/showCubes}}
         </form>
         {{/if}}
 
@@ -77,8 +71,13 @@
     </div>
 
     <!-- /.col -->
-     {{#if session.schema}}
+     
     <div id="main-wrapper" class="col-lg-8">
+
+    {{#if session.schema}}    
+        <div class="working" id="working" style="display: none">
+            <i class="fa fa-refresh fa-spin fa-5x"></i>                          
+        </div>
         <div class="panel-group" id="accordionQL">
             <div class="panel panel-default">
                 <div class="panel-heading">
@@ -151,6 +150,7 @@
                                     </textarea>
                                 </div>
                                 <button type="button" class="btn btn-xs btn-success sparqlquery-btn">Get SPARQL query!</button>
+                                <button type="button" class="btn btn-xs btn-success sparqlquerybest-btn">Get a better SPARQL query!</button>
                                 <div class="alert alert-warning" id="alertget" style="display: none">
                                     <strong> Warning! </strong> There is no QL query run.
                                 </div>    
@@ -166,7 +166,7 @@
                     <h3 class="panel-title">
                         <a data-toggle="collapse" data-parent="#accordionSPARQL" href="#collapseSparql">
                             <i class="fa fa-share-alt fa-fw"></i> 
-                            SPARQL queries
+                            SPARQL query
                             <i class="fa fa-fw fa-chevron-down"></i>
                         </a>
                     </h3>
@@ -179,15 +179,14 @@
                     <div class="panel-body">
                         <form id="runqueryform" role="form" method="get" action="runsparqlquery">    
                             <div class="form-group">
-                                <label>SPARQL query</label>
                                 <textarea class="form-control" id="sparqlquerypanel" name="sparqlquerypanel" placeholder="SPARQL query" rows="15">
                                 {{#if session.sparqlquery}}
                                  {{#showSparqlQuery session.sparqlquery}}
-                                        {{/showSparqlQuery}}
+                                {{/showSparqlQuery}}
                                 {{/if}}
                                 </textarea>
                             </div>
-                            <button type="button" class="btn btn-xs btn-success runquery-btn">Run SPARQL query!</button>
+                            <button type="button" class="btn btn-xs btn-success getresults-btn">Get results!</button>
                             <div class="alert alert-warning" id="alertrun" style="display: none">
                                 <strong> Warning! </strong> There is no query to run.
                             </div>    
@@ -195,10 +194,47 @@
                     </div>
                 </div>
             </div>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <a data-toggle="collapse" data-parent="#accordionSPARQL" href="#collapseResults">
+                            <i class="fa fa-share-alt fa-fw"></i> 
+                            SPARQL Query results
+                            <i class="fa fa-fw fa-chevron-down"></i>
+                        </a>
+                    </h3>
+                </div>
+
+
+
+                <div id="collapseResults" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <div class="working" id="gettingresults"="display: none">
+                            <i class="fa fa-refresh fa-spin fa-5x"></i>                          
+                        </div>
+                        {{#if session.sparqlcols}}
+                            {{#saveResultColumns session.sparqlcols}}
+                            {{/saveResultColumns}} 
+                        {{/if}}    
+                        <table id="resultstable" 
+                            data-classes="table table-hover table-condensed"
+                            data-search="true"
+                            data-striped="true"
+                            data-show-refresh="true"
+                            data-show-toggle="true"
+                            data-show-columns="true"
+                            data-height="400"
+                            data-pagination="true">
+                        </table>    
+                        
+                    </div>
+                </div>
+            </div>
         </div>
+    {{/if}}   
 
     </div>  
-     {{/if}}
+    
 
 
   
@@ -206,7 +242,25 @@
 
    {{#section 'jquery'}}
     <script>
+
+      function queryParams() {
+            return {
+                type: 'owner',
+                sort: 'updated',
+                direction: 'desc',
+                per_page: 100,
+                page: 1
+            };
+        }
+
       $(document).ready(function () {
+
+         //get cubes 
+        $('.getcubes-btn').on ("click",(function () {
+            $('.working').show();
+            $('#getcubes').submit();    
+        }
+        ));
 
         //simplify query 
          $('.simplify-btn').on ("click",(function () {
@@ -249,21 +303,61 @@
             }
         }
         )); 
-
-        //run sparql query
-         $('.runquery-btn').on ("click",(function () {
+        //get sparql query 
+        $('.sparqlquerybest-btn').on ("click",(function () {
             $('.alert-danger').hide();
             $('.alert-success').hide();
             $('.alert-warning').hide();
-            var sparqlQuery = $('#sparqlquerypanel').val();
-            if (sparqlQuery){
+            var simpleQuery = $('#simplequerypanel').val();
+            if (simpleQuery){
               try {
-                $('#runqueryform').submit();    
+                $('#getsparqlqueryform').submit();    
               } catch (e) {
                 $('.alert-danger').html(String(e));
                 $('.alert-danger').show();
               }
             } else{
+                $('#alertget').show();
+            }
+        }
+        ));
+
+
+          //get results
+         $('.getresults-btn').on ("click",(function () {
+            $('.alert-danger').hide();
+            $('.alert-success').hide();
+            $('.alert-warning').hide();
+            $('#gettingresults').show();
+            $("#collapseResults").collapse('show');
+            var sparqlquery = $('#sparqlquerypanel').val();
+            
+            if(typeof sparqlcols !== 'undefined' && sparqlquery){
+                try {
+                    var cols = [];
+                    sparqlcols.forEach(function(column){
+                        var c =  { 
+                            title: column.colname,
+                            field: column.colvar,
+                            sortable: true
+                        };
+                        cols.push(c);
+                    });
+                    $.get( '/runsparql',{sparqlquery:sparqlquery}, function(res) {
+                        $('#resultstable').bootstrapTable({
+                            data: JSON.parse(res),
+                            columns: cols
+                        });
+                        //$('#accordionSPARQL .in').collapse('hide');
+                        $('#gettingresults').hide();
+                    });
+                
+                  
+                } catch (e) {
+                    $('.alert-danger').html(String(e));
+                    $('.alert-danger').show();
+                }
+            }else{
                 $('#alertrun').show();
             }
         }

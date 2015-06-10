@@ -8,6 +8,8 @@ function Datacube(name, uri, dataset){
     this.name = name;
     this.uri = uri;
     this.dataset = dataset;
+    this.schemagraph = '';
+    this.instancegraph = '';
     this.dimensions = [];
     this.measures = [];
 }
@@ -23,6 +25,14 @@ Datacube.prototype.existsDimension = function(dimuri){
 	return this.dimensions.filter(function(d){
         return d.uri == dimuri;}
         ).length > 0;
+}
+
+Datacube.prototype.setInstanceGraph = function(graph){
+    this.instancegraph = graph;
+}
+
+Datacube.prototype.setSchemaGraph = function(graph){
+    this.schemagraph = graph;
 }
 
 //pre: the dimension exists

@@ -4,7 +4,7 @@ var util = require('util');
 var SparqlClient = require('sparql-client');
 
 // if set to true uses proxySrv as proxy
-var withProxy= false;
+var withProxy= true;
 var proxySrv = "http://httpproxy.fing.edu.uy:3128";
 
 
@@ -53,21 +53,39 @@ exports.runSparql = function(endpoint, query, timeout, callback){
 // post: returns the list of URIs of the datacubes (qb:DataSetStructure) in the endpoint
 exports.getCubes = function(endpoint, callback){
     var query = "PREFIX qb: <http://purl.org/linked-data/cube#> \
-                select ?schemagraph ?cubeuri ?cname  ?dataset \
-                where {GRAPH ?schemagraph { \
-                        ?cubeuri a qb:DataStructureDefinition.\
-                        ?dataset qb:structure ?cubeuri. \
-                        OPTIONAL {?cubeuri rdfs:label ?cname}}}";
+        select ?schemagraph ?cubeuri ?cname ?dataset ?instancegraph ?numobs \
+        where {\
+            GRAPH ?schemagraph { \
+                ?cubeuri a qb:DataStructureDefinition.\
+                ?dataset qb:structure ?cubeuri. \
+                OPTIONAL {?cubeuri rdfs:label ?cname}} .\
+                {   SELECT distinct ?instancegraph ?dataset (count(?o) AS ?numobs)\
+                    WHERE { \
+                        GRAPH ?instancegraph{ \
+                            ?o qb:dataSet ?dataset}\
+                }}}";
        
-    return this.runSparql(endpoint, query, 0,function processCubes(error,content){
+    return this.runSparql(endpoint, query, 30000,function processCubes(error,content){
         var cubelist = [];
-        content.results.bindings.forEach(function(row){
-            var schemagraph = row.schemagraph.value;
-            var dataset =  row.dataset.value;
-            var cubeuri  = row.cubeuri.value;
-            var cubename = row.hasOwnProperty('cname') ? row.cname.value : parseURL(cubeuri).hash;
-            cubelist.push({schemagraph:schemagraph,dataset:dataset, uri:cubeuri, name:cubename, selected:false});
-        });
+        if (content){
+            content.results.bindings.forEach(function(row){
+                var schemagraph = row.schemagraph.value;
+                var dataset =  row.dataset.value;
+                var cubeuri  = row.cubeuri.value;
+                var cubename = row.hasOwnProperty('cname') ? row.cname.value : parseURL(cubeuri).hash;
+                var instancegraph = row.instancegraph.value;
+                var numobs = row.numobs.value;
+                cubelist.push({
+                    schemagraph:schemagraph,
+                    dataset:dataset, 
+                    uri:cubeuri, 
+                    name:cubename, 
+                    instancegraph:instancegraph, 
+                    numobs:numobs,
+                    selected:false});
+            });
+        }
+        
     callback(error, cubelist);    
     });
 };
@@ -99,7 +117,7 @@ exports.getChildLevelMembers = function(endpoint,childlevel,parentlevel,parentle
 
 exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callback){
     var query = "prefix qb: <http://purl.org/linked-data/cube#> prefix qb4o: <http://purl.org/qb4olap/cubes#> \
-                SELECT ?cname ?d ?dname ?h ?hname ?l1 ?l1name ?l2 ?l2name ?card ?m ?f\
+                SELECT ?cname ?d ?dname ?h ?hname ?l1 ?l1name ?l2 ?l2name ?card ?m ?f ?mrange\
                 FROM <"+schemagraph+"> \
                 WHERE { <"+cubeuri+"> qb:component ?c1,?c2. \
                 ?c1 qb4o:level ?l.\
@@ -114,8 +132,10 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
                 OPTIONAL { ?l1 rdfs:label ?l1name }\
                 OPTIONAL { ?l2 rdfs:label ?l2name }\
                 OPTIONAL { ?c2 qb4o:aggregateFunction ?f }\
+                OPTIONAL { ?m rdfs:range ?mrange }\
                 }\
                 order by ?d ?h";
+                //console.log("schema query: "+ query);
     
     return this.runSparql(endpoint, query, 0, function processStructure(error,content){
         // assign values to empty variables
@@ -128,6 +148,7 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
             var huri = row.h.value;
             var hname = row.hasOwnProperty('hname') ? row.hname.value : this.parseURL(huri).hash;             
             var muri = row.m.value;
+            var measuretype = row.hasOwnProperty('mrange')? row.mrange.value:'';
            
             var a = row.hasOwnProperty('f') ? row.f.value : "http://purl.org/qb4olap/cubes#sum";
             var l1uri = row.l1.value;
@@ -146,7 +167,7 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
             //if measure does not exist create it
             if (!dc.existsMeasure(muri)){
                 var mname = parseURL(muri).hash;
-                var measure = new Measure(muri, mname,aggfunc);
+                var measure = new Measure(muri, mname,aggfunc,measuretype);
                 dc.addMeasure(measure);
             }          
             //process level info            
@@ -189,9 +210,11 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
 // pre: endpoint is the URL of a SPARQL endpoint, cubeuri is the URI of a datacube in the endpoint,schemagraph is the named graph where the schema is stored
 // post: returns a Datacube and a Cuboid object that represents the structure of the datacube.
 
-exports.getCubeInstances = function(endpoint, cubeuri, schemagraph, callback){
+exports.getCubeInstances = function(endpoint, cubeuri, schemagraph, instancegraph, callback){
     var query = "prefix qb: <http://purl.org/linked-data/cube#> prefix qb4o: <http://purl.org/qb4olap/cubes#> \
                 SELECT ?d ?dname ?h ?hname ?l1 ?l1name ?l2 ?l2name ?lm1 ?lm1name ?lm2 ?lm2name \
+                FROM <"+schemagraph+"> \
+                FROM <"+instancegraph+"> \
                 WHERE { \
                     ?lm1 qb4o:memberOf ?l1.\
                     ?lm1 skos:broader ?lm2.\
@@ -220,6 +243,7 @@ exports.getCubeInstances = function(endpoint, cubeuri, schemagraph, callback){
                 }\
                 order by ?d ?h";
     
+    //console.log(query);
     return this.runSparql(endpoint, query, 0,function processInstances(error,content){
                           
         var instances = {
@@ -314,7 +338,26 @@ exports.getCubeInstances = function(endpoint, cubeuri, schemagraph, callback){
     });              
 }
 
-
+// pre: content is the results of runSparql. An object with properties head and results, and results contains bindings.
+// post: returns an array that, for each binding, returns the variable and its value
+exports.processResults= function(content){
+    var results=[];
+    //var length = 0;
+    if (content){
+        content.results.bindings.forEach(function (row){
+            //length ++;
+            var newRow ={};
+            Object.getOwnPropertyNames(row).forEach(function(prop){
+                //console.log("prop"+prop);
+                //console.log(util.inspect(row, { showHidden: false, depth: null, colors:true }));
+                newRow[prop] = row[prop].value;
+            });
+            results.push(newRow);
+        });    
+    }
+    //console.log("RESULT size:"+length);
+    return results;
+}
 
 
 function parseURL(url) {

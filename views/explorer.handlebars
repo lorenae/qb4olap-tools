@@ -13,7 +13,7 @@
 
 <div class="row" id="newwrapper">
     <div id="sidebar-wrapper"  class="col-lg-4">
-        <form role="form" method="get" action="getcubes">
+        <form role="form" id="getcubes" method="get" action="getcubes">
             <i class="fa fa-shield fa-rotate-270"></i>
             <label>Pick a SPARQL endpoint</label>
             <div class="form-group form-inline">
@@ -21,27 +21,20 @@
                     <option>http://www.fing.edu.uy/inco/grupos/csi/sparql</option>
                 </select>
                 <input type="hidden" name="target" value="explorer"></input>
-                <button type="submit" class="btn btn-xs btn-primary getcubes-btn">Use endpoint</button>
+                <button type="submit" class="btn btn-xs btn-primary getcubes-btn">Get cubes</button>
             </div>
         </form>
+
+        
+        
           
         {{#if session.cubes}}
         <form role="form" method="get" action="getcompletecube">
-                <i class="fa fa-cubes fa-fw"></i>
+                <i class="fa fa-cubes fa-fw"></i>   
                 <label>Pick a QB4OLAP cube to explore</label>
-                <div class="form-group form-inline">
-                    <select class="form-control" name="cubeselect">
-                        {{#each session.cubes}}
-                            {{#if selected}}
-                             <option value="{{uri}}" selected="selected">{{dataset}}</option>
-                             {{else}}
-                             <option value="{{uri}}">{{dataset}}</option>
-                             {{/if}}
-                        {{/each}}    
-                    </select>
-                    <input type="hidden" name="target" value="explorer"></input>
-                    <button type="submit" class="btn btn-xs btn-primary getstructure-btn">Explore!</button>
-                </div>
+                {{#showCubes session.cubes "explorer"}}
+                    {{name}}
+                {{/showCubes}}
         </form>
         {{/if}}
 
@@ -66,7 +59,7 @@
                     <h5 class="list-group-item-heading">Measures</h5>
                     <p class="list-group-item-text">
                     {{#showMeasures session.schema.measures}}
-                    {{uri}}
+                    {{name}}{{uri}}
                     {{/showMeasures}}          
                 </li>
             </ul>
@@ -78,6 +71,9 @@
 
     <!-- /.col -->
     <div id="main-wrapper" class="col-lg-8">
+        <div class="working" id="working" style="display: none">
+            <i class="fa fa-refresh fa-spin fa-5x"></i>                          
+        </div>
         {{#if session.instances}}
         {{#saveInstance session.instances}}
         {{/saveInstance}}
@@ -137,6 +133,13 @@
       $(document).ready(function () {
         
 
+         //get cubes 
+        $('.getcubes-btn').on ("click",(function () {
+            $('.working').show();
+            $('#getcubes').submit();    
+        }
+        ));
+
         //hide side menu
         var $menu = $('#sidebar-wrapper');
         var $content = $('#main-wrapper');
@@ -154,23 +157,21 @@
         }
 
         $('#myModal').on('show.bs.modal', function () {
-
- 
-        $(this).find('.modal-dialog').css({
-                  width:'40%x', //choose your width
-                  height:'100%', 
-                  'padding':'0'
-           });
-         $(this).find('.modal-content').css({
-                  height:'100%', 
-                  'border-radius':'0',
-                  'padding':'0'
-           });
-         $(this).find('.modal-body').css({
-                  width:'auto',
-                  height:'100%', 
-                  'padding':'0'
-           });
+            $(this).find('.modal-dialog').css({
+                      width:'40%x', //choose your width
+                      height:'100%', 
+                      'padding':'0'
+               });
+             $(this).find('.modal-content').css({
+                      height:'100%', 
+                      'border-radius':'0',
+                      'padding':'0'
+               });
+             $(this).find('.modal-body').css({
+                      width:'auto',
+                      height:'100%', 
+                      'padding':'0'
+               });
         })
 
         $('.toggle-button').click(function () {

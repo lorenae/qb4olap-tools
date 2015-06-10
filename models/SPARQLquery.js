@@ -138,7 +138,7 @@ SPARQLquery.prototype.toString = function(){
             var strsubq = this.subquery.toString();
             strwhere = " WHERE \{\{ "+strsubq+" \}\} \n";
         }else{
-            strbgps =obtainWhereClause(this.patterns,true);
+            strbgps =obtainWhereClause(this.patterns,false);
             if(this.filter){
                 strfilter = " FILTER ( "+this.filter+" )\n";
             }
@@ -154,8 +154,6 @@ SPARQLquery.prototype.toString = function(){
             strgroupby  += "\n";
                 
         }
-        
-
         return (strprefix + strresult + strfrom + strwhere + strgroupby);
 };
 
@@ -186,7 +184,7 @@ function obtainWhereClause(bgps,optimize){
             
             //if there are more patterns with the same subject, add them
             if(g.patterns.length >1){
-                for (var i = 0; i < g.patterns.length; i++) {
+                for (var i = 1; i < g.patterns.length; i++) {
                     pat +="; ";
                     pat += g.patterns[i].p+" "+g.patterns[i].o;
                 }
