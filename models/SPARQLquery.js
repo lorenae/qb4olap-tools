@@ -15,6 +15,7 @@ function SPARQLquery(resulttype){
     this.from = [];
     this.filter = '';
     this.patterns = [];
+    this.patterngroups = [];
     this.groupby = [];
     this.subquery = '';
 }
@@ -56,6 +57,34 @@ SPARQLquery.prototype.addPattern = function(subject, predicate, object){
     });
 };
 
+//adds a bgp graph pattern to a group of patterns
+SPARQLquery.prototype.addPatternToGroup = function(groupid, subject, predicate, object){
+
+    var group = this.patterngroups.filter(function(g){
+        return g.id == groupid;
+    });
+
+    //exists a group with this id
+    if(group.length >0){
+        group[0].patterns.push({
+            s:subject,
+            p:predicate,
+            o:object
+    });
+    }else{
+        var newgroup ={
+            id:groupid,
+            patterns : []};
+        newgroup.patterns.push({
+            s:subject,
+            p:predicate,
+            o:object
+        });
+        this.patterngroups.unshift(newgroup);
+
+    }   
+};
+
 //adds an expresion to the set of filters
 SPARQLquery.prototype.addFilter = function(filterExpression){
     this.filter =filterExpression;
@@ -94,7 +123,8 @@ SPARQLquery.prototype.getNewVariable = function(seed, counter){
 };
 
 
-SPARQLquery.prototype.toString = function(){
+//if reduce=true groups patters with the same subject and rewrites using ;
+SPARQLquery.prototype.toString = function(reduce){
     var strprefix= "";
     var strresult= "";
     var strfrom="";
@@ -138,7 +168,7 @@ SPARQLquery.prototype.toString = function(){
             var strsubq = this.subquery.toString();
             strwhere = " WHERE \{\{ "+strsubq+" \}\} \n";
         }else{
-            strbgps =obtainWhereClause(this.patterns,false);
+            strbgps =obtainWhereClause(this.patterns,this.patterngroups,reduce);
             if(this.filter){
                 strfilter = " FILTER ( "+this.filter+" )\n";
             }
@@ -158,12 +188,12 @@ SPARQLquery.prototype.toString = function(){
 };
 
 
-function obtainWhereClause(bgps,optimize){
+function obtainWhereClause(bgps,bgpgroups,reduce){
 
     var strbgps = '';
 
-    if (optimize){
-        //group patterns by subject.
+    if (reduce){
+        //group patterns by subject and move smaller groups top
         var grouped = [];
         bgps.forEach(function(bgp){
             var group = grouped.filter(function(g){
@@ -193,6 +223,15 @@ function obtainWhereClause(bgps,optimize){
             strbgps += pat;                    
         }); 
     }else{
+        bgpgroups.forEach(function(group){
+            var g = "{";
+            group.patterns.forEach(function(bgp){
+                var pat = bgp.s+" "+bgp.p+" "+bgp.o+" .\n";    
+                g += pat;
+            });
+            g += "} .";
+            strbgps += g;
+        });
         bgps.forEach(function(bgp){
             var pat = bgp.s+" "+bgp.p+" "+bgp.o+" .\n";
             strbgps += pat;

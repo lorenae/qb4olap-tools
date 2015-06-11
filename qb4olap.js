@@ -438,6 +438,21 @@ app.get('/getsparqlquery', function(req, res) {
 	}
 });
 
+app.get('/getbettersparqlquery', function(req, res) {
+	sess=req.session;
+	if(sess.schema && sess.simplequery){
+		operators.getBetterSparqlQuery(sess.state.endpoint, sess.schema, sess.simplequery, function (err,spquery) {
+			sess.sparqlcols = spquery.columns;
+			//console.log("QUERY COLS FROM GETSPQUERY:" +util.inspect(spquery.columns, { showHidden: false, depth: null, colors:true }));
+			sess.sparqlquery = spquery.sparqlquery;
+			res.render('queries', {sparqlaccordion:true});
+		});
+
+	}else{
+		res.render('queries');
+	}
+});
+
 
 app.get('/runsparql', function(req, res) {
 	sess=req.session;

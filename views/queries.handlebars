@@ -139,7 +139,7 @@
                         </div>  
 
                         <div id="simplified-wrapper" class="col-lg-6">
-                            <form id="getsparqlqueryform" role="form" method="get" action="getsparqlquery">    
+                            <form id="getsparqlqueryform" role="form" method="get">    
                                 <div class="form-group">
                                     <label>Simplified QL query</label>
                                     <textarea class="form-control" id="simplequerypanel" name="simplequerypanel" disabled="" placeholder="Simplified QL query" rows="9">                
@@ -293,6 +293,7 @@
             var simpleQuery = $('#simplequerypanel').val();
             if (simpleQuery){
               try {
+                $('#getsparqlqueryform').attr('action', 'getsparqlquery');
                 $('#getsparqlqueryform').submit();    
               } catch (e) {
                 $('.alert-danger').html(String(e));
@@ -311,6 +312,7 @@
             var simpleQuery = $('#simplequerypanel').val();
             if (simpleQuery){
               try {
+                $('#getsparqlqueryform').attr('action', 'getbettersparqlquery');
                 $('#getsparqlqueryform').submit();    
               } catch (e) {
                 $('.alert-danger').html(String(e));
@@ -343,7 +345,7 @@
                         };
                         cols.push(c);
                     });
-                    $.get( '/runsparql',{sparqlquery:sparqlquery}, function(res) {
+                    $.get( 'runsparql',{sparqlquery:sparqlquery}, function(res) {
                         $('#resultstable').bootstrapTable({
                             data: JSON.parse(res),
                             columns: cols
