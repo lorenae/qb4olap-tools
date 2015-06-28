@@ -21,14 +21,20 @@
         {
             "cube": "http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#QB4O_CM_MKT_LCAP_CD",
             "queryid": 20,
-            "querydesc": "Total Market capitalization by Region",
-            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#>; \r\nQUERY\r\n$C1 := ROLLUP (<http://worldbank.270a.info/dataset/CM.MKT.LCAP.CD>, schema:geoDim,schema:region);\r\n$C2 := ROLLUP ($C1, schema:timeDim,schema:timeAll   );"
+            "querydesc": "Yearly market capitalization by Region",
+            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#>; \r\nQUERY\r\n$C1 := ROLLUP (<http://worldbank.270a.info/dataset/CM.MKT.LCAP.CD>, schema:geoDim,schema:region);"
         },
         {
             "cube": "http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#QB4O_CM_MKT_LCAP_CD",
             "queryid": 21,
-            "querydesc": "Market capitalization by year by country Income Level",
-            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#>; \r\nQUERY\r\n$C1 := ROLLUP (<http://worldbank.270a.info/dataset/CM.MKT.LCAP.CD>, schema:geoDim,schema:income);"
+            "querydesc": "Yearly market capitalization by country Income Level",
+            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#>; \r\nQUERY\r\n$C1 := ROLLUP (<http://worldbank.270a.info/dataset/CM.MKT.LCAP.CD>, schema:geoDim,schema:geoAll);\r\n $C2 := DRILLDOWN ($C1, schema:geoDim,schema:income);"
+        },
+        {
+            "cube": "http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#QB4O_CM_MKT_LCAP_CD",
+            "queryid": 22,
+            "querydesc": "Total market capitalization by Region",
+            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#>; \r\nQUERY\r\n$C1 := ROLLUP (<http://worldbank.270a.info/dataset/CM.MKT.LCAP.CD>, schema:geoDim,schema:income);\r\n $C2 := ROLLUP ($C1, schema:timeDim,schema:timeAll); \r\n $C3 := SLICE ($C2, schema:timeDim);"
         },
         {
             "cube": "http://dwbook.org/cubes/schemas/northwind#Northwind",
