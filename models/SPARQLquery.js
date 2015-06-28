@@ -13,7 +13,7 @@ function SPARQLquery(resulttype){
     this.prefixes = [];
     this.resultformat = {vars:[],expressions:[]};
     this.from = [];
-    this.filter = '';
+    this.filters = [];
     this.patterns = [];
     this.patterngroups = [];
     this.groupby = [];
@@ -58,7 +58,8 @@ SPARQLquery.prototype.addPattern = function(subject, predicate, object){
 };
 
 //adds a bgp graph pattern to a group of patterns
-SPARQLquery.prototype.addPatternToGroup = function(groupid, subject, predicate, object){
+//if append is true, adds the pattern to the end of the group, otherwise adds the pattern at the beggining of the group
+SPARQLquery.prototype.addPatternToGroup = function(groupid, append, subject, predicate, object){
 
     var group = this.patterngroups.filter(function(g){
         return g.id == groupid;
@@ -66,11 +67,19 @@ SPARQLquery.prototype.addPatternToGroup = function(groupid, subject, predicate, 
 
     //exists a group with this id
     if(group.length >0){
-        group[0].patterns.push({
-            s:subject,
-            p:predicate,
-            o:object
-    });
+        if (append){
+            group[0].patterns.push({
+                s:subject,
+                p:predicate,
+                o:object
+            });
+        }else{
+            group[0].patterns.unshift({
+                s:subject,
+                p:predicate,
+                o:object
+            });
+        }
     }else{
         var newgroup ={
             id:groupid,
@@ -80,14 +89,14 @@ SPARQLquery.prototype.addPatternToGroup = function(groupid, subject, predicate, 
             p:predicate,
             o:object
         });
-        this.patterngroups.unshift(newgroup);
+        this.patterngroups.push(newgroup);
 
     }   
 };
 
 //adds an expresion to the set of filters
 SPARQLquery.prototype.addFilter = function(filterExpression){
-    this.filter =filterExpression;
+    this.filters.push(filterExpression);
 };
 
 //adds a variable to group by
@@ -164,14 +173,14 @@ SPARQLquery.prototype.toString = function(reduce){
         }
 
         //QUERY WHERE
+        if(this.filters.length >0){
+                strfilter = obtainFilterClause(this.filters);
+            }
         if(this.subquery){
             var strsubq = this.subquery.toString();
-            strwhere = " WHERE \{\{ "+strsubq+" \}\} \n";
+            strwhere = " WHERE \{\{ "+strsubq+strfilter+" \}\} \n";
         }else{
             strbgps =obtainWhereClause(this.patterns,this.patterngroups,reduce);
-            if(this.filter){
-                strfilter = " FILTER ( "+this.filter+" )\n";
-            }
             strwhere = " WHERE \{ "+strbgps+strfilter+" \}\n";
         }
 
@@ -187,7 +196,20 @@ SPARQLquery.prototype.toString = function(reduce){
         return (strprefix + strresult + strfrom + strwhere + strgroupby);
 };
 
+//returns a filter expression as the conjunction of all the filters
+function obtainFilterClause(filters){
+    var strfilter = ' FILTER (';
+    filters.forEach(function(f){
+        strfilter += '('+f+')';
+        strfilter += '&&';
+    });
+    strfilter = strfilter.substring(0, strfilter.length - 2);
+    strfilter += ')';
+    return (strfilter);
+}
 
+
+//processes bgps and bgps groups
 function obtainWhereClause(bgps,bgpgroups,reduce){
 
     var strbgps = '';

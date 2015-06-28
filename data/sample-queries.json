@@ -29,7 +29,26 @@
             "queryid": 21,
             "querydesc": "Market capitalization by year by country Income Level",
             "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#>; \r\nQUERY\r\n$C1 := ROLLUP (<http://worldbank.270a.info/dataset/CM.MKT.LCAP.CD>, schema:geoDim,schema:income);"
-        }
+        },
+        {
+            "cube": "http://dwbook.org/cubes/schemas/northwind#Northwind",
+            "queryid": 41,
+            "querydesc": "Total sales amount per customer, year, and product category.",
+            "query": "prefix nw: <http://dwbook.org/cubes/schemas/northwind#>; \r\nQUERY\r\n$C1 := ROLLUP(<http://dwbook.org/cubes/instances/northwind#dataset1>,nw:customerDim, nw:city); \r\n$C2 := ROLLUP($C1,nw:orderDateDim, nw:quarter); \r\n$C3 := SLICE($C2, nw:shippedDateDim); \r\n$C4 := SLICE($C3, nw:supplierDim); \r\n$C5 := SLICE($C4, nw:dueDateDim); \r\n$C6 := ROLLUP($C5,nw:orderDateDim, nw:year); \r\n$C7 := SLICE($C6, nw:employeeDim); \r\n$C8 := ROLLUP($C7,nw:productDim, nw:category); \r\n$C9 := SLICE($C8, MEASURES(nw:quantity)); \r\n$C10 := SLICE($C9, MEASURES(nw:unitPrice)); \r\n$C11 := SLICE($C10, MEASURES(nw:discount)); \r\n$C12 := SLICE($C11, MEASURES(nw:freight)); \r\n$C13 := SLICE($C12, MEASURES(nw:netAmount)); \r\n$C14 := DRILLDOWN($C13,nw:customerDim, nw:customer); \r\n $C15 := SLICE($C14, nw:orderDim);\r\n $C16 := SLICE($C15, nw:shipperDim);"
+        },
+        {
+            "cube": "http://dwbook.org/cubes/schemas/northwind#Northwind",
+            "queryid": 42,
+            "querydesc": "Yearly sales amount for each pair of customer country and supplier countries.",
+            "query": "prefix nw: <http://dwbook.org/cubes/schemas/northwind#>; \r\nQUERY\r\n$C1 := ROLLUP(<http://dwbook.org/cubes/instances/northwind#dataset1>,nw:customerDim, nw:city); \r\n$C2 := ROLLUP($C1,nw:orderDateDim, nw:quarter); \r\n$C3 := SLICE($C2, nw:shippedDateDim); \r\n$C4 := ROLLUP($C3, nw:supplierDim, nw:country); \r\n$C5 := SLICE($C4, nw:dueDateDim); \r\n$C6 := ROLLUP($C5,nw:orderDateDim, nw:year); \r\n$C7 := SLICE($C6, nw:employeeDim); \r\n$C8 := SLICE($C7,nw:productDim); \r\n$C9 := SLICE($C8, MEASURES(nw:quantity)); \r\n$C10 := SLICE($C9, MEASURES(nw:unitPrice)); \r\n$C11 := SLICE($C10, MEASURES(nw:discount)); \r\n$C12 := SLICE($C11, MEASURES(nw:freight)); \r\n$C13 := SLICE($C12, MEASURES(nw:netAmount)); \r\n$C14 := ROLLUP($C13,nw:customerDim, nw:country); \r\n $C15 := SLICE($C14, nw:orderDim);\r\n $C16 := SLICE($C15, nw:shipperDim);"
+        },
+        {
+            "cube": "http://dwbook.org/cubes/schemas/northwind#Northwind",
+            "queryid": 413,
+            "querydesc": "Total sales amount, and sum of the quantities sold for each order.",
+            "query": "prefix nw: <http://dwbook.org/cubes/schemas/northwind#>; \r\nQUERY\r\n$C1 := ROLLUP(<http://dwbook.org/cubes/instances/northwind#dataset1>,nw:customerDim, nw:city); \r\n$C2 := ROLLUP($C1,nw:orderDateDim, nw:quarter); \r\n$C3 := SLICE($C2, nw:shippedDateDim); \r\n$C4 := ROLLUP($C3, nw:supplierDim, nw:country); \r\n$C5 := SLICE($C4, nw:dueDateDim); \r\n$C6 := SLICE($C5,nw:orderDateDim); \r\n$C7 := SLICE($C6, nw:employeeDim); \r\n$C8 := SLICE($C7,nw:productDim); \r\n$C9 := SLICE($C8, MEASURES(nw:unitPrice)); \r\n$C10 := SLICE($C9, MEASURES(nw:discount)); \r\n$C11 := SLICE($C10, MEASURES(nw:freight)); \r\n$C12 := SLICE($C11, MEASURES(nw:netAmount)); \r\n$C13 := SLICE($C12, nw:shipperDim);\r\n$C14 := SLICE($C13, nw:customerDim); \r\n$C15 := SLICE($C14, nw:supplierDim); \r\n"
+        }	
+        
         
    
     ]

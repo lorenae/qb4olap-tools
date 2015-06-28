@@ -4,7 +4,7 @@ var util = require('util');
 var SparqlClient = require('sparql-client');
 
 // if set to true uses proxySrv as proxy
-var withProxy= true;
+var withProxy= false;
 var proxySrv = "http://httpproxy.fing.edu.uy:3128";
 
 
@@ -53,17 +53,20 @@ exports.runSparql = function(endpoint, query, timeout, callback){
 // post: returns the list of URIs of the datacubes (qb:DataSetStructure) in the endpoint
 exports.getCubes = function(endpoint, callback){
     var query = "PREFIX qb: <http://purl.org/linked-data/cube#> \
+        PREFIX dct:      <http://purl.org/dc/terms/>\
         select ?schemagraph ?cubeuri ?cname ?dataset ?instancegraph ?numobs \
         where {\
             GRAPH ?schemagraph { \
                 ?cubeuri a qb:DataStructureDefinition.\
                 ?dataset qb:structure ?cubeuri. \
-                OPTIONAL {?cubeuri rdfs:label ?cname}} .\
+                OPTIONAL {?dataset dct:title ?cname}} .\
                 {   SELECT distinct ?instancegraph ?dataset (count(?o) AS ?numobs)\
                     WHERE { \
                         GRAPH ?instancegraph{ \
                             ?o qb:dataSet ?dataset}\
                 }}}";
+       
+    //console.log(query);
        
     return this.runSparql(endpoint, query, 30000,function processCubes(error,content){
         var cubelist = [];
@@ -116,26 +119,29 @@ exports.getChildLevelMembers = function(endpoint,childlevel,parentlevel,parentle
 // post: returns a Datacube and a Cuboid object that represents the structure of the datacube.
 
 exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callback){
-    var query = "prefix qb: <http://purl.org/linked-data/cube#> prefix qb4o: <http://purl.org/qb4olap/cubes#> \
-                SELECT ?cname ?d ?dname ?h ?hname ?l1 ?l1name ?l2 ?l2name ?card ?m ?f ?mrange\
+    var query = "prefix qb: <http://purl.org/linked-data/cube#> \
+                prefix qb4o: <http://purl.org/qb4olap/cubes#> \
+                PREFIX dct:      <http://purl.org/dc/terms/>\
+                SELECT ?cname ?d ?dname ?h ?hname ?l ?lname ?l1 ?l1name ?l2 ?l2name ?card ?m ?f ?mrange\
                 FROM <"+schemagraph+"> \
                 WHERE { <"+cubeuri+"> qb:component ?c1,?c2. \
+                ?ds qb:structure <"+cubeuri+">. \
                 ?c1 qb4o:level ?l.\
                 ?c2 qb:measure ?m. \
                 ?h qb4o:hasLevel ?l. \
                 ?h qb4o:inDimension ?d. \
-                ?ih1 a qb4o:HierarchyStep;qb4o:inHierarchy ?h.\
-                ?ih1 a qb4o:HierarchyStep; qb4o:childLevel ?l1; qb4o:parentLevel ?l2 ; qb4o:pcCardinality ?card.\
-                OPTIONAL { <"+cubeuri+"> rdfs:label ?cname }\
+                OPTIONAL {?ih1 a qb4o:HierarchyStep;qb4o:inHierarchy ?h; qb4o:childLevel ?l1; qb4o:parentLevel ?l2 ; qb4o:pcCardinality ?card.}\
+                OPTIONAL {?ds dct:title ?cname}\
                 OPTIONAL { ?d rdfs:label ?dname }\
                 OPTIONAL { ?h rdfs:label ?hname }\
+                OPTIONAL { ?l rdfs:label ?lname }\
                 OPTIONAL { ?l1 rdfs:label ?l1name }\
                 OPTIONAL { ?l2 rdfs:label ?l2name }\
                 OPTIONAL { ?c2 qb4o:aggregateFunction ?f }\
                 OPTIONAL { ?m rdfs:range ?mrange }\
                 }\
                 order by ?d ?h";
-                //console.log("schema query: "+ query);
+    //console.log("schema query: "+ query);
     
     return this.runSparql(endpoint, query, 0, function processStructure(error,content){
         // assign values to empty variables
@@ -144,18 +150,20 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
 
         content.results.bindings.forEach(function(row){
             var duri = row.d.value;
-            var dname = row.hasOwnProperty('dname') ? row.dname.value : this.parseURL(duri).hash;             
+            var dname = row.hasOwnProperty('dname') ? row.dname.value : parseURL(duri).hash;             
             var huri = row.h.value;
-            var hname = row.hasOwnProperty('hname') ? row.hname.value : this.parseURL(huri).hash;             
+            var hname = row.hasOwnProperty('hname') ? row.hname.value : parseURL(huri).hash;             
             var muri = row.m.value;
             var measuretype = row.hasOwnProperty('mrange')? row.mrange.value:'';
            
             var a = row.hasOwnProperty('f') ? row.f.value : "http://purl.org/qb4olap/cubes#sum";
-            var l1uri = row.l1.value;
-            var l1name = row.hasOwnProperty('l1name') ? row.l1name.value : this.parseURL(l1uri).hash;                   
-            var l2uri = row.l2.value;
-            var l2name = row.hasOwnProperty('l2name') ? row.l2name.value : this.parseURL(l2uri).hash;
-            var c = row.hasOwnProperty('card') ? row.card.value : "http://purl.org/qb4olap/cubes#OneToMany";                   
+            var luri = row.l.value;
+            var lname = row.hasOwnProperty('lname') ? row.lname.value : parseURL(luri).hash;                   
+            var l1uri = row.hasOwnProperty('l1') ? row.l1.value: null;
+            var l1name = row.hasOwnProperty('l1name') ? row.l1name.value : (l1uri != null ? parseURL(l1uri).hash : null);                   
+            var l2uri = row.hasOwnProperty('l2') ? row.l2.value: null;
+            var l2name = row.hasOwnProperty('l2name') ? row.l2name.value : (l2uri != null ? parseURL(l2uri).hash : null);  
+            var c = row.hasOwnProperty('card') ? row.card.value : "http://purl.org/qb4olap/cubes#ManyToOne";                   
             var aggfunc;
             switch(a){
                 case "http://purl.org/qb4olap/cubes#sum": aggfunc= SUM; break;
@@ -171,8 +179,16 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
                 dc.addMeasure(measure);
             }          
             //process level info            
-            var child = new Level(l1uri, l1name);
-            var parent = new Level(l2uri, l2name);
+            var child = null;
+
+            var parent = null; 
+            if (l1uri != null && l2uri != null) {
+                child = new Level(l1uri, l1name);
+                parent = new Level(l2uri, l2name);
+            } else{
+                child = new Level(luri, lname);
+            }
+            
             var cardinality;
             switch(c){
                 case "http://purl.org/qb4olap/cubes#OneToMany": cardinality= ONE_TO_MANY; break;
@@ -190,7 +206,10 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
             dimension = dc.getDimension(duri);
             //add levels to the dimension
             if (!dimension.existsLevel(child.uri)) {dimension.addLevel(child);}
-            if (!dimension.existsLevel(parent.uri)) {dimension.addLevel(parent);}
+            if (parent != null && !dimension.existsLevel(parent.uri)){
+                dimension.addLevel(parent);
+            }
+
             //if hierarchy does not exist in dimension, create it
             var hierarchy;
             if (!dimension.existsHierarchy(huri)){
@@ -226,8 +245,7 @@ exports.getCubeInstances = function(endpoint, cubeuri, schemagraph, instancegrap
                         ?c1 qb4o:level ?l.\
                         ?h qb4o:hasLevel ?l.\
                         ?h qb4o:inDimension ?d. \
-                        ?ih1 a qb4o:HierarchyStep;qb4o:inHierarchy ?h.\
-                        ?ih1 a qb4o:HierarchyStep; qb4o:childLevel ?l1; qb4o:parentLevel ?l2. \
+                        ?ih1 a qb4o:HierarchyStep;qb4o:inHierarchy ?h; qb4o:childLevel ?l1; qb4o:parentLevel ?l2 ; qb4o:pcCardinality ?card.\
                         OPTIONAL { ?d rdfs:label ?dname }\
                         OPTIONAL { ?h rdfs:label ?hname }\
                         OPTIONAL { ?l1 rdfs:label ?l1name }\
@@ -238,8 +256,8 @@ exports.getCubeInstances = function(endpoint, cubeuri, schemagraph, instancegrap
                     }\
                 OPTIONAL{?lm1 skos:prefLabel ?lm1name}\
                 OPTIONAL{?lm2 skos:prefLabel ?lm2name}\
-                FILTER(lang(?lm1name) = \"en\")\
-                FILTER(lang(?lm2name) = \"en\")\
+                FILTER(lang(?lm1name) = \"en\" || lang(?lm1name) = \"\")\
+                FILTER(lang(?lm2name) = \"en\" || lang(?lm2name) = \"\")\
                 }\
                 order by ?d ?h";
     
@@ -256,24 +274,24 @@ exports.getCubeInstances = function(endpoint, cubeuri, schemagraph, instancegrap
 
         content.results.bindings.forEach(function(row){
             var duri = row.d.value;
-            var dname = row.hasOwnProperty('dname') ? row.dname.value : this.parseURL(duri).hash;             
+            var dname = row.hasOwnProperty('dname') ? row.dname.value : parseURL(duri).hash;             
             var huri = row.h.value;
-            var hname = row.hasOwnProperty('hname') ? row.hname.value : this.parseURL(huri).hash;             
+            var hname = row.hasOwnProperty('hname') ? row.hname.value : parseURL(huri).hash;  
             var l1uri = row.l1.value;
-            var l1name = row.hasOwnProperty('l1name') ? row.l1name.value : this.parseURL(l1uri).hash;                   
+            var l1name = row.hasOwnProperty('l1name') ? row.l1name.value : parseURL(l1uri).hash;                   
             var l2uri = row.l2.value;
-            var l2name = row.hasOwnProperty('l2name') ? row.l2name.value : this.parseURL(l2uri).hash;
+            var l2name = row.hasOwnProperty('l2name') ? row.l2name.value : parseURL(l2uri).hash;             
             var lm1uri = row.lm1.value;
-            var lm1name = row.hasOwnProperty('lm1name') ? row.lm1name.value : this.parseURL(lm1uri).hash;                   
+            var lm1name = row.hasOwnProperty('lm1name') ? row.lm1name.value : parseURL(lm1uri).hash;                   
             var lm2uri = row.lm2.value;
-            var lm2name = row.hasOwnProperty('lm2name') ? row.lm2name.value : this.parseURL(lm2uri).hash;
+            var lm2name = row.hasOwnProperty('lm2name') ? row.lm2name.value : parseURL(lm2uri).hash;
 
 
+            
             var childmap = nodesMap.filter(function(map) {
                 return (map.member == lm1uri && map.level == l1uri && map.hierarchy == huri);
-                //return (map.member == lm1uri && map.level == l1uri );
                 });
-
+            
             //if the node does not exist
             if (childmap.length == 0) {
                 idchild = memberCount++;
@@ -298,38 +316,39 @@ exports.getCubeInstances = function(endpoint, cubeuri, schemagraph, instancegrap
                 idchild = childmap[0].id;
             }
 
+            if (lm2uri != null){
+                var parentmap = nodesMap.filter(function(map) {
+                    return (map.member == lm2uri && map.level == l2uri && map.hierarchy == huri);
+                    //return (map.member == lm2uri && map.level == l2uri );
+                    });
 
-            var parentmap = nodesMap.filter(function(map) {
-                return (map.member == lm2uri && map.level == l2uri && map.hierarchy == huri);
-                //return (map.member == lm2uri && map.level == l2uri );
-                });
+                if (parentmap.length == 0) {
+                    idparent = memberCount++;
+                    nodesMap.push({
+                        member:lm2uri, 
+                        level:l2uri,
+                        hierarchy:huri,
+                        id:idparent
+                    });
 
-            if (parentmap.length == 0) {
-                idparent = memberCount++;
-                nodesMap.push({
-                    member:lm2uri, 
-                    level:l2uri,
-                    hierarchy:huri,
-                    id:idparent
-                });
+                    var parentnode = {
+                    id:idparent,
+                    uri:lm2uri,
+                    name:lm2name, 
+                    level:l2name, 
+                    hierarchy:hname,
+                    dimension:dname
+                    };
 
-                var parentnode = {
-                id:idparent,
-                uri:lm2uri,
-                name:lm2name, 
-                level:l2name, 
-                hierarchy:hname,
-                dimension:dname
-                };
-
-                instances.nodes.push(parentnode);
-            } else{
-                idparent = parentmap[0].id;
-            }         
-         instances.links.push({
-                source:idchild,
-                target:idparent
-            });   
+                    instances.nodes.push(parentnode);
+                } else{
+                    idparent = parentmap[0].id;
+                }         
+                instances.links.push({
+                        source:idchild,
+                        target:idparent
+                });   
+            }
         });
 
     //console.log("INSTANCES en el server: ");

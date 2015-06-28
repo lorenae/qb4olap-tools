@@ -26,16 +26,27 @@ Hierarchy.prototype.addEdgeToLattice = function(childLevel, parentLevel, cardina
 
     //if the child level does not exist in the lattice add a new node to the list 
 	if (!this.existsLevelNode(childLevel.uri)) {
-        var newNode = { childuri: childLevel.uri , pclist:[{parenturi:parentLevel.uri,card:cardinality}] };
+        var newNode;
+        if (parentLevel == null){
+            newNode ={childuri: childLevel.uri , pclist:[] };
+        } else{ 
+            newNode ={childuri: childLevel.uri , pclist:[{parenturi:parentLevel.uri,card:cardinality}] };
+        }
         this.lattice.push(newNode);
         //console.log('agrego un hijo');
 	}
     //find the node for this level and add the pair (parentLevel,cardinality)
     else{
-        var node = this.getLevelNode(childLevel.uri);
-        var newPair = {parenturi:parentLevel.uri,card:cardinality};
-        node.pclist.push(newPair);
-        //console.log('agrego un nodo a un hijo existente');
+        if (parentLevel != null){
+            var node = this.getLevelNode(childLevel.uri);
+            var isparent = node.pclist.filter(function(parent){
+                    return parent.parenturi === parentLevel.uri;}
+                    ).length >0;
+            if (!isparent){
+                var newPair = {parenturi:parentLevel.uri,card:cardinality};
+                node.pclist.push(newPair);    
+            }
+        }
     }
 };
 
@@ -68,51 +79,61 @@ Hierarchy.prototype.getLevelNode = function(luri){
 
 //pre: the hierarchy exists
 //post: returns the level that occurs as child but never occurs as parent.
+// this condition does not work for recursive hierarchies.
+
 Hierarchy.prototype.getBottomLevel = function(){
 
     var childs = getChilds(this.lattice);
     var parents = getParents(this.lattice);
 
-    //console.log("childs: "+childs);
-    //console.log("parents: "+parents);
-
-    return childs.diff(parents)[0];
-}
+    if (arraysEqual(childs,parents)) {
+        return childs[0];
+    }else{
+        return childs.diff(parents)[0];    
+    }
+};
 
 
 //pre: the hierarchy exists
 //post: returns the level that occurs as parent but never occurs as child.
+// this condition does not work for recursive hierarchies.
 Hierarchy.prototype.getTopLevel = function(){
     var childs = getChilds(this.lattice);
     var parents = getParents(this.lattice);
 
-    return parents.diff(childs)[0];
-}
+    if (parents.length == 0){
+        return childs[0];
+    }else if (arraysEqual(childs,parents)) {
+        return childs[0];
+    }else{
+        return parents.diff(childs)[0];
+    }
+};
 
 
 //pre: the hierarchy exists
 //post: returns the levels in the lattice from bottom to top, associated with their relative position
 //ex: bottom relative position is 1, parents of bottom have relative position 2, etc.
 
-Hierarchy.prototype.traverse = function(){
-    
-    var bylevels = [];
-    var position = 1;
-    var actualevel = this.getBottomLevel();
-    var toplevel = this.getTopLevel();
-    
+Hierarchy.prototype.traverse = function(){ 
 
-    var traverseLevel = function (listin, actuallevel, actualpos, listout){
-        if (listin.length>0 ) {
-            var toProcess = listin.filter(function(lnode){
-                return lnode.childuri == actuallevel
+    var traverseRec = function (lattice, actuallevel, actualpos, listout){
+            //if the lattice is not empty
+            if (lattice.length>0 ) {
+            //obtain the node in the lattice where the level to process is the child level    
+            var actualNode = lattice.filter(function(lnode){
+                return lnode.childuri == actuallevel;
             });
-            if (toProcess.length>0){
-                listin = listin.diff(toProcess);        
-                listout.push({level:actuallevel, pos:actualpos});
+
+            if (actualNode.length>0){
+                //remove from the lattice the processed node
+                lattice = lattice.diff(actualNode);        
+                //insert in the result the actual level                
+                insert(actuallevel, actualpos, listout);
                 actualpos++;
-                for (var pc = 0; pc < toProcess[0].pclist.length; pc++) {
-                    traverseLevel(listin,toProcess[0].pclist[pc].parenturi,actualpos,listout);
+                //call the function recursively for each of the parents on the actual level.
+                for (var pc = 0; pc < actualNode[0].pclist.length; pc++) {
+                    traverseRec(lattice,actualNode[0].pclist[pc].parenturi,actualpos,listout);
                 }
             }
         } else {
@@ -120,12 +141,66 @@ Hierarchy.prototype.traverse = function(){
         }   
     }
 
-    var lat = this.lattice.slice();
-    traverseLevel(lat,actualevel,position,bylevels);
-    bylevels.push({level:toplevel, pos:bylevels[0].pos+1});
+    var bylevels = [];
+    var position = 1;
+    var actualevel = this.getBottomLevel();
+    var toplevel = this.getTopLevel();
+   
+    if (actualevel == toplevel){
+        bylevels.push({level:actualevel, pos:position});
+    }else{
+        var lat = this.lattice.slice();
+        traverseRec(lat,actualevel,position,bylevels);
+        insert(toplevel, bylevels[bylevels.length-1].pos+1, bylevels);
+    }
     return  bylevels;    
 }
 
+
+//pre: the hierarchy exists
+//post: returns all the paths in the lattice from bottom to top
+
+Hierarchy.prototype.getPaths = function(){
+
+    var getPathsRec = function (lattice, actuallevel, position, allpaths){       
+    
+        //obtain the node in the lattice where the level to process is the child level    
+        var actualNode = lattice.filter(function(lnode){
+            return lnode.childuri == actuallevel;
+        });
+
+        if (actualNode.length>0){
+            //call the function recursively for each of the parents on the actual level.
+            actualNode[0].pclist.forEach(function(parent){
+                getPathsRec(lattice, parent.parenturi,position+1,allpaths);
+                allpaths.forEach(function(p){
+                    var isinpath = p.filter(function(n){
+                        return n.level == actualNode[0].childuri;
+                    }).length>0;
+                    if (!isinpath){
+                        p.unshift({level:actualNode[0].childuri, pos:position});
+                    }
+                });
+            });
+        }else{
+            //todo change pclist is empty
+            //console.log("llegue arriba");
+            allpaths.push([]);
+        }
+    };
+
+    var allpaths = [];   
+    var actualevel = this.getBottomLevel();
+    var toplevel = this.getTopLevel();
+    var position = 1;     
+
+    getPathsRec(this.lattice,actualevel,position, allpaths);
+    allpaths.forEach(function(p){
+        pos = p[p.length-1].pos+1;
+        p.push({level:toplevel, pos:pos});
+    });
+    return  allpaths; 
+   }
 
 
 var getChilds = function(lattice){
@@ -150,6 +225,38 @@ var getParents = function(lattice){
         })
     })
     return parents;
+}
+
+function arraysEqual(a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (a.length != b.length) return false;
+
+  for (var i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+
+//inserts a pair (level, pos) in the list of levels, sorted by pos
+function insert(level, pos, array) {
+  array.splice(locationOf(pos, array) + 1, 0, {level:level, pos:pos});
+  return array;
+}
+
+
+
+function locationOf(element, array, start, end) {
+  start = start || 0;
+  end = end || array.length;
+  var pivot = parseInt(start + (end - start) / 2, 10);
+  if (end-start <= 1 || array[pivot].pos === element) return pivot;
+  if (array[pivot].pos < element) {
+    return locationOf(element, array, pivot, end);
+  } else {
+    return locationOf(element, array, start, pivot);
+  }
 }
 
 

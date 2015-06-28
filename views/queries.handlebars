@@ -25,7 +25,7 @@
             </div>
         </form>
 
-        <div class="working" id="working" style="display: none">
+        <div class="working" id="gettingcubes" style="display: none">
             <i class="fa fa-refresh fa-spin fa-5x"></i>                          
         </div>
           
@@ -74,10 +74,8 @@
      
     <div id="main-wrapper" class="col-lg-8">
 
-    {{#if session.schema}}    
-        <div class="working" id="working" style="display: none">
-            <i class="fa fa-refresh fa-spin fa-5x"></i>                          
-        </div>
+       
+    {{#if session.schema}} 
         <div class="panel-group" id="accordionQL">
             <div class="panel panel-default">
                 <div class="panel-heading">
@@ -89,7 +87,12 @@
                         </a>
                     </h3>
                 </div>
+                {{#if queriesaccordion}}
+                <div id="collapseQueries" class="panel-collapse collapse in">
+                {{else}}
                 <div id="collapseQueries" class="panel-collapse collapse">
+                {{/if}}
+               
                     <div class="panel-body">
                         <div class="list-group">
                             {{#each session.queries}}
@@ -122,9 +125,10 @@
                                 <div class="form-group">
                                     <label>QL query editor</label>
                                     <button type="reset" class="btn btn-xs btn-default reset-btn">Reset editor</button>
-                                    <textarea class="form-control" id="querypanel" name="querypanel"  placeholder="Enter QL query" rows="9">
+                                    <textarea class="form-control" id="querypanel" name="querypanel"  placeholder="Enter QL query" rows="20">
                                         {{#if session.querytext}}
-                                            {{session.querytext}}
+                                            {{#showQLQuery session.querytext}}
+                                            {{/showQLQuery}}
                                         {{/if}}
                                     </textarea>
                                 </div>           
@@ -142,7 +146,7 @@
                             <form id="getsparqlqueryform" role="form" method="get">    
                                 <div class="form-group">
                                     <label>Simplified QL query</label>
-                                    <textarea class="form-control" id="simplequerypanel" name="simplequerypanel" disabled="" placeholder="Simplified QL query" rows="9">                
+                                    <textarea class="form-control" id="simplequerypanel" name="simplequerypanel" disabled="" placeholder="Simplified QL query" rows="20">                
                                     {{#if session.simplequery}}
                                         {{#showQuery session.simplequery}}
                                         {{/showQuery}}
@@ -209,13 +213,14 @@
 
                 <div id="collapseResults" class="panel-collapse collapse">
                     <div class="panel-body">
-                        <div class="working" id="gettingresults"="display: none">
-                            <i class="fa fa-refresh fa-spin fa-5x"></i>                          
-                        </div>
+                        
                         {{#if session.sparqlcols}}
                             {{#saveResultColumns session.sparqlcols}}
                             {{/saveResultColumns}} 
-                        {{/if}}    
+                        {{/if}} 
+                        <div class="working" id="gettingresults"="display: none">
+                            <i class="fa fa-refresh fa-spin fa-5x"></i>                          
+                        </div>   
                         <table id="resultstable" 
                             data-classes="table table-hover table-condensed"
                             data-search="true"
@@ -243,6 +248,10 @@
    {{#section 'jquery'}}
     <script>
 
+      $(function() {
+        $( document ).tooltip();
+        });
+
       function queryParams() {
             return {
                 type: 'owner',
@@ -257,8 +266,15 @@
 
          //get cubes 
         $('.getcubes-btn').on ("click",(function () {
-            $('.working').show();
+            $('#gettingcubes').show();
             $('#getcubes').submit();    
+        }
+        ));
+
+
+        $('li.schema').on ("click",(function () {
+            console.log("tt"+$(this).attr("title"));
+            $('#querypanel').val($('#querypanel').val()+$(this).attr("title"));
         }
         ));
 
@@ -330,11 +346,17 @@
             $('.alert-danger').hide();
             $('.alert-success').hide();
             $('.alert-warning').hide();
-            $('#gettingresults').show();
+           
             $("#collapseResults").collapse('show');
             var sparqlquery = $('#sparqlquerypanel').val();
+            if($('#resultstable').length >0){
+                    $('#resultstable').bootstrapTable('destroy'); 
+            }
             
             if(typeof sparqlcols !== 'undefined' && sparqlquery){
+                //show spinning arrows    
+                //$('#gettingresults').show();
+                
                 try {
                     var cols = [];
                     sparqlcols.forEach(function(column){
@@ -345,13 +367,25 @@
                         };
                         cols.push(c);
                     });
+                    $('#resultstable').bootstrapTable({
+                        columns: cols
+                    });
+                    $('#resultstable').bootstrapTable('showLoading'); 
+                    
                     $.get( 'runsparql',{sparqlquery:sparqlquery}, function(res) {
+                         $('#resultstable').bootstrapTable('hideLoading');
+                         $('#resultstable').bootstrapTable('load',JSON.parse(res));
+                         $('#gettingresults').hide();
+
+                        /*
                         $('#resultstable').bootstrapTable({
                             data: JSON.parse(res),
                             columns: cols
                         });
+                        
+                        */
                         //$('#accordionSPARQL .in').collapse('hide');
-                        $('#gettingresults').hide();
+                        
                     });
                 
                   

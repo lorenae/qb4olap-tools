@@ -106,8 +106,8 @@ Network = function() {
   linksG = null;
   node = null;
   link = null;
-  layout = "force";
-  //layout = "radial_dim";
+  //layout = "force";
+  layout = "radial_dim";
   //layout = "radial_hier";
   filter = "all";
   //sort = "links";
@@ -117,7 +117,7 @@ Network = function() {
   nodeColors = d3.scale.category20();
   tooltip = Tooltip("vis-tooltip", 230);
   charge = function(node) {
-    return -Math.pow(node.radius, 2.0) / 2;
+    return -Math.pow(node.radius, 1.5) / 3;
   };
   
   network = function(selection, data) {
@@ -448,7 +448,8 @@ Network = function() {
     layout = newLayout;
     if (layout === "force") {
       //return force.on("tick", forceTick).charge(-200).linkDistance(50);
-      return force.on("tick", forceTick).charge(-30).linkDistance(10);
+      //return force.on("tick", forceTick).charge(-30).linkDistance(10);
+      return force.on("tick", forceTick).charge(-15).linkDistance(5);
     } else if (layout === "radial_dim") {
       return force.on("tick", radialTick).charge(charge);
     } else if (layout === "radial_hier"){
@@ -521,9 +522,9 @@ Network = function() {
     var content;
 
     //console.log(d);
-    content = '<p>' + d.name + '</p>';
+    content = '<b><p>' + d.name + '</p>';
     content += '<p> Level:' + d.level + '</p>';
-    content += '<p> Hierarchy: ' + d.hierarchy + '</p>';
+    content += '<p> Hierarchy: ' + d.hierarchy + '</p></b>';
     tooltip.showTooltip(content, d3.event);
 
     if (link) {

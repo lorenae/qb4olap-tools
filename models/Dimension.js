@@ -58,64 +58,41 @@ Dimension.prototype.existsLevel = function(luri){
 };
 
 //returns the shortest path from level origin to target, traversing
-//the lattice of hierarchy in this dimension
+//the lattice of hierarchies in this dimension
 Dimension.prototype.getShortestPath = function(originLevel, targetLevel){
 
     var debug = false;
-
     var results = [];
-    if (debug){
-        console.log("bottom "+originLevel);
-        console.log("target "+targetLevel);
-            
-    }
-    
-
+   
     this.hierarchies.forEach(function(hier){
         var h = new Hierarchy(hier.uri, hier.name, hier.lattice);
         var result = [];
-
-        if (debug){
-            console.log("hierarchy:"+hier.uri);
-            console.log(util.inspect(hier.lattice, { showHidden: false, depth: null, colors:true }));
-            console.log("exists "+originLevel+"="+h.existsLevel(originLevel) );
-            console.log("exists "+targetLevel+"="+h.existsLevel(targetLevel) );
-        }
-
         if (h.existsLevel(originLevel) && h.existsLevel(targetLevel)){
             var start = 0;
             var end = 0;
             all = h.traverse();
             all.forEach(function(l){
-                if (debug){
-                    console.log("l");
-                    console.log(util.inspect(l, { showHidden: false, depth: null, colors:true }));    
-                }
+                var isAlreadyInPath = result.filter(function(r){
+                    r.level == l.level;
+                }).length >0;
 
-                if(l.level == originLevel){
+                if (!isAlreadyInPath) {
+                    if(l.level == originLevel){
                     start = l.pos;
                     result.push(l);
-                }else if(l.level == targetLevel){
-                    end = l.pos;
-                    result.push(l);
-                }else if(l.pos >start && end === 0){
-                    start = l.pos;
-                    result.push(l);
-                }
-                if (debug){
-                    console.log("start: "+start);
-                    console.log("end: "+end);
-                    console.log("result ");
-                    console.log(util.inspect(result, { showHidden: false, depth: null, colors:true }));    
+                    }else if(l.level == targetLevel){
+                        end = l.pos;
+                        result.push(l);
+                    }else if(l.pos >start && end === 0){
+                        start = l.pos;
+                        result.push(l);
+                    }
                 }
             });
-            results.push({hierarchy:h.getUri, path:result});
+            results.push({hierarchy:h.uri, path:result});
         }
     });
     //results is a set of paths from origin to target, now select the shortest
-
-    
-
     var shortestPathIndex = 0;
 
     for( var i=1; i< results.length; i++){
@@ -125,8 +102,43 @@ Dimension.prototype.getShortestPath = function(originLevel, targetLevel){
     return (results[shortestPathIndex]);
 };
 
+//returns the longest path from level origin to target, traversing
+//the lattice of hierarchy in this dimension
+Dimension.prototype.getLongestPath = function(originLevel, targetLevel){
 
-
+    var result = "";   
+    this.hierarchies.forEach(function(hier){
+        var h = new Hierarchy(hier.uri, hier.name, hier.lattice);
+        if (h.existsLevel(originLevel) && h.existsLevel(targetLevel)){
+            allpaths = h.getPaths(); 
+            //compute the difference in the positions, and return the path with maximum diff
+            var maxlength = 0;
+            allpaths.forEach(function(path){
+                var originnode = path.filter(function(node){
+                    return node.level == originLevel;
+                });
+                var targetnode = path.filter(function(node){
+                    return node.level == targetLevel;
+                });
+                //if the path connects both levels
+                if (originnode.length>0 && targetnode.length>0){
+                    var posorigin = originnode[0].pos;
+                    var postarget = targetnode[0].pos;
+                    if (postarget - posorigin >= maxlength){
+                        maxlength = postarget - posorigin;
+                        //delete the nodes in the path from targetnode to the end
+                        var end = path.indexOf(targetnode[0]);
+                        if (end < path.length-1){
+                            path.splice(end+1, path.length-end);
+                        }
+                        result = {hierarchy:hier.uri, path:path};
+                    }
+                }
+            });
+        }
+    });
+    return result;
+};
 
 
 module.exports=Dimension;

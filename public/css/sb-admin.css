@@ -17,6 +17,11 @@ body {
     }
 }
 
+.working{
+    display: table;
+    margin: 0 auto;
+}
+
 #wrapper {
     padding-left: 0;
 }

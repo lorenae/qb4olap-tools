@@ -24,6 +24,7 @@ var Dimension = require('./models/Dimension');
 
 var sampleQueries = require('./data/sample-queries.json');
 var storedcubes = require('./data/stored-cubes.json');
+var storedcompletecubes = require('./data/stored-completecubes.json');
 
 
 var app = express();
@@ -65,9 +66,9 @@ var hbs = expressHandlebars.create({
 
 			var d = new Dimension (dimension.uri, dimension.name, dimension.levels, dimension.hierarchies);
 			var hordinal = 0
-			var out = "<li><a class=\"collapsed\" data-toggle=\"collapse\" data-target=\"#"+danchor+"\" aria-expanded=\"false\" href=\"javascript:;\">";                  
+			var out = "<li class=\"schema\" title=\""+ d.uri+"\"><a class=\"collapsed\" data-toggle=\"collapse\" data-target=\"#"+danchor+"\" aria-expanded=\"false\" href=\"javascript:;\">";                  
 			out += "<i class=\"fa fa-fw fa-circle\"></i>";
-			out += options.fn(d);
+			out += d.name;
 			out +="<i class=\"fa fa-fw fa-chevron-down\"></i></a>";
 			out += "<ul id=\""+danchor+"\" class=\"collapse\" style=\"height: 0px; list-style: none; padding-left: 1;\" aria-expanded=\"false\">";
 			dimension.hierarchies.forEach(function (hierarchy){
@@ -75,19 +76,19 @@ var hbs = expressHandlebars.create({
 				var orderedLevels = h.traverse();
 				var hanchor = "hier"+dimordinal*10+hordinal;
 				hordinal++;
-				out += "<li><a class=\"collapsed\" data-toggle=\"collapse\" data-target=\"#"+hanchor+"\" aria-expanded=\"false\" href=\"javascript:;\">";
+				out += "<li class=\"schema\" title=\""+ h.uri+"\"><a class=\"collapsed\" data-toggle=\"collapse\" data-target=\"#"+hanchor+"\" aria-expanded=\"false\" href=\"javascript:;\">";
 				out += "<i class=\"fa fa-fw fa-sitemap\"></i>";
-				out += options.fn(h);
+				out += h.name;
 				out +="<i class=\"fa fa-fw fa-chevron-down\"></i></a>";
 				out += "<ul id=\""+hanchor+"\" class=\"collapse\" style=\"height: 0px; list-style: none; padding-left: 2;\" aria-expanded=\"false\">";
 
 				orderedLevels.forEach(function (ol){
-					out += "<li>";
+					var level = d.getLevel(ol.level);
+					out += "<li class=\"schema\" title=\""+ level.uri+"\">";
 					for (var p = 0; p < ol.pos; p++) {
 						out += "<i class=\"fa fa-fw fa-square\"></i>";
 					}
-					var level = d.getLevel(ol.level);
-					out += options.fn(level);
+					out += level.name;
 					out += "</li>";
 				})
 				//close level list
@@ -133,17 +134,18 @@ var hbs = expressHandlebars.create({
 		var renderCube = function(cube, options){
 		
 			var href = "getcompletecube?cubeselect="+encodeURIComponent(cube.uri)+"&target="+target;
-
 			if(cube.selected){
 				var style = "class=\"list-group-item active\">";
 			}else{
 				var style = "class=\"list-group-item\">";
 			};
-
 			var out = "<a href=\""+href+"\""+style;
 			out+= "<h3 class=\"list-group-item-heading\">"+cube.name+"</h3>";
-			out+= "<p class=\"list-group-item-text\"> URI:"+cube.uri+"</p>";
-			out+= "<p class=\"list-group-item-text\"> \#Obs:"+cube.numobs+"</p>";
+			out+= "<p class=\"list-group-item-text\"> <b>Schema URI: </b>"+cube.uri+"</p>";
+			out+= "<p class=\"list-group-item-text\"> <b>Dataset URI:</b>"+cube.dataset+"</p>";
+			out+= "<p class=\"list-group-item-text\"> <b>Schema graph:</b>"+cube.schemagraph+"</p>";
+			out+= "<p class=\"list-group-item-text\"> <b>Instance graph:</b>"+cube.instancegraph+"</p>";
+			out+= "<p class=\"list-group-item-text\"> <b>Number of observations:</b>"+cube.numobs+"</p>";
 			out+= "</a>"
 			return out;
 		};
@@ -206,8 +208,7 @@ var hbs = expressHandlebars.create({
 	},
 	showQuery: function(query, options) {
 
-			var querytext = "";
-			querytext += "QUERY \n";
+			var querytext = "QUERY \n";
 			query.query.forEach(function(operation){
 				if ( (operation.qloperator=="ROLLUP") || (operation.qloperator=="DRILLDOWN")){
 				querytext += operation.statement+"="+operation.qloperator+"("+operation.source+","+operation.dimension+","+operation.level+");\n";
@@ -224,7 +225,10 @@ var hbs = expressHandlebars.create({
 					querytext += operation.statement+"= DICE("+operation.source+","+operation.dicecondition.operator+");\n";
 				}
 			});
-			return new Handlebars.SafeString(querytext);
+			return new Handlebars.SafeString(querytext.replace(/^\s\s*/, ''));
+	},
+	showQLQuery: function(query,options){
+		return new Handlebars.SafeString(query.replace(/^\s\s*/, '')); 
 	},
 	showSparqlQuery: function(query, options){
 			//console.log("showsparql in handle");
@@ -307,28 +311,25 @@ app.get('/getcubes', function(req, res) {
 			res.render(target);
 		//if cubes are not cached yet, try to get from file	
 		}else{
-			if(storedcubes.cubes){
+			if(storedcubes.cubes && !reloadStoredCubes()){
 				//if file is not old enough use it
-				if (!reloadStoredCubes()){
 					sess.cubes = storedcubes.cubes;
 					cache.put('cubes',storedcubes.cubes,43200000);
 					res.render(target);
-				
-				}else{
-					backend.getCubes(endpoint, function (err, cubelist) {
-						if (cubelist)
-						{	
-							//console.log(util.inspect(cubelist, { showHidden: false, depth: null, colors:true }));
-							cache.put('cubes',cubelist,43200000);
-							storeCubes(Date.now(),cubelist);
-							sess.cubes = cubelist;
-							res.render(target);
-						}
-						else
-						{	res.render(target, {error:err});
-						}
-					});
-				}
+			}else{
+				backend.getCubes(endpoint, function (err, cubelist) {
+				if (cubelist)
+					{	
+						//console.log(util.inspect(cubelist, { showHidden: false, depth: null, colors:true }));
+						cache.put('cubes',cubelist,43200000);
+						storeCubes(Date.now(),cubelist);
+						sess.cubes = cubelist;
+						res.render(target);
+					}
+					else
+					{	res.render(target, {error:err});
+					}
+				});
 			}
 		}
 	}
@@ -358,7 +359,8 @@ app.get('/getcubestructure', function(req, res) {
     {	backend.getCubeSchema(sess.state.endpoint, sess.state.cube,sess.state.schemagraph, function (err, datacube) {
    		sess.schema = datacube;
    		sess.queries = getSampleQueries(dataset);
-   		console.log(req.originalUrl);
+   		//console.log(req.originalUrl);
+
     	res.render('queries');
 	});
 	}	
@@ -370,14 +372,10 @@ app.get('/getcompletecube', function(req, res) {
 
 	var cubeuri = req.query.cubeselect;
 	var target = req.query.target;
-	
-	//console.log("cubeuri: "+cubeuri+", target:"+target);
-	//console.log ("session.cubes" + JSON.stringify(sess.cubes));
 
 	sess.cubes.forEach(function(cube){
 		cube.selected = (cube.uri == cubeuri);
 	});
-
 
 	var selectedcube = sess.cubes.filter(function(c){
         return c.selected;});  
@@ -390,20 +388,83 @@ app.get('/getcompletecube', function(req, res) {
 	sess.state.dataset = dataset;
 	sess.state.schemagraph = schemagraph;
 	sess.state.instancegraph = instancegraph;
+	sess.queries = getSampleQueries(cubeuri);
 
-	if(sess.state.endpoint && sess.state.cube)
-    {	backend.getCubeSchema(sess.state.endpoint, sess.state.cube,sess.state.dataset,sess.state.schemagraph, function (err, cubeschema) {
-    	cubeschema.instancegraph = instancegraph;
-    	cubeschema.schemagraph = schemagraph;
-   		sess.schema = cubeschema;
-   		sess.queries = getSampleQueries(cubeuri);
-   		backend.getCubeInstances(sess.state.endpoint, sess.state.cube,sess.state.schemagraph,sess.state.instancegraph, function (err, cubeinstances) {
-   			sess.instances = cubeinstances;
-	    	res.render(target);
+	var completecubes = sess.state.completecubes;
+
+	function contains(array,obj) {
+    	return (array.indexOf(obj) != -1);
+	}
+
+	//if is in the session, use it
+	if (completecubes && contains(Object.keys(completecubes),cubeuri) ){  
+		var thisCube = sess.state.completecubes[cubeuri];
+		sess.schema = thisCube.schema;
+		sess.instances = thisCube.instances;
+		if (target == 'queries'){
+			res.render('queries', {queriesaccordion:true});
+		}else{
+			res.render(target);
+		}
+	//if is not in the session but is in the stored file and is still fresh, use it	
+	}else if(storedcompletecubes && !reloadCompleteStoredCubes() && contains(Object.keys(storedcompletecubes.completecubes),cubeuri)){
+		sess.state.completecubes= storedcompletecubes.completecubes;
+		var thisCube = sess.state.completecubes[cubeuri];
+		sess.schema = thisCube.schema;
+		sess.instances = thisCube.instances;
+		if (target == 'queries'){
+			res.render('queries', {queriesaccordion:true});
+		}else{
+			res.render(target);
+		}
+	//else, go to the SPARQL backend	
+	}else if(sess.state.endpoint && sess.state.cube){
+	    	backend.getCubeSchema(sess.state.endpoint, sess.state.cube,sess.state.dataset,sess.state.schemagraph, function (err, cubeschema) {
+			cubeschema.instancegraph = instancegraph;
+			cubeschema.schemagraph = schemagraph;
+	    	//set the schema
+	   		sess.schema = cubeschema;
+	   		//set the queries
+	   		
+	   		if(cubeuri != 'http://dwbook.org/cubes/schemas/northwind#Northwind'){
+		   		//console.log("SCHEMA:" +util.inspect(cubeschema, { showHidden: false, depth: null, colors:true }));
+		   		backend.getCubeInstances(sess.state.endpoint, sess.state.cube,sess.state.schemagraph,sess.state.instancegraph, function (err, cubeinstances) {
+		   			//set the instances
+		   			sess.instances = cubeinstances;
+		   			var toSession = {schema:sess.schema,instances:cubeinstances};
+		   			if (!completecubes){
+		   				completecubes = {};	
+		   			}
+		   			completecubes[cubeuri]= toSession;
+		   			sess.state.completecubes= completecubes; 
+		   			storeCompleteCubes(Date.now(),completecubes);
+		   			if (target == 'queries'){
+		   				res.render('queries', {queriesaccordion:true});
+		   			}else{
+		   				res.render(target);
+		   			}
+					});
+		   		
+			}else{
+				    //set the instances
+		   			sess.instances = {};
+		   			var toSession = {schema:sess.schema,instances:{}};
+		   			if (!completecubes){
+		   				completecubes = {};	
+		   			}
+		   			completecubes[cubeuri]= toSession;
+		   			sess.state.completecubes= completecubes; 
+		   			storeCompleteCubes(Date.now(),completecubes);
+		   			if (target == 'queries'){
+		   				res.render('queries', {queriesaccordion:true});
+		   			}else{
+		   				res.render(target);
+		   			}
+
+			}
 			});
-   		});
-	}	
-});
+		}	
+	});
 
 app.get('/simplifyquery', function(req, res) {
 
@@ -412,8 +473,9 @@ app.get('/simplifyquery', function(req, res) {
 	
 	sess=req.session;
 	if(sess.schema){
-		sess.querytext = querytext;
+		sess.querytext = querytext.replace(/^\s\s*/, '');
 		sess.originalquery = query;
+		//console.log("original query:" +util.inspect(query, { showHidden: false, depth: null, colors:true }));
 		operators.getSimplifiedQuery(sess.state.endpoint, sess.schema, query, function (err, simplified) {
 			sess.simplequery = simplified;
 			res.render('queries', {editoraccordion:true});
@@ -505,7 +567,35 @@ function reloadStoredCubes(){
     //console.log(Date.now());
 	var age = Math.abs(Date.now() - stored) / 3600000;
 	//console.log("AGE:"+age);
-	return (age>12);
+	return (age>10);
+}
+
+// keep stored cubes updated
+function reloadCompleteStoredCubes(){
+    var stored = storedcompletecubes.timestamp;
+    //console.log(stored);
+    //console.log(Date.now());
+	var age = Math.abs(Date.now() - stored) / 3600000;
+	//console.log("AGE:"+age);
+	return (age>2);
+}
+
+
+function storeCompleteCubes(timestamp,completecubes){
+	var toStore = {
+		timestamp:timestamp,
+		completecubes:completecubes
+	}
+	var outputFilename = './data/stored-completecubes.json';
+
+	fs.writeFile(outputFilename, JSON.stringify(toStore, null, 4), function(err) {
+	    if(err) {
+	      console.log(err);
+	    } else {
+	      console.log("JSON saved to " + outputFilename);
+	    }
+	}); 
+
 }
 
 function storeCubes(timestamp,cubelist){
