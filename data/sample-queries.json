@@ -20,7 +20,7 @@
         },
         {   "cube": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#migr_asyappctzmQB4O",
             "queryid": 141,
-            "querydesc": "Asylum applications submitted in 2013 by African citizens, where destination is France  (sex, time, age, citizenship, destination)",
+            "querydesc": "Asylum applications submitted by African citizens, where destination is France  (sex, time, age, citizenship, destination)",
             "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>;\r\nPREFIX data: <http://eurostat.linked-statistics.org/data/>;\r\nPREFIX property: <http://eurostat.linked-statistics.org/property#>;\r\nQUERY\r\n$C1 := ROLLUP (data:migr_asyappctzm, schema:citizenshipDim,schema:continent);\r\n$C2 := SLICE ($C1, schema:asylappDim);\r\n$C3 := ROLLUP ($C2, schema:timeDim, schema:year);\r\n$C4 := DICE ($C3, (schema:citizenshipDim|schema:continent|schema:continentName = \"Africa\"));\r\n$C5 := DICE ($C4, schema:destinationDim|property:geo|schema:countryName = \"France\");"
         },
         {   "cube": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#migr_asyappctzmQB4O",
