@@ -50,6 +50,36 @@ Hierarchy.prototype.addEdgeToLattice = function(childLevel, parentLevel, cardina
     }
 };
 
+
+//adds a level pair only if it does not exist
+Hierarchy.prototype.addEdgeToLatticeByuri = function(childuri, parenturi, cardinality){
+
+    //if the child level does not exist in the lattice add a new node to the list 
+    if (!this.existsLevelNode(childuri)) {
+        var newNode;
+        if (parenturi == null){
+            newNode ={childuri: childuri , pclist:[] };
+        } else{ 
+            newNode ={childuri: childuri , pclist:[{parenturi:parenturi,card:cardinality}] };
+        }
+        this.lattice.push(newNode);
+        //console.log('agrego un hijo');
+    }
+    //find the node for this level and add the pair (parentLevel,cardinality)
+    else{
+        if (parenturi != null){
+            var node = this.getLevelNode(childuri);
+            var isparent = node.pclist.filter(function(parent){
+                    return parent.parenturi === parenturi}
+                    ).length >0;
+            if (!isparent){
+                var newPair = {parenturi:parenturi,card:cardinality};
+                node.pclist.push(newPair);    
+            }
+        }
+    }
+};
+
 Hierarchy.prototype.existsLevelNode = function(luri){
     return this.lattice.filter(function(node){       
         return node.childuri === luri;

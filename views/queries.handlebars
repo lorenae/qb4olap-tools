@@ -199,6 +199,10 @@
                 </div>
             </div>
             <div class="panel panel-default">
+                {{#if session.sparqlcols}}
+                    {{#saveResultColumns session.sparqlcols}}
+                    {{/saveResultColumns}} 
+                {{/if}}
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         <a data-toggle="collapse" data-parent="#accordionSPARQL" href="#collapseResults">
@@ -208,16 +212,8 @@
                         </a>
                     </h3>
                 </div>
-
-
-
                 <div id="collapseResults" class="panel-collapse collapse">
                     <div class="panel-body">
-                        
-                        {{#if session.sparqlcols}}
-                            {{#saveResultColumns session.sparqlcols}}
-                            {{/saveResultColumns}} 
-                        {{/if}} 
                         <div class="working" id="gettingresults"="display: none">
                             <i class="fa fa-refresh fa-spin fa-5x"></i>                          
                         </div>   
@@ -248,10 +244,11 @@
    {{#section 'jquery'}}
     <script>
 
+/*
       $(function() {
         $( document ).tooltip();
         });
-
+*/
       function queryParams() {
             return {
                 type: 'owner',
@@ -264,6 +261,9 @@
 
       $(document).ready(function () {
 
+        //$(document).tooltip();
+        $('li.schema').tooltip(); 
+
          //get cubes 
         $('.getcubes-btn').on ("click",(function () {
             $('#gettingcubes').show();
@@ -272,11 +272,13 @@
         ));
 
 
+        /*
         $('li.schema').on ("click",(function () {
             console.log("tt"+$(this).attr("title"));
             $('#querypanel').val($('#querypanel').val()+$(this).attr("title"));
         }
         ));
+        */
 
         //simplify query 
          $('.simplify-btn').on ("click",(function () {

@@ -9,6 +9,7 @@ var proxySrv = "http://httpproxy.fing.edu.uy:3128";
 
 
 var Datacube = require('../models/Datacube');
+var Attribute = require('../models/Attribute');
 var Dimension = require('../models/Dimension');
 var Hierarchy = require('../models/Hierarchy');
 var Level = require('../models/Level');
@@ -119,28 +120,29 @@ exports.getChildLevelMembers = function(endpoint,childlevel,parentlevel,parentle
 // post: returns a Datacube and a Cuboid object that represents the structure of the datacube.
 
 exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callback){
-    var query = "prefix qb: <http://purl.org/linked-data/cube#> \
+       var query = "prefix qb: <http://purl.org/linked-data/cube#> \
                 prefix qb4o: <http://purl.org/qb4olap/cubes#> \
                 PREFIX dct:      <http://purl.org/dc/terms/>\
-                SELECT ?cname ?d ?dname ?h ?hname ?l ?lname ?l1 ?l1name ?l2 ?l2name ?card ?m ?f ?mrange\
+                SELECT ?cname ?d ?dname ?h ?hname ?l ?lname ?la ?laname ?larange ?l1 ?l1name ?la1 ?la1name ?la1range ?l2 ?l2name ?card ?m ?f ?mrange\
                 FROM <"+schemagraph+"> \
                 WHERE { <"+cubeuri+"> qb:component ?c1,?c2. \
                 ?ds qb:structure <"+cubeuri+">. \
                 ?c1 qb4o:level ?l.\
-                ?c2 qb:measure ?m. \
-                ?h qb4o:hasLevel ?l. \
-                ?h qb4o:inDimension ?d. \
-                OPTIONAL {?ih1 a qb4o:HierarchyStep;qb4o:inHierarchy ?h; qb4o:childLevel ?l1; qb4o:parentLevel ?l2 ; qb4o:pcCardinality ?card.}\
-                OPTIONAL {?ds dct:title ?cname}\
-                OPTIONAL { ?d rdfs:label ?dname }\
-                OPTIONAL { ?h rdfs:label ?hname }\
-                OPTIONAL { ?l rdfs:label ?lname }\
+                ?c2 qb:measure ?m.\
+                ?c2 qb4o:aggregateFunction ?f .\
+                OPTIONAL {?m rdfs:range ?mrange }\
+                ?h qb4o:hasLevel ?l.\
+                ?h qb4o:inDimension ?d.\
+                ?ds dct:title ?cname .\
+                ?d rdfs:label ?dname.\
+                ?h rdfs:label ?hname .\
+                ?l rdfs:label ?lname .\
+                OPTIONAL {?ih1 a qb4o:HierarchyStep;qb4o:inHierarchy ?h; qb4o:childLevel ?l1; qb4o:parentLevel ?l2 ; qb4o:pcCardinality ?card.} \
+                OPTIONAL {?l qb4o:hasAttribute ?la. ?la rdfs:label ?laname. ?la rdfs:range ?larange}\
+                OPTIONAL {?l1 qb4o:hasAttribute ?la1. ?la1 rdfs:label ?la1name. ?la1 rdfs:range ?la1range}\
                 OPTIONAL { ?l1 rdfs:label ?l1name }\
                 OPTIONAL { ?l2 rdfs:label ?l2name }\
-                OPTIONAL { ?c2 qb4o:aggregateFunction ?f }\
-                OPTIONAL { ?m rdfs:range ?mrange }\
-                }\
-                order by ?d ?h";
+                }";
     //console.log("schema query: "+ query);
     
     return this.runSparql(endpoint, query, 0, function processStructure(error,content){
@@ -158,11 +160,20 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
            
             var a = row.hasOwnProperty('f') ? row.f.value : "http://purl.org/qb4olap/cubes#sum";
             var luri = row.l.value;
-            var lname = row.hasOwnProperty('lname') ? row.lname.value : parseURL(luri).hash;                   
+            var lname = row.hasOwnProperty('lname') ? row.lname.value : parseURL(luri).hash;
+            var lauri = row.hasOwnProperty('la') ? row.la.value : null;
+            var laname = row.hasOwnProperty('laname') ? row.laname.value : (lauri != null ? parseURL(lauri).hash : null);  
+            var larange = row.hasOwnProperty('larange') ? row.larange.value : null;                                           
             var l1uri = row.hasOwnProperty('l1') ? row.l1.value: null;
             var l1name = row.hasOwnProperty('l1name') ? row.l1name.value : (l1uri != null ? parseURL(l1uri).hash : null);                   
             var l2uri = row.hasOwnProperty('l2') ? row.l2.value: null;
-            var l2name = row.hasOwnProperty('l2name') ? row.l2name.value : (l2uri != null ? parseURL(l2uri).hash : null);  
+            var l2name = row.hasOwnProperty('l2name') ? row.l2name.value : (l2uri != null ? parseURL(l2uri).hash : null);
+            var la1uri = row.hasOwnProperty('la1') ? row.la1.value: null;
+            var la1name = row.hasOwnProperty('la1name') ? row.la1name.value : (la1uri != null ? parseURL(la1uri).hash : null);  
+            var la1range = row.hasOwnProperty('la1range') ? row.la1range.value : null;  
+            var la2uri = row.hasOwnProperty('la2') ? row.la2.value: null;
+            var la2name = row.hasOwnProperty('la2name') ? row.la2name.value : (la2uri != null ? parseURL(la2uri).hash : null);  
+            var la2range = row.hasOwnProperty('la2range') ? row.la2range.value : null;       
             var c = row.hasOwnProperty('card') ? row.card.value : "http://purl.org/qb4olap/cubes#ManyToOne";                   
             var aggfunc;
             switch(a){
@@ -178,16 +189,7 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
                 var measure = new Measure(muri, mname,aggfunc,measuretype);
                 dc.addMeasure(measure);
             }          
-            //process level info            
-            var child = null;
 
-            var parent = null; 
-            if (l1uri != null && l2uri != null) {
-                child = new Level(l1uri, l1name);
-                parent = new Level(l2uri, l2name);
-            } else{
-                child = new Level(luri, lname);
-            }
             
             var cardinality;
             switch(c){
@@ -204,21 +206,58 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
                 dc.addDimension(dimension);
             }         
             dimension = dc.getDimension(duri);
-            //add levels to the dimension
-            if (!dimension.existsLevel(child.uri)) {dimension.addLevel(child);}
-            if (parent != null && !dimension.existsLevel(parent.uri)){
-                dimension.addLevel(parent);
-            }
 
+             //process level info            
+            var child,parent,childuri,childname = null;
+            var atr,atrname,atrrange = null;
+
+            if (l1uri != null ) {
+                childuri = l1uri;
+                childname = l1name;
+                atr = la1uri;
+                atrname = la1name;
+                atrrange = la1range;
+            } else{
+                childuri = luri;
+                childuti = lname;
+                atr = lauri;
+                atrname = laname;
+                atrrange = larange;
+            }
             //if hierarchy does not exist in dimension, create it
             var hierarchy;
             if (!dimension.existsHierarchy(huri)){
                 hierarchy = new Hierarchy(huri,hname,[]);
                 dimension.addHierarchy(hierarchy);
-            } 
+            }
             hierarchy = dimension.getHierarchy(huri);
-            //add a new edge to the hierarchy lattice
-            hierarchy.addEdgeToLattice(child, parent, cardinality);
+            hierarchy.addEdgeToLatticeByuri(childuri, l2uri, cardinality);
+
+            
+
+            //add levels to the dimension
+            if (!dimension.existsLevel(childuri)) {
+                child = new Level(childuri, childname);
+                child.addAttribute(new Attribute(atrname, atr, atrrange));
+                dimension.addLevel(child);
+            }
+            child = dimension.getLevel(childuri);
+            if (!child.existsAttribute(atr)){
+                child.addAttribute(new Attribute(atrname, atr, atrrange));
+            }
+            
+
+            if (l2uri != null){
+                if (!dimension.existsLevel(l2uri)){
+                    parent = new Level(l2uri, l2name);
+                    //parent.addAttribute(new Attribute(la2name, la2uri, la2range)); 
+                    dimension.addLevel(parent);
+                }else{
+                    //parent = dimension.getLevel(l2uri);
+                    //parent.addAttribute(new Attribute(la2name, la2uri, la2range)); 
+                }
+            }
+
         });
 
     callback(error, dc);
@@ -387,11 +426,3 @@ function parseURL(url) {
         hash: parsed[1]
     };
 }
-
-  
-
-
-
-
-
-

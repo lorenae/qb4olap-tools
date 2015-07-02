@@ -48,6 +48,14 @@ SPARQLquery.prototype.addFrom = function(graph){
 };
 
 
+//returns true if the bgp already exists
+SPARQLquery.prototype.existsPattern = function(subject, predicate, object){
+    return this.patterns.filter(function(pt){
+        return (pt.s == subject && pt.p == predicate && pt.o == object);
+    }).length >0;
+};
+
+
 //adds a bgp graph pattern 
 SPARQLquery.prototype.addPattern = function(subject, predicate, object){
 	this.patterns.push({
@@ -178,7 +186,8 @@ SPARQLquery.prototype.toString = function(reduce){
             }
         if(this.subquery){
             var strsubq = this.subquery.toString();
-            strwhere = " WHERE \{\{ "+strsubq+strfilter+" \}\} \n";
+            strbgps =obtainWhereClause(this.patterns,this.patterngroups,reduce);
+            strwhere = " WHERE \{\{ "+strbgps+"\}.\{"+strsubq+"\}"+strfilter+" \} \n";
         }else{
             strbgps =obtainWhereClause(this.patterns,this.patterngroups,reduce);
             strwhere = " WHERE \{ "+strbgps+strfilter+" \}\n";

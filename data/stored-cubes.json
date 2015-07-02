@@ -1,5 +1,5 @@
 {
-    "timestamp": 1435506479815,
+    "timestamp": 1435846221142,
     "cubes": [
         {
             "schemagraph": "http://www.fing.edu.uy/inco/cubes/schemas/wbld",
@@ -16,7 +16,7 @@
             "uri": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#migr_asyappctzmQB4O",
             "name": "Asylum and first time asylum applicants to European countries by citizenship, age and sex Monthly data",
             "instancegraph": "http://www.fing.edu.uy/inco/cubes/instances/migr_asyapp_clean",
-            "numobs": "150946",
+            "numobs": "78594",
             "selected": false
         },
         {

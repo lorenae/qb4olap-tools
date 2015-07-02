@@ -138,10 +138,96 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
                     });
                     
                     break;
-                //IPO & DICE    
+                //IPO & SLICE & DICE    
                 case 3: 
                     //splitDice
-                    simplequery = inputquery;
+                    var beforedice =[];
+                    var afterdice =[];
+
+                    splitDice(inputquery.query, beforedice, afterdice);
+                    var stcount = 1;
+                    var IPOs = [];
+                    //first push SLICE operations over measures.
+                    var slicemeas = beforedice.filter(function(operation){
+                        return ((operation.qloperator == "SLICE") && (operation.condType == "measure"));
+                    });                        
+                    slicemeas.forEach(function(slice){
+                        slice.statement = "$C"+stcount++;
+                        if(simplequery.query.length==0){
+                                slice.source = source;
+                            }else{
+                                slice.source = simplequery.query[simplequery.query.length-1].statement;
+                        }
+                        simplequery.query.push(slice);
+                    }); 
+
+                    datacube.dimensions.forEach(function(dim){
+                        var slicedim = beforedice.filter(function(operation){
+                            return ((operation.qloperator == "SLICE") && (operation.dimension == dim.uri));
+                        });
+                        // if exists a slice over a dimension, only keep the slice
+                        if (slicedim.length>0){
+                            var newSLICE = new Object();
+                                newSLICE.statement = "$C"+stcount++;
+                                newSLICE.qloperator = "SLICE";
+                                newSLICE.condType = "dimension";
+                                newSLICE.dimension = dim.uri;
+                                if(simplequery.query.length==0){
+                                    newSLICE.source = source;
+                                }else{
+                                    newSLICE.source = simplequery.query[simplequery.query.length-1].statement;
+                                }
+                                simplequery.query.push(newSLICE);
+                        }else{
+                            // group IPO operations by dimension, preserving order
+                            var ipodim = beforedice.filter(function(operation){
+                            return (((operation.qloperator == "ROLLUP")||(operation.qloperator == "DRILLDOWN")) && (operation.dimension == dim.uri));
+                            });
+                            // if exists IPO operations for a dimension and there is no slice over it
+                            if (ipodim.length>0){
+                                // consider the level reached by the last operation for each dimension (target level)
+                                //console.log("DIM:" +util.inspect(dim, { showHidden: false, depth: null, colors:true }));
+                                var bottomLevel = dim.levels[dim.levels.length-1];
+                                var targetLevel = ipodim[ipodim.length-1].level;
+                                //console.log("bottom:" +util.inspect(bottomLevel, { showHidden: false, depth: null, colors:true }));
+                                //console.log("target:" +util.inspect(targetLevel, { showHidden: false, depth: null, colors:true }));
+
+                                // if target level is different than the bottom level for that dimension, 
+                                // rewrite the sequence of IPOs as a ROLLUP from bottom up to target level
+                                // else, remove all the IPOs for that dimension
+                                if( targetLevel != bottomLevel){
+                                    var newIPO = new Object();                
+                                    newIPO.qloperator = "ROLLUP";
+                                    newIPO.dimension = dim.uri;
+                                    newIPO.bottomLevel = bottomLevel;
+                                    newIPO.targetLevel = targetLevel;
+                                    newIPO.level = targetLevel;
+                                    IPOs.push(newIPO);
+                                }                           
+                            }
+                        }
+                    }); 
+                    
+                    IPOs.forEach(function(ipo){
+                        ipo.statement = "$C"+stcount++;
+                        if(simplequery.query.length==0){
+                            ipo.source = source;
+                        }else{
+                            ipo.source = simplequery.query[simplequery.query.length-1].statement;
+                        }
+                        simplequery.query.push(ipo);
+                    });
+                    afterdice.forEach(function(dice){
+                        if(dice.qloperator == "DICE"){
+                            dice.statement = "$C"+stcount++;
+                            if(simplequery.query.length==0){
+                                dice.source = source;
+                            }else{
+                                dice.source = simplequery.query[simplequery.query.length-1].statement;
+                            }
+                            simplequery.query.push(dice);
+                        }
+                    });                   
                     simplequery.type = queryType; 
                     break;  
                 default: simplequery = inputquery;
@@ -391,8 +477,8 @@ function getNoDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
 //post: returns a SPARQL query that implements a QL query 
 function getDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
     
-    var sparqlIPO =  new SPARQLquery([],"select",[],[],[],[],'');
     var sparqlDICE =  new SPARQLquery([],"select",[],[],[],[],'');
+    var sparqlIPO =  new SPARQLquery([],"select",[],[],[],[],'');
     var sparqlStr;
     var meascolumns = [];
     var varcolumns = [];
@@ -409,9 +495,9 @@ function getDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
     var agSeed = "ag";
     var agCounter = 1;
 
-    sparqlIPO.addPrefix("qb","http://purl.org/linked-data/cube#");
-    sparqlIPO.addPrefix("qb4o","http://purl.org/qb4olap/cubes#");
-    sparqlIPO.addPrefix("skos","http://www.w3.org/2004/02/skos/core#");
+    sparqlDICE.addPrefix("qb","http://purl.org/linked-data/cube#");
+    sparqlDICE.addPrefix("qb4o","http://purl.org/qb4olap/cubes#");
+    sparqlDICE.addPrefix("skos","http://www.w3.org/2004/02/skos/core#");
 
     if (optimize){
         sparqlIPO.addPatternToGroup("o",true, "?o","a","qb:Observation");
@@ -447,8 +533,9 @@ function getDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
         }else{
             sparqlIPO.addExpresionToResult("("+m.aggfunc+"("+mi+") as "+agi+")");
         }
-        //add aggregated value to the outer query result
+        //add the calculated var to the outer query
         sparqlDICE.addVariableToResult(agi);
+        
         //associate the variable with the expresion to generate the table
         meascolumns.push({
             colvar:agi.substr(1), 
@@ -487,7 +574,7 @@ function getDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
         //exists a rollup on this dimension and not exists slice
         if (r.length>0 && s.length==0){
             var rollup = r[0];
-            //console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
+            console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
             var targetLevel = rollup.targetLevel;
             var bottomLevel = rollup.bottomLevel.uri;
             if (optimize){
@@ -500,7 +587,7 @@ function getDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
             var levelPath = dim.getShortestPath(bottomLevel, targetLevel);
             levelPath.path.forEach(function(actual){
                 var actualLevel = actual.level;
-                var plmi = sparqlIPO.getNewVariable(parentLevelMemSeed, parentLevelMemCounter);
+                var plmi = sparqlDICE.getNewVariable(parentLevelMemSeed, parentLevelMemCounter);
                 if(actualLevel != bottomLevel){
                     parentLevelMemCounter++;
                     if (optimize){
@@ -515,9 +602,9 @@ function getDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
                 }
                 if(actualLevel == targetLevel){
                     sparqlIPO.addVariableToResult(plmi);
-                    //add variable to the outer query result
-                    sparqlDICE.addVariableToResult(plmi);
                     sparqlIPO.addVariableToGroupBy(plmi);
+                    //add variable to outer query
+                    sparqlDICE.addVariableToResult(plmi);
                     //associate the variable with the expresion to generate the table
                     varcolumns.push({
                         colvar:plmi.substr(1), 
@@ -529,7 +616,7 @@ function getDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
         //doesnt exist a rollup on this dimension    
         }else if (s.length==0){
             sparqlIPO.addVariableToResult(lmi);
-            //add variable to the outer query result
+            //add variable to outer query
             sparqlDICE.addVariableToResult(lmi);
             //associate the variable with the expresion to generate the table
             varcolumns.push({
@@ -541,24 +628,30 @@ function getDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
         }
     });//end processing dimensions
 
-    //create the filter conditions for each dice
-
+    //create the filter conditions for each dice and add patterns
     var dices = simplequery.query.filter(function(oper){
         return (oper.qloperator == "DICE");
     });
     dices.forEach(function(dice){
         var seed = 1;
-        var resdice = {bgps : [],filtrs :[]};
-        getFilterFromDice(dice.dicecondition,varcolumns,meascolumns,seed,resdice);
+        var resdice = {bgps : []};
+        getFilterFromDice(dice.dicecondition,datacube,varcolumns,meascolumns,seed,resdice);
+        console.log("dice condition:");
+        //console.log(util.inspect(dice.dicecondition, { showHidden: false, depth: null, colors:true }));
+        console.log("filter from dice:");
+        //console.log(util.inspect(resdice, { showHidden: false, depth: null, colors:true }));
         seed ++;
         sparqlDICE.addFilter(resdice.filtr);
         resdice.bgps.forEach(function(b){
-            sparqlDICE.addPattern(b.s, b.p. b.o);
+            if (! sparqlDICE.existsPattern(b.s, b.p, b.o)){
+                console.log("bgp:");
+                //console.log(util.inspect(b, { showHidden: false, depth: null, colors:true }));
+                sparqlDICE.addPattern(b.s, b.p, b.o);
+            }
         });
     });
 
     sparqlDICE.addSubquery(sparqlIPO);
-
     sparqlstr = sparqlDICE.toString(false);
     //console.log("QUERY in qb4olap-operators: "+sparqlStr);
 
@@ -569,7 +662,7 @@ function getDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
 
 
 
-function getFilterFromDice(dicecondition,varcolumns,meascolumns,seed,result){
+function getFilterFromDice(dicecondition,datacube,varcolumns,meascolumns,seed,result){
     var operators = ['AND','OR'];
     if (dicecondition.nodetype == "leaf"){
         if(dicecondition.args[0].condType == "attribute"){
@@ -581,12 +674,24 @@ function getFilterFromDice(dicecondition,varcolumns,meascolumns,seed,result){
             //create a bgp that gets the value of the attribute
             var bgp = {
                 s: levelvar,
-                p: dicecondition.args[0].attribute,
+                p: "<"+dicecondition.args[0].attribute+">",
                 o: membervar
             }
+            
             result.bgps.push(bgp);
+                        
             //add a filter on the value of the attribute
-            var f = membervar + dicecondition.operator +dicecondition.args[1];
+            //get the type of the attribute
+            var dc = new Datacube(datacube.name, datacube.uri, datacube.dataset);
+            dc.setDimensions(datacube.dimensions);
+            var attype = dc.getAttributeType(dicecondition.args[0].level, dicecondition.args[0].attribute);
+
+            if (attype == "http://www.w3.org/2001/XMLSchema#string" && dicecondition.operator == "="){
+                var f = "(REGEX ("+membervar+","+dicecondition.args[1]+" , \"i\"))";
+            }else{
+                var f = "("+membervar + dicecondition.operator +dicecondition.args[1]+")";    
+            }
+            
             result.filtr = f;
         }else if (dicecondition.args[0].condType == "measure"){
             //find the variable that corresponds to this measure
@@ -594,16 +699,16 @@ function getFilterFromDice(dicecondition,varcolumns,meascolumns,seed,result){
                 return (v.colmeas == dicecondition.args[0].measure);
             })[0].colvar;
             //add a filter on the value of the measure
-            var f = measvar + dicecondition.operator +dicecondition.args[1];
+            var f = "("+measvar +" "+ dicecondition.operator +" "+dicecondition.args[1]+")";
             result.filtr = f;
         }
     }else{
         //if its a binary operator
         if (operators.indexOf(dicecondition.operator) > -1){
-            var rleft = {bgps : [],filtrs :[]};
-            var rright = {bgps : [],filtrs :[]};
-            getFilterFromDice(dicecondition.args[0],varcolumns,meascolumns,seed,rleft);
-            getFilterFromDice(dicecondition.args[1],varcolumns,meascolumns,seed,rright);
+            var rleft = {bgps : []};
+            var rright = {bgps : []};
+            getFilterFromDice(dicecondition.args[0],datacube,varcolumns,meascolumns,seed,rleft);
+            getFilterFromDice(dicecondition.args[1],datacube,varcolumns,meascolumns,seed,rright);
 
             rleft.bgps.forEach(function(b){
                 result.bgps.push(b);
@@ -611,7 +716,10 @@ function getFilterFromDice(dicecondition,varcolumns,meascolumns,seed,result){
             rright.bgps.forEach(function(b){
                 result.bgps.push(b);
             });
-            var f = rleft.filtr + dicecondition.operator +rright.filtr;
+            var binoper = "";
+            if (dicecondition.operator == "AND") binoper = "&&";
+            if (dicecondition.operator == "OR") binoper = "||";
+            var f = "("+rleft.filtr +" "+ binoper+" "+rright.filtr+")";
             result.filtr = f;
         }
     }
@@ -627,7 +735,7 @@ function existsConditionOverMeasure(dicecondition) {
   
     var result= false;
         //console.log("dicecondition en existsConditionOverMeasure");
-        //console.log(util.inspect(dicecondition, { showHidden: false, depth: null, colors:true }));
+        ////console.log(util.inspect(dicecondition, { showHidden: false, depth: null, colors:true }));
 
     if (dicecondition.nodetype == "internal"){
         var recCall = dicecondition.args.map(existsConditionOverMeasure);
@@ -706,7 +814,7 @@ function refersToLevel(dicecondition, level) {
     }
     else {
 //        console.log("en el ELSE de refersToLevel: ");
-//        console.log(util.inspect(dicecondition.args, { showHidden: false, depth: null, colors:true }));
+//        //console.log(util.inspect(dicecondition.args, { showHidden: false, depth: null, colors:true }));
         result = dicecondition.args.filter(function(arg){
             return ((Object.keys(arg).indexOf('level') >-1) && (arg['level'] == level))
         }).length > 0;

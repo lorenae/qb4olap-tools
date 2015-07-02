@@ -29,14 +29,14 @@ Dimension.prototype.addLevel = function(level){
 //pre: the hierarchy exists
 Dimension.prototype.getHierarchy = function(huri){
     return this.hierarchies.filter(function(h){
-        return h.uri == huri;}
+        return h.uri === huri;}
         )[0];
 };
 
 //pre: the level exists
 Dimension.prototype.getLevel = function(luri){
     return this.levels.filter(function(l){
-        return l.uri == luri;}
+        return l.uri === luri;}
         )[0];
 };
 
@@ -47,13 +47,13 @@ Dimension.prototype.getBottomLevel = function(){
 
 Dimension.prototype.existsHierarchy = function(huri){
     return this.hierarchies.filter(function(h) {
-        return h.uri == huri;
+        return h.uri === huri;
     }).length > 0;
 };
 
 Dimension.prototype.existsLevel = function(luri){
     return this.levels.filter(function(l) {
-        return l.uri == luri;
+        return l.uri === luri;
     }).length > 0;
 };
 

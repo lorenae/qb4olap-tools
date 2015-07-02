@@ -161,7 +161,6 @@ var hbs = expressHandlebars.create({
 	saveInstance: function(instance, options){
 		instanceJSON = JSON.stringify(instance);
 		//console.log("INSTANCES en el server: "+instanceJSON);
-
 		script = "<script type='text/javascript'> var cubeinstance="+instanceJSON+"</script>";
 		return new Handlebars.SafeString(script);	
 
@@ -203,29 +202,53 @@ var hbs = expressHandlebars.create({
 		columns.forEach(function(column){
 			hs += "<th data-field=\""+column.colvar+"\" data-sortable=\"true\">"+column.colname+"</th>";
 		});
-		console.log("TABLE HEADERS: "+ util.inspect(hs, { showHidden: false, depth: null, colors:true }));
+		//console.log("TABLE HEADERS: "+ util.inspect(hs, { showHidden: false, depth: null, colors:true }));
 		return new Handlebars.SafeString(hs);
 	},
 	showQuery: function(query, options) {
 
-			var querytext = "QUERY \n";
-			query.query.forEach(function(operation){
-				if ( (operation.qloperator=="ROLLUP") || (operation.qloperator=="DRILLDOWN")){
-				querytext += operation.statement+"="+operation.qloperator+"("+operation.source+","+operation.dimension+","+operation.level+");\n";
+		var renderCondition = function(dicecondition){
+			var operators = ['AND','OR'];
+		    var strcond = null;
+		    if (dicecondition.nodetype == "leaf"){
+		        if(dicecondition.args[0].condType == "attribute"){
+		            strcond = dicecondition.args[0].dimension+"|"+ dicecondition.args[0].level+"|"+dicecondition.args[0].attribute+" "+dicecondition.operator+" "+dicecondition.args[1];
+		        }else if (dicecondition.args[0].condType == "measure"){
+		            strcond = dicecondition.args[0].measure+" "+ dicecondition.operator +" "+dicecondition.args[1];
+		        }
+		    }else{
+		        //if its a binary operator
+		        if (operators.indexOf(dicecondition.operator) > -1){
+		            var cleft = renderCondition(dicecondition.args[0]);
+		            var cright = renderCondition(dicecondition.args[1]);
+		            
+		            if (dicecondition.operator == "AND") binoper = "&&";
+		            if (dicecondition.operator == "OR") binoper = "||";
+		            strcond = "(("+cleft +") "+ dicecondition.operator+" ("+cright+"))";
+		        }
+		    }
+		    return strcond;
+		};		
+
+		var querytext = "QUERY \n";
+		query.query.forEach(function(operation){
+			if ( (operation.qloperator=="ROLLUP") || (operation.qloperator=="DRILLDOWN")){
+			querytext += operation.statement+"="+operation.qloperator+"("+operation.source+","+operation.dimension+","+operation.level+");\n";
+			}
+			if(operation.qloperator=="SLICE"){
+				if(operation.condType == "dimension"){
+					querytext += operation.statement+"= SLICE("+operation.source+","+operation.dimension+");\n";
+				}else{
+					querytext += operation.statement+"= SLICE("+operation.source+",MEASURES("+operation.measure+"));\n";
 				}
-				if(operation.qloperator=="SLICE"){
-					if(operation.condType == "dimension"){
-						querytext += operation.statement+"= SLICE("+operation.source+",D("+operation.dimension+"));\n";
-					}else{
-						querytext += operation.statement+"= SLICE("+operation.source+",M("+operation.measure+"));\n";
-					}
-				}
-				if(operation.qloperator=="DICE"){
-					// TODO aux function that transforms the condition tree into a string
-					querytext += operation.statement+"= DICE("+operation.source+","+operation.dicecondition.operator+");\n";
-				}
-			});
-			return new Handlebars.SafeString(querytext.replace(/^\s\s*/, ''));
+			}
+			if(operation.qloperator=="DICE"){
+				//console.log("DICE  "+util.inspect(operation.dicecondition, { showHidden: false, depth: null, colors:true }));
+				// TODO aux function that transforms the condition tree into a string
+				querytext += operation.statement+"= DICE("+operation.source+","+renderCondition(operation.dicecondition)+");\n";
+			}
+		});
+		return new Handlebars.SafeString(querytext.replace(/^\s\s*/, ''));
 	},
 	showQLQuery: function(query,options){
 		return new Handlebars.SafeString(query.replace(/^\s\s*/, '')); 
@@ -570,14 +593,18 @@ function reloadStoredCubes(){
 	return (age>10);
 }
 
+//TODO improve speed
 // keep stored cubes updated
 function reloadCompleteStoredCubes(){
+	/*
     var stored = storedcompletecubes.timestamp;
     //console.log(stored);
     //console.log(Date.now());
 	var age = Math.abs(Date.now() - stored) / 3600000;
 	//console.log("AGE:"+age);
 	return (age>2);
+	*/
+	return false
 }
 
 
@@ -673,7 +700,6 @@ var apiOptions = {
 	context: '/',
 	domain: require('domain').create(),
 };
-
 // link API into pipeline
 app.use(rest.rester(apiOptions));
 */

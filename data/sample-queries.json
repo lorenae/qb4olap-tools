@@ -4,55 +4,65 @@
             "cube": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#migr_asyappctzmQB4O",
             "queryid": 11,
             "querydesc": "Asylum applications by all citizenships (sex, time, age, citizenship, destination, application type)",
-            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>; \r\nQUERY\r\n$C1 := ROLLUP (<http://eurostat.linked-statistics.org/data/migr_asyappctzm>, schema:citizenshipDim,schema:citAll);"
+            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>;\r\nPREFIX data: <http://eurostat.linked-statistics.org/data/>;\r\nQUERY\r\n$C1 := ROLLUP (data:migr_asyappctzm, schema:citizenshipDim,schema:citAll);"
         },    
         {
             "cube": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#migr_asyappctzmQB4O",
             "queryid": 12,
             "querydesc": "Asylum applications by year and continent (sex, time, age, citizenship, destination, application type)",
-            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>; \r\nQUERY\r\n$C1 := ROLLUP (<http://eurostat.linked-statistics.org/data/migr_asyappctzm>, schema:citizenshipDim,schema:continent);\r\n$C2 := ROLLUP ($C1, schema:citizenshipDim,schema:citAll);\r\n$C3 := ROLLUP ($C2, schema:timeDim, schema:year);\r\n$C4 := DRILLDOWN ($C3, schema:citizenshipDim,schema:continent);"
+            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>;\r\nPREFIX data: <http://eurostat.linked-statistics.org/data/>; \r\nQUERY\r\n$C1 := ROLLUP (data:migr_asyappctzm, schema:citizenshipDim,schema:continent);\r\n$C2 := ROLLUP ($C1, schema:citizenshipDim,schema:citAll);\r\n$C3 := ROLLUP ($C2, schema:timeDim, schema:year);\r\n$C4 := DRILLDOWN ($C3, schema:citizenshipDim,schema:continent);"
         },
         {
             "cube": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#migr_asyappctzmQB4O",
             "queryid": 13,
             "querydesc": "Asylum applications by year (sex, time, age, destination, application type)",
-            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>; \r\nQUERY\r\n$C1 := ROLLUP (<http://eurostat.linked-statistics.org/data/migr_asyappctzm>, schema:citizenshipDim,schema:continent);\r\n$C2 := SLICE ($C1, schema:citizenshipDim);\r\n$C3 := ROLLUP ($C2, schema:timeDim, schema:year);"
+            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>;\r\nPREFIX data: <http://eurostat.linked-statistics.org/data/>; \r\nQUERY\r\n$C1 := ROLLUP (data:migr_asyappctzm, schema:citizenshipDim,schema:continent);\r\n$C2 := SLICE ($C1, schema:citizenshipDim);\r\n$C3 := ROLLUP ($C2, schema:timeDim, schema:year);"
+        },
+        {   "cube": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#migr_asyappctzmQB4O",
+            "queryid": 141,
+            "querydesc": "Asylum applications submitted in 2013 by African citizens, where destination is France  (sex, time, age, citizenship, destination)",
+            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>;\r\nPREFIX data: <http://eurostat.linked-statistics.org/data/>;\r\nPREFIX property: <http://eurostat.linked-statistics.org/property#>;\r\nQUERY\r\n$C1 := ROLLUP (data:migr_asyappctzm, schema:citizenshipDim,schema:continent);\r\n$C2 := SLICE ($C1, schema:asylappDim);\r\n$C3 := ROLLUP ($C2, schema:timeDim, schema:year);\r\n$C4 := DICE ($C3, (schema:citizenshipDim|schema:continent|schema:continentName = \"Africa\"));\r\n$C5 := DICE ($C4, (schema:timeDim|schema:year|schema:yearNum = 2013) AND (schema:destinationDim|property:geo|schema:countryName = \"France\"));"
+        },
+        {   "cube": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#migr_asyappctzmQB4O",
+            "queryid": 151,
+            "querydesc": "Asylum applications by year submitted by Asian citizens, where applications count > 5000 and destination is France or Germany (sex, time, age, citizenship, destination)",
+            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>;\r\nPREFIX data: <http://eurostat.linked-statistics.org/data/>;\r\nPREFIX property: <http://eurostat.linked-statistics.org/property#>;\r\nPREFIX sdmx-measure:<http://purl.org/linked-data/sdmx/2009/measure#> ;\r\nQUERY\r\n$C1 := ROLLUP (data:migr_asyappctzm, schema:citizenshipDim,schema:citAll);\r\n$C2 := ROLLUP ($C1, schema:timeDim, schema:year);\r\n$C3 := DRILLDOWN ($C2, schema:citizenshipDim,schema:continent);\r\n$C4 := DICE ($C3, (schema:citizenshipDim|schema:continent|schema:continentName = \"Asia\"));\r\n$C5 := DICE ($C4, ( sdmx-measure:obsValue > 5000 AND (schema:destinationDim|property:geo|schema:countryName = \"France\") OR (schema:destinationDim|property:geo|schema:countryName = \"Germany\")));"
         },
         {
             "cube": "http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#QB4O_CM_MKT_LCAP_CD",
             "queryid": 20,
             "querydesc": "Yearly market capitalization by Region",
-            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#>; \r\nQUERY\r\n$C1 := ROLLUP (<http://worldbank.270a.info/dataset/CM.MKT.LCAP.CD>, schema:geoDim,schema:region);"
+            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#>;\r\nPREFIX data: <http://worldbank.270a.info/dataset/>; \r\nQUERY\r\n$C1 := ROLLUP (data:CM.MKT.LCAP.CD, schema:geoDim,schema:region);"
         },
         {
             "cube": "http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#QB4O_CM_MKT_LCAP_CD",
             "queryid": 21,
             "querydesc": "Yearly market capitalization by country Income Level",
-            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#>; \r\nQUERY\r\n$C1 := ROLLUP (<http://worldbank.270a.info/dataset/CM.MKT.LCAP.CD>, schema:geoDim,schema:geoAll);\r\n $C2 := DRILLDOWN ($C1, schema:geoDim,schema:income);"
+            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#>;\r\nPREFIX data: <http://worldbank.270a.info/dataset/>; \r\nQUERY\r\n$C1 := ROLLUP (data:CM.MKT.LCAP.CD, schema:geoDim,schema:geoAll);\r\n $C2 := DRILLDOWN ($C1, schema:geoDim,schema:income);"
         },
         {
             "cube": "http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#QB4O_CM_MKT_LCAP_CD",
             "queryid": 22,
             "querydesc": "Total market capitalization by Region",
-            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#>; \r\nQUERY\r\n$C1 := ROLLUP (<http://worldbank.270a.info/dataset/CM.MKT.LCAP.CD>, schema:geoDim,schema:income);\r\n $C2 := ROLLUP ($C1, schema:timeDim,schema:timeAll); \r\n $C3 := SLICE ($C2, schema:timeDim);"
+            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#>;\r\nPREFIX data: <http://worldbank.270a.info/dataset/>; \r\nQUERY\r\n$C1 := ROLLUP (data:CM.MKT.LCAP.CD, schema:geoDim,schema:income);\r\n $C2 := ROLLUP ($C1, schema:timeDim,schema:timeAll); \r\n $C3 := SLICE ($C2, schema:timeDim);"
         },
         {
             "cube": "http://dwbook.org/cubes/schemas/northwind#Northwind",
             "queryid": 41,
             "querydesc": "Total sales amount per customer, year, and product category.",
-            "query": "prefix nw: <http://dwbook.org/cubes/schemas/northwind#>; \r\nQUERY\r\n$C1 := ROLLUP(<http://dwbook.org/cubes/instances/northwind#dataset1>,nw:customerDim, nw:city); \r\n$C2 := ROLLUP($C1,nw:orderDateDim, nw:quarter); \r\n$C3 := SLICE($C2, nw:shippedDateDim); \r\n$C4 := SLICE($C3, nw:supplierDim); \r\n$C5 := SLICE($C4, nw:dueDateDim); \r\n$C6 := ROLLUP($C5,nw:orderDateDim, nw:year); \r\n$C7 := SLICE($C6, nw:employeeDim); \r\n$C8 := ROLLUP($C7,nw:productDim, nw:category); \r\n$C9 := SLICE($C8, MEASURES(nw:quantity)); \r\n$C10 := SLICE($C9, MEASURES(nw:unitPrice)); \r\n$C11 := SLICE($C10, MEASURES(nw:discount)); \r\n$C12 := SLICE($C11, MEASURES(nw:freight)); \r\n$C13 := SLICE($C12, MEASURES(nw:netAmount)); \r\n$C14 := DRILLDOWN($C13,nw:customerDim, nw:customer); \r\n $C15 := SLICE($C14, nw:orderDim);\r\n $C16 := SLICE($C15, nw:shipperDim);"
+            "query": "prefix nw: <http://dwbook.org/cubes/schemas/northwind#>;\r\nPREFIX data: <http://dwbook.org/cubes/instances/northwind#>; \r\nQUERY\r\n$C1 := ROLLUP(data:dataset1,nw:customerDim, nw:city); \r\n$C2 := ROLLUP($C1,nw:orderDateDim, nw:quarter); \r\n$C3 := SLICE($C2, nw:shippedDateDim); \r\n$C4 := SLICE($C3, nw:supplierDim); \r\n$C5 := SLICE($C4, nw:dueDateDim); \r\n$C6 := ROLLUP($C5,nw:orderDateDim, nw:year); \r\n$C7 := SLICE($C6, nw:employeeDim); \r\n$C8 := ROLLUP($C7,nw:productDim, nw:category); \r\n$C9 := SLICE($C8, MEASURES(nw:quantity)); \r\n$C10 := SLICE($C9, MEASURES(nw:unitPrice)); \r\n$C11 := SLICE($C10, MEASURES(nw:discount)); \r\n$C12 := SLICE($C11, MEASURES(nw:freight)); \r\n$C13 := SLICE($C12, MEASURES(nw:netAmount)); \r\n$C14 := DRILLDOWN($C13,nw:customerDim, nw:customer); \r\n $C15 := SLICE($C14, nw:orderDim);\r\n $C16 := SLICE($C15, nw:shipperDim);"
         },
         {
             "cube": "http://dwbook.org/cubes/schemas/northwind#Northwind",
             "queryid": 42,
             "querydesc": "Yearly sales amount for each pair of customer country and supplier countries.",
-            "query": "prefix nw: <http://dwbook.org/cubes/schemas/northwind#>; \r\nQUERY\r\n$C1 := ROLLUP(<http://dwbook.org/cubes/instances/northwind#dataset1>,nw:customerDim, nw:city); \r\n$C2 := ROLLUP($C1,nw:orderDateDim, nw:quarter); \r\n$C3 := SLICE($C2, nw:shippedDateDim); \r\n$C4 := ROLLUP($C3, nw:supplierDim, nw:country); \r\n$C5 := SLICE($C4, nw:dueDateDim); \r\n$C6 := ROLLUP($C5,nw:orderDateDim, nw:year); \r\n$C7 := SLICE($C6, nw:employeeDim); \r\n$C8 := SLICE($C7,nw:productDim); \r\n$C9 := SLICE($C8, MEASURES(nw:quantity)); \r\n$C10 := SLICE($C9, MEASURES(nw:unitPrice)); \r\n$C11 := SLICE($C10, MEASURES(nw:discount)); \r\n$C12 := SLICE($C11, MEASURES(nw:freight)); \r\n$C13 := SLICE($C12, MEASURES(nw:netAmount)); \r\n$C14 := ROLLUP($C13,nw:customerDim, nw:country); \r\n $C15 := SLICE($C14, nw:orderDim);\r\n $C16 := SLICE($C15, nw:shipperDim);"
+            "query": "prefix nw: <http://dwbook.org/cubes/schemas/northwind#>;\r\nPREFIX data: <http://dwbook.org/cubes/instances/northwind#>; \r\nQUERY\r\n$C1 := ROLLUP(data:dataset1,nw:customerDim, nw:city); \r\n$C2 := ROLLUP($C1,nw:orderDateDim, nw:quarter); \r\n$C3 := SLICE($C2, nw:shippedDateDim); \r\n$C4 := ROLLUP($C3, nw:supplierDim, nw:country); \r\n$C5 := SLICE($C4, nw:dueDateDim); \r\n$C6 := ROLLUP($C5,nw:orderDateDim, nw:year); \r\n$C7 := SLICE($C6, nw:employeeDim); \r\n$C8 := SLICE($C7,nw:productDim); \r\n$C9 := SLICE($C8, MEASURES(nw:quantity)); \r\n$C10 := SLICE($C9, MEASURES(nw:unitPrice)); \r\n$C11 := SLICE($C10, MEASURES(nw:discount)); \r\n$C12 := SLICE($C11, MEASURES(nw:freight)); \r\n$C13 := SLICE($C12, MEASURES(nw:netAmount)); \r\n$C14 := ROLLUP($C13,nw:customerDim, nw:country); \r\n $C15 := SLICE($C14, nw:orderDim);\r\n $C16 := SLICE($C15, nw:shipperDim);"
         },
         {
             "cube": "http://dwbook.org/cubes/schemas/northwind#Northwind",
             "queryid": 413,
             "querydesc": "Total sales amount, and sum of the quantities sold for each order.",
-            "query": "prefix nw: <http://dwbook.org/cubes/schemas/northwind#>; \r\nQUERY\r\n$C1 := ROLLUP(<http://dwbook.org/cubes/instances/northwind#dataset1>,nw:customerDim, nw:city); \r\n$C2 := ROLLUP($C1,nw:orderDateDim, nw:quarter); \r\n$C3 := SLICE($C2, nw:shippedDateDim); \r\n$C4 := ROLLUP($C3, nw:supplierDim, nw:country); \r\n$C5 := SLICE($C4, nw:dueDateDim); \r\n$C6 := SLICE($C5,nw:orderDateDim); \r\n$C7 := SLICE($C6, nw:employeeDim); \r\n$C8 := SLICE($C7,nw:productDim); \r\n$C9 := SLICE($C8, MEASURES(nw:unitPrice)); \r\n$C10 := SLICE($C9, MEASURES(nw:discount)); \r\n$C11 := SLICE($C10, MEASURES(nw:freight)); \r\n$C12 := SLICE($C11, MEASURES(nw:netAmount)); \r\n$C13 := SLICE($C12, nw:shipperDim);\r\n$C14 := SLICE($C13, nw:customerDim); \r\n$C15 := SLICE($C14, nw:supplierDim); \r\n"
+            "query": "prefix nw: <http://dwbook.org/cubes/schemas/northwind#>;\r\nPREFIX data: <http://dwbook.org/cubes/instances/northwind#>; \r\nQUERY\r\n$C1 := ROLLUP(data:dataset1,nw:customerDim, nw:city); \r\n$C2 := ROLLUP($C1,nw:orderDateDim, nw:quarter); \r\n$C3 := SLICE($C2, nw:shippedDateDim); \r\n$C4 := ROLLUP($C3, nw:supplierDim, nw:country); \r\n$C5 := SLICE($C4, nw:dueDateDim); \r\n$C6 := SLICE($C5,nw:orderDateDim); \r\n$C7 := SLICE($C6, nw:employeeDim); \r\n$C8 := SLICE($C7,nw:productDim); \r\n$C9 := SLICE($C8, MEASURES(nw:unitPrice)); \r\n$C10 := SLICE($C9, MEASURES(nw:discount)); \r\n$C11 := SLICE($C10, MEASURES(nw:freight)); \r\n$C12 := SLICE($C11, MEASURES(nw:netAmount)); \r\n$C13 := SLICE($C12, nw:shipperDim);\r\n$C14 := SLICE($C13, nw:customerDim); \r\n$C15 := SLICE($C14, nw:supplierDim); \r\n"
         }	
         
         
