@@ -574,7 +574,7 @@ function getDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
         //exists a rollup on this dimension and not exists slice
         if (r.length>0 && s.length==0){
             var rollup = r[0];
-            console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
+            //console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
             var targetLevel = rollup.targetLevel;
             var bottomLevel = rollup.bottomLevel.uri;
             if (optimize){
@@ -636,15 +636,15 @@ function getDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
         var seed = 1;
         var resdice = {bgps : []};
         getFilterFromDice(dice.dicecondition,datacube,varcolumns,meascolumns,seed,resdice);
-        console.log("dice condition:");
+        //console.log("dice condition:");
         //console.log(util.inspect(dice.dicecondition, { showHidden: false, depth: null, colors:true }));
-        console.log("filter from dice:");
+        //console.log("filter from dice:");
         //console.log(util.inspect(resdice, { showHidden: false, depth: null, colors:true }));
         seed ++;
         sparqlDICE.addFilter(resdice.filtr);
         resdice.bgps.forEach(function(b){
             if (! sparqlDICE.existsPattern(b.s, b.p, b.o)){
-                console.log("bgp:");
+                //console.log("bgp:");
                 //console.log(util.inspect(b, { showHidden: false, depth: null, colors:true }));
                 sparqlDICE.addPattern(b.s, b.p, b.o);
             }
