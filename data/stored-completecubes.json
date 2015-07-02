@@ -276,9 +276,9 @@
                                 "uri": "http://eurostat.linked-statistics.org/property#citizen",
                                 "attribs": [
                                     {
-                                        "name": null,
-                                        "uri": null,
-                                        "datatype": null
+                                        "name": "Country name",
+                                        "uri": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#countryName",
+                                        "datatype": "http://www.w3.org/2001/XMLSchema#string"
                                     }
                                 ]
                             }
@@ -348,9 +348,9 @@
                                 "uri": "http://eurostat.linked-statistics.org/property#asyl_app",
                                 "attribs": [
                                     {
-                                        "name": null,
-                                        "uri": null,
-                                        "datatype": null
+                                        "name": "Type of applicant",
+                                        "uri": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#asylappName",
+                                        "datatype": "http://www.w3.org/2001/XMLSchema#string"
                                     }
                                 ]
                             }
@@ -8573,7 +8573,13 @@
                             {
                                 "name": "Continent Level",
                                 "uri": "http://dwbook.org/cubes/schemas/northwind#continent",
-                                "attribs": []
+                                "attribs": [
+                                    {
+                                        "name": "Continent Name",
+                                        "uri": "http://dwbook.org/cubes/schemas/northwind#continentName",
+                                        "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                                    }
+                                ]
                             },
                             {
                                 "name": "Region Level",
@@ -8810,7 +8816,13 @@
                             {
                                 "name": "Year Level",
                                 "uri": "http://dwbook.org/cubes/schemas/northwind#year",
-                                "attribs": []
+                                "attribs": [
+                                    {
+                                        "name": "Year Number",
+                                        "uri": "http://dwbook.org/cubes/schemas/northwind#yearNo",
+                                        "datatype": "http://www.w3.org/2001/XMLSchema#positiveInteger"
+                                    }
+                                ]
                             },
                             {
                                 "name": "Semester Level",
@@ -8939,7 +8951,13 @@
                             {
                                 "name": "Year Level",
                                 "uri": "http://dwbook.org/cubes/schemas/northwind#year",
-                                "attribs": []
+                                "attribs": [
+                                    {
+                                        "name": "Year Number",
+                                        "uri": "http://dwbook.org/cubes/schemas/northwind#yearNo",
+                                        "datatype": "http://www.w3.org/2001/XMLSchema#positiveInteger"
+                                    }
+                                ]
                             },
                             {
                                 "name": "Semester Level",
@@ -9068,7 +9086,13 @@
                             {
                                 "name": "Year Level",
                                 "uri": "http://dwbook.org/cubes/schemas/northwind#year",
-                                "attribs": []
+                                "attribs": [
+                                    {
+                                        "name": "Year Number",
+                                        "uri": "http://dwbook.org/cubes/schemas/northwind#yearNo",
+                                        "datatype": "http://www.w3.org/2001/XMLSchema#positiveInteger"
+                                    }
+                                ]
                             },
                             {
                                 "name": "Semester Level",
@@ -9197,7 +9221,23 @@
                             {
                                 "name": "Category Level",
                                 "uri": "http://dwbook.org/cubes/schemas/northwind#category",
-                                "attribs": []
+                                "attribs": [
+                                    {
+                                        "name": "Category ID",
+                                        "uri": "http://dwbook.org/cubes/schemas/northwind#categoryID",
+                                        "datatype": "http://www.w3.org/2001/XMLSchema#positiveInteger"
+                                    },
+                                    {
+                                        "name": "Category Name",
+                                        "uri": "http://dwbook.org/cubes/schemas/northwind#categoryName",
+                                        "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                                    },
+                                    {
+                                        "name": "Description",
+                                        "uri": "http://dwbook.org/cubes/schemas/northwind#description",
+                                        "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                                    }
+                                ]
                             },
                             {
                                 "name": "Product Level",
@@ -9254,7 +9294,7 @@
                         "name": "Order Dimension",
                         "levels": [
                             {
-                                "name": null,
+                                "name": "Order Level",
                                 "uri": "http://dwbook.org/cubes/schemas/northwind#order",
                                 "attribs": [
                                     {
@@ -9288,7 +9328,7 @@
                         "name": "Shipper Dimension",
                         "levels": [
                             {
-                                "name": null,
+                                "name": "Shipper Level",
                                 "uri": "http://dwbook.org/cubes/schemas/northwind#shipper",
                                 "attribs": [
                                     {
@@ -9324,7 +9364,13 @@
                             {
                                 "name": "Continent Level",
                                 "uri": "http://dwbook.org/cubes/schemas/northwind#continent",
-                                "attribs": []
+                                "attribs": [
+                                    {
+                                        "name": "Continent Name",
+                                        "uri": "http://dwbook.org/cubes/schemas/northwind#continentName",
+                                        "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                                    }
+                                ]
                             },
                             {
                                 "name": "Region Level",
@@ -9511,7 +9557,13 @@
                             {
                                 "name": "Continent Level",
                                 "uri": "http://dwbook.org/cubes/schemas/northwind#continent",
-                                "attribs": []
+                                "attribs": [
+                                    {
+                                        "name": "Continent Name",
+                                        "uri": "http://dwbook.org/cubes/schemas/northwind#continentName",
+                                        "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                                    }
+                                ]
                             },
                             {
                                 "name": "Region Level",

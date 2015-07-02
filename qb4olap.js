@@ -81,15 +81,38 @@ var hbs = expressHandlebars.create({
 				out += h.name;
 				out +="<i class=\"fa fa-fw fa-chevron-down\"></i></a>";
 				out += "<ul id=\""+hanchor+"\" class=\"collapse\" style=\"height: 0px; list-style: none; padding-left: 2;\" aria-expanded=\"false\">";
+				var lordinal = 0;
 
 				orderedLevels.forEach(function (ol){
 					var level = d.getLevel(ol.level);
-					out += "<li class=\"schema\" title=\""+ level.uri+"\">";
-					for (var p = 0; p < ol.pos; p++) {
-						out += "<i class=\"fa fa-fw fa-square\"></i>";
+					var attribs = level.attribs;
+					if(attribs.length>0){
+						var lanchor = "lev"+dimordinal*100+hordinal*10+lordinal;
+						lordinal++;
+						out += "<li class=\"schema\" title=\""+ level.uri+"\"><a class=\"collapsed\" data-toggle=\"collapse\" data-target=\"#"+lanchor+"\" aria-expanded=\"false\" href=\"javascript:;\">";
+						for (var p = 0; p < ol.pos; p++) {
+							out += "<i class=\"fa fa-fw fa-square\"></i>";
+						}
+						out += level.name;
+						out +="<i class=\"fa fa-fw fa-chevron-down\"></i></a>";
+						//atribute list
+						out += "<ul id=\""+lanchor+"\" class=\"collapse\" style=\"height: 0px; list-style: none; padding-left: 2;\" aria-expanded=\"false\">";
+						attribs.forEach(function(a){
+							out += "<li class=\"schema\" title=\""+ a.uri+"\">";
+							out += "<i class=\"fa fa-fw fa-square\"></i>";
+							out += a.name+ "("+a.datatype+")";
+							out += "</li>";
+						});
+						out += "</ul></li>";
+					}else{
+						out += "<li class=\"schema\" title=\""+ level.uri+"\">";
+						for (var p = 0; p < ol.pos; p++) {
+							out += "<i class=\"fa fa-fw fa-square\"></i>";
+						}
+						out += level.name;
+						out += "</li>";
 					}
-					out += level.name;
-					out += "</li>";
+					
 				})
 				//close level list
 				out += "</ul></li>";
