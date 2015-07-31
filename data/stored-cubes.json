@@ -1,5 +1,5 @@
 {
-    "timestamp": 1435846221142,
+    "timestamp": 1438356840498,
     "cubes": [
         {
             "schemagraph": "http://www.fing.edu.uy/inco/cubes/schemas/wbld",
@@ -26,6 +26,15 @@
             "name": "Nortwind DW example",
             "instancegraph": "http://www.fing.edu.uy/inco/cubes/instances/northwind",
             "numobs": "2027",
+            "selected": false
+        },
+        {
+            "schemagraph": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyappctzmQB4O13",
+            "dataset": "http://eurostat.linked-statistics.org/data/migr_asyappctzm",
+            "uri": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#migr_asyappctzmQB4O13",
+            "name": "Asylum and first time asylum applicants to European countries by citizenship, age and sex Monthly data",
+            "instancegraph": "http://www.fing.edu.uy/inco/cubes/instances/migr_asyapp_clean",
+            "numobs": "78594",
             "selected": false
         }
     ]
