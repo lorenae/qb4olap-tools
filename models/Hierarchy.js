@@ -17,42 +17,20 @@ function Hierarchy(uri,name,lattice){
     this.uri = uri;
     this.name = name;
     this.lattice = lattice;
+    this.steps = [];
 }
 
 
 
 //adds a level pair only if it does not exist
-Hierarchy.prototype.addEdgeToLattice = function(childLevel, parentLevel, cardinality){
-
-    //if the child level does not exist in the lattice add a new node to the list 
-	if (!this.existsLevelNode(childLevel.uri)) {
-        var newNode;
-        if (parentLevel == null){
-            newNode ={childuri: childLevel.uri , pclist:[] };
-        } else{ 
-            newNode ={childuri: childLevel.uri , pclist:[{parenturi:parentLevel.uri,card:cardinality}] };
-        }
-        this.lattice.push(newNode);
-        //console.log('agrego un hijo');
-	}
-    //find the node for this level and add the pair (parentLevel,cardinality)
-    else{
-        if (parentLevel != null){
-            var node = this.getLevelNode(childLevel.uri);
-            var isparent = node.pclist.filter(function(parent){
-                    return parent.parenturi === parentLevel.uri;}
-                    ).length >0;
-            if (!isparent){
-                var newPair = {parenturi:parentLevel.uri,card:cardinality};
-                node.pclist.push(newPair);    
-            }
-        }
-    }
+Hierarchy.prototype.addEdgeToLattice = function(childLevel, parentLevel, cardinality, rollup){
+    this.addEdgeToLatticeByuri(childLevel.uri, parentLevel.uri, cardinality,rollup);
 };
 
 
+
 //adds a level pair only if it does not exist
-Hierarchy.prototype.addEdgeToLatticeByuri = function(childuri, parenturi, cardinality){
+Hierarchy.prototype.addEdgeToLatticeByuri = function(childuri, parenturi, cardinality, rollup){
 
     //if the child level does not exist in the lattice add a new node to the list 
     if (!this.existsLevelNode(childuri)) {
@@ -61,6 +39,7 @@ Hierarchy.prototype.addEdgeToLatticeByuri = function(childuri, parenturi, cardin
             newNode ={childuri: childuri , pclist:[] };
         } else{ 
             newNode ={childuri: childuri , pclist:[{parenturi:parenturi,card:cardinality}] };
+            this.addStep(childuri, parenturi, cardinality, rollup);
         }
         this.lattice.push(newNode);
         //console.log('agrego un hijo');
@@ -68,6 +47,7 @@ Hierarchy.prototype.addEdgeToLatticeByuri = function(childuri, parenturi, cardin
     //find the node for this level and add the pair (parentLevel,cardinality)
     else{
         if (parenturi != null){
+            this.addStep(childuri, parenturi, cardinality, rollup);
             var node = this.getLevelNode(childuri);
             var isparent = node.pclist.filter(function(parent){
                     return parent.parenturi === parenturi}
@@ -79,6 +59,21 @@ Hierarchy.prototype.addEdgeToLatticeByuri = function(childuri, parenturi, cardin
         }
     }
 };
+
+
+//adds a hierarchy step if it does not exist
+Hierarchy.prototype.addStep = function(childuri, parenturi, cardinality, rollup){
+    var existsStep = this.steps.filter(function(step){
+        return (step.childuri === childuri)&&
+               (step.parenturi === parenturi)&& 
+               (step.card === cardinality)&& 
+               (step.rup === rollup);}).length >0;
+    if (!existsStep){
+       var newStep ={childuri: childuri , parenturi:parenturi,card:cardinality,rup:rollup};
+       this.steps.push(newStep); 
+    }
+}
+
 
 Hierarchy.prototype.existsLevelNode = function(luri){
     return this.lattice.filter(function(node){       
@@ -140,6 +135,18 @@ Hierarchy.prototype.getTopLevel = function(){
     }
 };
 
+//post: if exists a step in the hierarchy from childuri to parenturi, returns the rollup function associated
+//to that step, otherwise returns null
+Hierarchy.prototype.getRollupFunction = function (childuri,parenturi){
+    var rollup = null;
+    var s = this.steps.filter(function(step){
+        return (step.childuri === childLevel.uri)&&
+               (step.parenturi === parentLevel.uri);});
+    if (s){
+        rollup = s[0].rup;
+    }
+    return rollup;
+}
 
 //pre: the hierarchy exists
 //post: returns the levels in the lattice from bottom to top, associated with their relative position

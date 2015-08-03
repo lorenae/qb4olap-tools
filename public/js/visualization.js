@@ -537,7 +537,8 @@ Network = function() {
   clicked = function(d) {
     
     var url = d.uri;
-    $(".modal-body").html('<iframe width="100%" height="100%" frameborder="0" scrolling="yes" allowtransparency="true" src="'+url+'"></iframe>');
+    $(".modal-body").html('<frame width="100%" height="100%" frameborder="0" scrolling="yes" allowtransparency="true" src="'+url+'"></frame>');
+    //$(".modal-body").html('<frameset cols="100%"><frame src="'+url+'"></frame></frameset>');
     $('#modalTitle').html('Dereferencing '+d.uri);
     $('#myModal').modal('show');
 
