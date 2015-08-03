@@ -1,6 +1,6 @@
 function Tooltip(tooltipId, width){
   var tooltipId = tooltipId;
-  $("body").append("<div class='tooltip' id='"+tooltipId+"'></div>");
+  $("body").append("<div class='d3-tip' id='"+tooltipId+"'></div>");
   //$("body").append("<div id='"+tooltipId+"'></div>");
 
   if(width){
@@ -8,7 +8,7 @@ function Tooltip(tooltipId, width){
   }
 
   hideTooltip();
-
+  
   function showTooltip(content, event) {
     $("#"+tooltipId).html(content);
     $("#"+tooltipId).show();
@@ -29,8 +29,8 @@ function Tooltip(tooltipId, width){
     var toolTipeH = $(ttid).height();
     var windowY = $(window).scrollTop();
     var windowX = $(window).scrollLeft();
-    var curX = event.pageX;
-    var curY = event.pageY;
+    var curX = d3.event.pageX;
+    var curY = d3.event.pageY;
     var ttleft = ((curX) < $(window).width() / 2) ? curX - toolTipW - xOffset*2 : curX + xOffset;
     if (ttleft < windowX + xOffset){
       ttleft = windowX + xOffset;

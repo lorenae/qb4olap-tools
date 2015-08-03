@@ -474,7 +474,7 @@ app.get('/getcompletecube', function(req, res) {
 	   		
 	   		//if(cubeuri != 'http://dwbook.org/cubes/schemas/northwind#Northwind'){
 	   		if (true){	
-		   		console.log("SCHEMA:" +util.inspect(cubeschema, { showHidden: false, depth: null, colors:true }));
+		   		//console.log("SCHEMA:" +util.inspect(cubeschema, { showHidden: false, depth: null, colors:true }));
 		   		backend.getCubeInstances(sess.state.endpoint, sess.state.cube,sess.state.schemagraph,sess.state.instancegraph, 
 		   			function (err, cubeinstances) {
 		   			//set the instances
