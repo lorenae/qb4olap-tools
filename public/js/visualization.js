@@ -95,7 +95,7 @@ RadialPlacement = function() {
 };
 
 Network = function() {
-  var allData, charge, curLinksData, curNodesData, filter, filterLinks, filterNodes, force, forceTick, groupCenters, height, hideDetails, layout, link, linkedByIndex, linksG, mapNodes, moveToRadialLayout, neighboring, network, node, nodeColors, nodeCounts, nodesG, radialTick, setFilter, setLayout, setSort, setupData, showDetails, sort, sortedArtists, strokeFor, tooltip, update, updateCenters, updateLinks, updateNodes, width;
+  var allData, charge, curLinksData, curNodesData, filter, filterLinks, filterNodes, force, forceTick, groupCenters, height, hideDetails, layout, link, linkedByIndex, linksG, mapNodes, moveToRadialLayout, neighboring, network, node, nodeColors, nodeCounts, nodesG, radialTick, setFilter, setLayout, setSort, setupData, showDetails, sort, sortedArtists, strokeFor, tip, update, updateCenters, updateLinks, updateNodes, width;
   width = 900;
   height = 700;
   allData = [];
@@ -115,7 +115,17 @@ Network = function() {
   groupCenters = null;
   force = d3.layout.force();
   nodeColors = d3.scale.category20();
-  tooltip = Tooltip("vis-tooltip", 230);
+
+  tip = Tooltip("vis-tip", 230);
+
+/*
+  tip = d3.tip()
+  .attr('class', 'd3-tip')
+  .html(function(d) {
+    return "<b><p>" + d.name + "</p><p> Level:" + d.level + "</p><p> Hierarchy: " + d.hierarchy + "</p></b>";
+  })
+*/
+
   charge = function(node) {
     return -Math.pow(node.radius, 1.5) / 3;
   };
@@ -141,6 +151,16 @@ Network = function() {
       .attr("height", height)
       .attr("transform", "translate(" + margin.left + "," + margin.right + ")")
       .call(zoom);
+
+
+/*
+    vis = d3.select(selection).append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("transform", "translate(" + margin.left + "," + margin.right + ")")
+      .call(tip);
+*/
+
 
     linksG = vis.append("g").attr("id", "links");
     nodesG = vis.append("g").attr("id", "nodes");
@@ -385,7 +405,7 @@ Network = function() {
 
 
   updateCenters = function(groups) {
-    console.log(groups);
+//    console.log(groups);
     if (layout === "radial_dim") {
       return groupCenters = RadialPlacement().center({
         "x": width / 2,
@@ -422,11 +442,16 @@ Network = function() {
     }).style("stroke", function(d) {
       return strokeFor(d);
     }).style("stroke-width", 1.0);
-    node
-    .on("mouseover", showDetails)
-    .on("mouseout", hideDetails)
+    node.on("mouseover", showDetails)
+    .on("mouseout", hideDetails) 
     .on("click", clicked);
     return node.exit().remove();
+
+    /*
+    .on("mouseover", tip.show)
+    .on("mouseout", tip.hide)
+
+    */
   };
   updateLinks = function() {
     link = linksG.selectAll("line.link").data(curLinksData, function(d) {
@@ -525,7 +550,7 @@ Network = function() {
     content = '<b><p>' + d.name + '</p>';
     content += '<p> Level:' + d.level + '</p>';
     content += '<p> Hierarchy: ' + d.hierarchy + '</p></b>';
-    tooltip.showTooltip(content, d3.event);
+    tip.showTooltip(content, d3.event);
 
     if (link) {
       link.attr("stroke", function(l) {
@@ -559,7 +584,7 @@ Network = function() {
   };
 
   hideDetails = function(d, i) {
-    tooltip.hideTooltip();
+    tip.hideTooltip();
     node.style("stroke", function(n) {
       if (!n.searched) {
         return strokeFor(n);
