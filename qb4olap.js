@@ -309,8 +309,12 @@ app.use(function(req, res, next){
 var sess;
 
 app.get('/', function(req, res) {
-	res.render('home');
+	res.render('home',{ layout: 'ppal' });
 });
+app.get('/home', function(req, res) {
+	res.render('home',{ layout: 'ppal' });
+});
+
 app.get('/about', function(req, res) {
 	res.render('about',{
 		fort: fortune.getFortune(),
