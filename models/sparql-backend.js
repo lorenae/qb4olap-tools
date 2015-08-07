@@ -4,7 +4,7 @@ var util = require('util');
 var SparqlClient = require('sparql-client');
 
 // if set to true uses proxySrv as proxy
-var withProxy= false;
+var withProxy= true;
 var proxySrv = "http://httpproxy.fing.edu.uy:3128";
 
 
