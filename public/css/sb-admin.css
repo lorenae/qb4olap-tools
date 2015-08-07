@@ -1,4 +1,4 @@
-/*!
+    /*!
  * Start Bootstrap - SB Admin Bootstrap Admin Template (http://startbootstrap.com)
  * Code licensed under the Apache License v2.0.
  * For details, see http://www.apache.org/licenses/LICENSE-2.0.
@@ -6,7 +6,25 @@
 
 /* Global Styles */
 
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6 {
+    font-family: "Alfa Slab One",Georgia, "Times New Roman", Times, serif;  
+}
+
+
+
 body {
+    font-family: "Open Sans", Arimo, Helvetica, Arial, sans-serif!important;
     margin-top: 100px;
     
 }
@@ -258,6 +276,7 @@ ul.alert-dropdown {
   background: #555;
 }
 
+
 .d3-tip {
   line-height: 1;
   font-weight: bold;
@@ -266,6 +285,14 @@ ul.alert-dropdown {
   color: #fff;
   border-radius: 2px;
   position: absolute;
+}
+
+
+.navbar-fixed-bottom
+{vertical-align: middle;}
+
+.navbar-nav-right{
+    float: right;
 }
 
 

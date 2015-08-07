@@ -1,10 +1,10 @@
-//sparql-backend.js
+﻿//sparql-backend.js
 
 var util = require('util');
 var SparqlClient = require('sparql-client');
 
 // if set to true uses proxySrv as proxy
-var withProxy= true;
+var withProxy= false;
 var proxySrv = "http://httpproxy.fing.edu.uy:3128";
 
 
@@ -94,51 +94,27 @@ exports.getCubes = function(endpoint, callback){
     });
 };
 
-//pre: childlevel and parentlevel are the URIs of levels in the same hierarchy, parentlevelmember is a member of parentlevel
-//post: returns the set of childlevel members that can reach parentlevelmember
-
-exports.getChildLevelMembers = function(endpoint,childlevel,parentlevel,parentlevelmember, callback){
-    var query = "PREFIX qb4o: <http://purl.org/qb4olap/cubes#> \
-                 PREFIX skos: <http://www.w3.org/2004/02/skos/core#> \
-                select ?clm \
-                where { ?clm qb4o:inLevel <"+childlevel+">. \
-                        ?clm skos:broader+ <"+parentlevelmember+">.\
-                        <"+parentlevelmember+"> qb4o:inLevel <"+parentlevel+">.}";
-    return this.runSparql(endpoint, query, 0,function processChilds(error,content){
-        var childlist = [];
-        content.results.bindings.forEach(function(row){
-            childlist.push({level:childlevel, value:row.clm.value});
-        });
-    callback(error, childlist);    
-    });
-};
-
-
-
-
 // pre: endpoint is the URL of a SPARQL endpoint, cubeuri is the URI of a datacube in the endpoint, schemagraph is the named graph where the schema is stored
 // post: returns a Datacube and a Cuboid object that represents the structure of the datacube.
 
 exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callback){
-       var query = "prefix qb: <http://purl.org/linked-data/cube#> \
-                prefix qb4o: <http://purl.org/qb4olap/cubes#> \
-                PREFIX dct:      <http://purl.org/dc/terms/>\
-                SELECT ?cname ?d ?dname ?h ?hname ?l ?lname ?la ?laname ?larange ?l1 ?l1name ?la1 ?la1name ?la1range ?l2 ?l2name ?card ?m ?f ?mrange\
-                FROM <"+schemagraph+"> \
-                WHERE { <"+cubeuri+"> qb:component ?c1,?c2. \
-                ?ds qb:structure <"+cubeuri+">. \
-                ?c1 qb4o:level ?l.\
-                ?c2 qb:measure ?m.\
-                ?c2 qb4o:aggregateFunction ?f .\
-                OPTIONAL {?m rdfs:range ?mrange }\
-                ?h qb4o:hasLevel ?l.\
-                ?h qb4o:inDimension ?d.\
-                ?ds dct:title ?cname .\
-                ?d rdfs:label ?dname.\
-                ?h rdfs:label ?hname .\
-                ?l rdfs:label ?lname .\
-                OPTIONAL {?ih1 a qb4o:HierarchyStep;qb4o:inHierarchy ?h; qb4o:childLevel ?l1; qb4o:parentLevel ?l2 ; qb4o:pcCardinality ?card.} \
-                OPTIONAL {?l qb4o:hasAttribute ?la. ?la rdfs:label ?laname. ?la rdfs:range ?larange}\
+       var query = "PREFIX qb: <http://purl.org/linked-data/cube#> \
+                PREFIX qb4o: <http://purl.org/qb4olap/cubes#> \
+                PREFIX dct: <http://purl.org/dc/terms/>\
+                SELECT ?cname ?d ?dname ?h ?hname ?l ?lname ?la ?laname ?larange ?l1 ?l1name ?la1 ?la1name ?la1range ?l2 ?l2name ?rup ?card ?m ?f ?mrange\
+                FROM <"+schemagraph+">   WHERE { <"+cubeuri+"> qb:component ?c1,?c2.\
+                ?ds qb:structure <"+cubeuri+"> . ?c1 qb4o:level ?l.\
+				?c2 qb:measure ?m. ?c2 qb4o:aggregateFunction ?f .\
+				OPTIONAL {?m rdfs:range ?mrange }\
+				?h qb4o:hasLevel ?l.\
+				?h qb4o:inDimension ?d.\
+				?ds dct:title ?cname .\
+				?d rdfs:label ?dname.\
+				?h rdfs:label ?hname .\
+				?l rdfs:label ?lname .\
+				OPTIONAL {?ih1 a qb4o:HierarchyStep;qb4o:inHierarchy ?h; qb4o:childLevel ?l1; qb4o:parentLevel ?l2 ; qb4o:pcCardinality ?card.} \
+				OPTIONAL {?ih1 qb4o:rollup ?rup}\
+				OPTIONAL {?l qb4o:hasAttribute ?la. ?la rdfs:label ?laname. ?la rdfs:range ?larange}\
                 OPTIONAL {?l1 qb4o:hasAttribute ?la1. ?la1 rdfs:label ?la1name. ?la1 rdfs:range ?la1range}\
                 OPTIONAL { ?l1 rdfs:label ?l1name }\
                 OPTIONAL { ?l2 rdfs:label ?l2name }\
@@ -168,6 +144,7 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
             var l1name = row.hasOwnProperty('l1name') ? row.l1name.value : (l1uri != null ? parseURL(l1uri).hash : null);                   
             var l2uri = row.hasOwnProperty('l2') ? row.l2.value: null;
             var l2name = row.hasOwnProperty('l2name') ? row.l2name.value : (l2uri != null ? parseURL(l2uri).hash : null);
+            var rup = row.hasOwnProperty('rup') ? row.rup.value : "http://www.w3.org/2004/02/skos/core#broader";
             var la1uri = row.hasOwnProperty('la1') ? row.la1.value: null;
             var la1name = row.hasOwnProperty('la1name') ? row.la1name.value : (la1uri != null ? parseURL(la1uri).hash : null);  
             var la1range = row.hasOwnProperty('la1range') ? row.la1range.value : null;  
@@ -231,7 +208,7 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
                 dimension.addHierarchy(hierarchy);
             }
             hierarchy = dimension.getHierarchy(huri);
-            hierarchy.addEdgeToLatticeByuri(childuri, l2uri, cardinality);
+            hierarchy.addEdgeToLatticeByuri(childuri, l2uri, cardinality,rup);
 
             
 
