@@ -65,7 +65,7 @@ Dimension.prototype.getShortestPath = function(originLevel, targetLevel){
     var results = [];
    
     this.hierarchies.forEach(function(hier){
-        var h = new Hierarchy(hier.uri, hier.name, hier.lattice);
+        var h = new Hierarchy(hier.uri, hier.name, hier.lattice, hier.steps);
         var result = [];
         if (h.existsLevel(originLevel) && h.existsLevel(targetLevel)){
             var start = 0;
@@ -108,7 +108,7 @@ Dimension.prototype.getLongestPath = function(originLevel, targetLevel){
 
     var result = "";   
     this.hierarchies.forEach(function(hier){
-        var h = new Hierarchy(hier.uri, hier.name, hier.lattice);
+        var h = new Hierarchy(hier.uri, hier.name, hier.lattice, hier.steps);
         if (h.existsLevel(originLevel) && h.existsLevel(targetLevel)){
             allpaths = h.getPaths(); 
             //compute the difference in the positions, and return the path with maximum diff

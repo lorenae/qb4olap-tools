@@ -118,14 +118,6 @@ Network = function() {
 
   tip = Tooltip("vis-tip", 230);
 
-/*
-  tip = d3.tip()
-  .attr('class', 'd3-tip')
-  .html(function(d) {
-    return "<b><p>" + d.name + "</p><p> Level:" + d.level + "</p><p> Hierarchy: " + d.hierarchy + "</p></b>";
-  })
-*/
-
   charge = function(node) {
     return -Math.pow(node.radius, 1.5) / 3;
   };
@@ -140,27 +132,11 @@ Network = function() {
 
     var margin = {top: -5, right: -5, bottom: -5, left: -5};
 
-    /*
-    vis = d3.select(selection).append("svg")
-      .attr("width", width)
-      .attr("height", height);
-    */
-
     vis = d3.select(selection).append("svg")
       .attr("width", width)
       .attr("height", height)
       .attr("transform", "translate(" + margin.left + "," + margin.right + ")")
       .call(zoom);
-
-
-/*
-    vis = d3.select(selection).append("svg")
-      .attr("width", width)
-      .attr("height", height)
-      .attr("transform", "translate(" + margin.left + "," + margin.right + ")")
-      .call(tip);
-*/
-
 
     linksG = vis.append("g").attr("id", "links");
     nodesG = vis.append("g").attr("id", "nodes");
@@ -447,11 +423,7 @@ Network = function() {
     .on("click", clicked);
     return node.exit().remove();
 
-    /*
-    .on("mouseover", tip.show)
-    .on("mouseout", tip.hide)
 
-    */
   };
   updateLinks = function() {
     link = linksG.selectAll("line.link").data(curLinksData, function(d) {
@@ -472,8 +444,6 @@ Network = function() {
   setLayout = function(newLayout) {
     layout = newLayout;
     if (layout === "force") {
-      //return force.on("tick", forceTick).charge(-200).linkDistance(50);
-      //return force.on("tick", forceTick).charge(-30).linkDistance(10);
       return force.on("tick", forceTick).charge(-15).linkDistance(5);
     } else if (layout === "radial_dim") {
       return force.on("tick", radialTick).charge(charge);
@@ -537,8 +507,7 @@ Network = function() {
   clicked = function(d) {
     
     var url = d.uri;
-    $(".modal-body").html('<frame width="100%" height="100%" frameborder="0" scrolling="yes" allowtransparency="true" src="'+url+'"></frame>');
-    //$(".modal-body").html('<frameset cols="100%"><frame src="'+url+'"></frame></frameset>');
+    $(".modal-body").html('<iframe width="100%" height="100%" frameborder="0" scrolling="yes" allowtransparency="true" src="'+url+'"></iframe>');
     $('#modalTitle').html('Dereferencing '+d.uri);
     $('#myModal').modal('show');
 
@@ -547,7 +516,6 @@ Network = function() {
   showDetails = function(d, i) {
     var content;
 
-    //console.log(d);
     content = '<b><p>' + d.name + '</p>';
     content += '<p> Level:' + d.level + '</p>';
     content += '<p> Hierarchy: ' + d.hierarchy + '</p></b>';
@@ -610,43 +578,3 @@ activate = function(group, link) {
   d3.selectAll("#" + group + " a").classed("active", false);
   return d3.select("#" + group + " #" + link).classed("active", true);
 };
-
-/*
-$(function() {
-  var myNetwork;
-  myNetwork = Network();
-  d3.selectAll("#layouts a").on("click", function(d) {
-    var newLayout;
-    newLayout = d3.select(this).attr("id");
-    activate("layouts", newLayout);
-    return myNetwork.toggleLayout(newLayout);
-  });
-  d3.selectAll("#filters a").on("click", function(d) {
-    var newFilter;
-    newFilter = d3.select(this).attr("id");
-    activate("filters", newFilter);
-    return myNetwork.toggleFilter(newFilter);
-  });
-  d3.selectAll("#sorts a").on("click", function(d) {
-    var newSort;
-    newSort = d3.select(this).attr("id");
-    activate("sorts", newSort);
-    return myNetwork.toggleSort(newSort);
-  });
-  $("#song_select").on("change", function(e) {
-    var songFile;
-    songFile = $(this).val();
-    return d3.json("data/" + songFile, function(json) {
-      return myNetwork.updateData(json);
-    });
-  });
-  $("#search").keyup(function() {
-    var searchTerm;
-    searchTerm = $(this).val();
-    return myNetwork.updateSearch(searchTerm);
-  });
-  return d3.json("data/jolene.json", function(json) {
-    return myNetwork("#vis", json);
-  });
-});
-*/

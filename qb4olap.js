@@ -61,6 +61,12 @@ var hbs = expressHandlebars.create({
 	
 	showDimensions: function(dimensions, options) {
 
+
+		var prettyprinttype = function(type){
+			var t = type.replace('http://www.w3.org/2001/XMLSchema#', 'xsd:');
+			return t;
+		}
+
 		var renderDimension = function(dimension, dimordinal ,options) {
 			var danchor = "dim"+dimordinal;
 
@@ -100,7 +106,7 @@ var hbs = expressHandlebars.create({
 						attribs.forEach(function(a){
 							out += "<li class=\"schema\" title=\""+ a.uri+"\">";
 							out += "<i class=\"fa fa-fw fa-square\"></i>";
-							out += a.name+ "("+a.datatype+")";
+							out += a.name+ " ( "+prettyprinttype(a.datatype)+" ) ";
 							out += "</li>";
 						});
 						out += "</ul></li>";
@@ -131,16 +137,19 @@ var hbs = expressHandlebars.create({
 	
 	showMeasures: function(measures, options) {
 
+		var prettyprinttype = function(type){
+			var t = type.replace('http://www.w3.org/2001/XMLSchema#', 'xsd:');
+			return t;
+		}
 		var renderMeasure = function(measure, measureordinal, options) {
 			var manchor = "meas"+measureordinal;
-			var out = "<li><a class=\"collapsed\" data-toggle=\"collapse\" data-target=\"#"+manchor+"\" aria-expanded=\"false\" href=\"javascript:;\">";                  
+			var out = "<li title=\""+ measure.uri+"\" ><a class=\"collapsed\" data-toggle=\"collapse\" data-target=\"#"+manchor+"\" aria-expanded=\"false\" href=\"javascript:;\">";                  
 			out += "<i class=\"fa fa-fw fa-tachometer\"></i>";
-			out += measure.uri;
+			out += measure.name;
 			out +="<i class=\"fa fa-fw fa-chevron-down\"></i></a>";
 			out += "<ul id=\""+manchor+"\" class=\"collapse\" style=\"height: 0px; list-style: none; padding-left: 1;\" aria-expanded=\"false\">";
-			out += "<li><i class=\"fa fa-fw fa-square\"></i>Name: "+measure.name+"</li>";
-			out += "<li><i class=\"fa fa-fw fa-square\"></i>Aggregation Func.: "+measure.aggfunc+"</li>";
-			out += "<li><i class=\"fa fa-fw fa-square\"></i>Type: "+measure.datatype+"</li>";
+			out += "<li><i class=\"fa fa-fw fa-square\"></i>Aggregation Function: "+measure.aggfunc+"</li>";
+			out += "<li><i class=\"fa fa-fw fa-square\"></i>Type: "+prettyprinttype(measure.datatype)+"</li>";
 			out += "</ul></li>";
 			return out;
 		};
@@ -168,6 +177,7 @@ var hbs = expressHandlebars.create({
 			out+= "<p class=\"list-group-item-text\"> <b>Dataset URI:</b>"+cube.dataset+"</p>";
 			out+= "<p class=\"list-group-item-text\"> <b>Schema graph:</b>"+cube.schemagraph+"</p>";
 			out+= "<p class=\"list-group-item-text\"> <b>Instance graph:</b>"+cube.instancegraph+"</p>";
+			out+= "<p class=\"list-group-item-text\"> <b>QB4OLAP version:</b>"+cube.qb4olapversion+"</p>";
 			out+= "<p class=\"list-group-item-text\"> <b>Number of observations:</b>"+cube.numobs+"</p>";
 			out+= "</a>"
 			return out;
@@ -315,20 +325,12 @@ app.get('/home', function(req, res) {
 	res.render('home',{ layout: 'ppal' });
 });
 
-app.get('/about', function(req, res) {
-	res.render('about',{
-		fort: fortune.getFortune(),
-		pageTestScript: '/qa/tests-about.js'
-	});
-});
-
-
 app.get('/explorer', function(req, res){
 	
 	if(typeof req.session.state === 'undefined'){
    		req.session.state = {};
  	};
-	res.render('explorer');
+	res.render('explorer',{ layout: 'explorer' });
 });
 
 
@@ -337,7 +339,7 @@ app.get('/queries', function(req, res){
 	if(typeof req.session.state === 'undefined'){
    		req.session.state = {};
  	};
-	res.render('queries');
+	res.render('queries',{ layout: 'queries' });
 });
 
 
@@ -352,7 +354,7 @@ app.get('/getcubes', function(req, res) {
 
 	//if cubes are in session, use them
 	if (sess.cubes){
-		res.render(target);
+		res.render(target,{ layout: target });
 	}else{
 		//get the cubes from cache
 		c = cache.get('cubes');
@@ -365,7 +367,7 @@ app.get('/getcubes', function(req, res) {
 				//if file is not old enough use it
 					sess.cubes = storedcubes.cubes;
 					cache.put('cubes',storedcubes.cubes,43200000);
-					res.render(target);
+					res.render(target,{ layout: target });
 			}else{
 				backend.getCubes(endpoint, function (err, cubelist) {
 				if (cubelist)
@@ -374,10 +376,10 @@ app.get('/getcubes', function(req, res) {
 						cache.put('cubes',cubelist,43200000);
 						storeCubes(Date.now(),cubelist);
 						sess.cubes = cubelist;
-						res.render(target);
+						res.render(target,{layout: target });
 					}
 					else
-					{	res.render(target, {error:err});
+					{	res.render(target, {layout:target, error:err});
 					}
 				});
 			}
@@ -432,12 +434,16 @@ app.get('/getcompletecube', function(req, res) {
 	var dataset = selectedcube[0].dataset;
 	var schemagraph = selectedcube[0].schemagraph;
 	var instancegraph = selectedcube[0].instancegraph; 
+	var qb4olapversion = selectedcube[0].qb4olapversion; 
 	
+	//console.log("CUBE:" +util.inspect(selectedcube[0], { showHidden: false, depth: null, colors:true }));
+
 	sess=req.session;
 	sess.state.cube = cubeuri;
 	sess.state.dataset = dataset;
 	sess.state.schemagraph = schemagraph;
 	sess.state.instancegraph = instancegraph;
+	sess.state.qb4olapversion = qb4olapversion;
 	sess.queries = getSampleQueries(cubeuri);
 
 	var completecubes = sess.state.completecubes;
@@ -452,9 +458,9 @@ app.get('/getcompletecube', function(req, res) {
 		sess.schema = thisCube.schema;
 		sess.instances = thisCube.instances;
 		if (target == 'queries'){
-			res.render('queries', {queriesaccordion:true});
+			res.render('queries', {layout:'queries', queriesaccordion:true});
 		}else{
-			res.render(target);
+			res.render(target,{ layout: target });
 		}
 	//if is not in the session but is in the stored file and is still fresh, use it	
 	}else if(storedcompletecubes && !reloadCompleteStoredCubes() && contains(Object.keys(storedcompletecubes.completecubes),cubeuri)){
@@ -463,9 +469,9 @@ app.get('/getcompletecube', function(req, res) {
 		sess.schema = thisCube.schema;
 		sess.instances = thisCube.instances;
 		if (target == 'queries'){
-			res.render('queries', {queriesaccordion:true});
+			res.render('queries', {layout:'queries', queriesaccordion:true});
 		}else{
-			res.render(target);
+			res.render(target,{ layout:target });
 		}
 	//else, go to the SPARQL backend	
 	}else if(sess.state.endpoint && sess.state.cube){
@@ -479,7 +485,8 @@ app.get('/getcompletecube', function(req, res) {
 	   		//if(cubeuri != 'http://dwbook.org/cubes/schemas/northwind#Northwind'){
 	   		if (true){	
 		   		//console.log("SCHEMA:" +util.inspect(cubeschema, { showHidden: false, depth: null, colors:true }));
-		   		backend.getCubeInstances(sess.state.endpoint, sess.state.cube,sess.state.schemagraph,sess.state.instancegraph, 
+		   		//console.log("version en ppal "+sess.state.qb4olapversion);
+		   		backend.getCubeInstances(sess.state.endpoint, sess.state.cube,sess.state.schemagraph,sess.state.instancegraph,sess.state.qb4olapversion, 
 		   			function (err, cubeinstances) {
 		   			//set the instances
 		   			sess.instances = cubeinstances;
@@ -491,9 +498,9 @@ app.get('/getcompletecube', function(req, res) {
 		   			sess.state.completecubes= completecubes; 
 		   			storeCompleteCubes(Date.now(),completecubes);
 		   			if (target == 'queries'){
-		   				res.render('queries', {queriesaccordion:true});
+		   				res.render('queries', {layout:'queries',queriesaccordion:true});
 		   			}else{
-		   				res.render(target);
+		   				res.render(target,{ layout: target });
 		   			}
 					});
 		   		
@@ -508,9 +515,9 @@ app.get('/getcompletecube', function(req, res) {
 		   			sess.state.completecubes= completecubes; 
 		   			storeCompleteCubes(Date.now(),completecubes);
 		   			if (target == 'queries'){
-		   				res.render('queries', {queriesaccordion:true});
+		   				res.render('queries', {layout:'queries', queriesaccordion:true});
 		   			}else{
-		   				res.render(target);
+		   				res.render(target,{ layout: target });
 		   			}
 
 			}
@@ -530,10 +537,10 @@ app.get('/simplifyquery', function(req, res) {
 		//console.log("original query:" +util.inspect(query, { showHidden: false, depth: null, colors:true }));
 		operators.getSimplifiedQuery(sess.state.endpoint, sess.schema, query, function (err, simplified) {
 			sess.simplequery = simplified;
-			res.render('queries', {editoraccordion:true});
+			res.render('queries', {layout:'queries', editoraccordion:true});
 		});
 	} else{
-		res.render('queries');
+		res.render('queries', {layout:'queries'});
 	}
 });
 
@@ -544,11 +551,11 @@ app.get('/getsparqlquery', function(req, res) {
 			sess.sparqlcols = spquery.columns;
 			//console.log("QUERY COLS FROM GETSPQUERY:" +util.inspect(spquery.columns, { showHidden: false, depth: null, colors:true }));
 			sess.sparqlquery = spquery.sparqlquery;
-			res.render('queries', {sparqlaccordion:true});
+			res.render('queries', {layout:'queries', sparqlaccordion:true});
 		});
 
 	}else{
-		res.render('queries');
+		res.render('queries', {layout:'queries'});
 	}
 });
 
@@ -559,11 +566,11 @@ app.get('/getbettersparqlquery', function(req, res) {
 			sess.sparqlcols = spquery.columns;
 			//console.log("QUERY COLS FROM GETSPQUERY:" +util.inspect(spquery.columns, { showHidden: false, depth: null, colors:true }));
 			sess.sparqlquery = spquery.sparqlquery;
-			res.render('queries', {sparqlaccordion:true});
+			res.render('queries', {layout:'queries', sparqlaccordion:true});
 		});
 
 	}else{
-		res.render('queries');
+		res.render('queries', {layout:'queries'});
 	}
 });
 
@@ -590,7 +597,7 @@ app.get('/runsparqlquery', function(req, res) {
 		backend.runSparql(sess.state.endpoint,sparqlquery,0, function (err, content) {
 			//TODO need to send metadata for each column
 			sess.queryresults = content;
-			res.render('queries', {resultsaccordion:true});
+			res.render('queries', {layout:'queries', resultsaccordion:true});
 			//res.render('queryresults', {vars:content.head.vars, results:content.results.bindings});
 		});
 	}
