@@ -267,7 +267,10 @@ exports.getSparqlQuery = function(endpoint, datacube, simplequery, callback){
         case 3:
         query = getDiceSparqlQuery(endpoint, datacube, simplequery, false);
         break;
-        
+        //SLICE only
+        case 4:
+        query = getNoDiceSparqlQuery(endpoint, datacube, simplequery, false);
+        break;
         default:
     }
     callback('', query);
@@ -293,11 +296,16 @@ exports.getBetterSparqlQuery = function(endpoint, datacube, simplequery, callbac
         case 2:
         query = getNoDiceSparqlQuery(endpoint, datacube, simplequery, true);
         break;
-        //ALL
+        //ALL operators
         case 3:
         query = getDiceSparqlQuery(endpoint, datacube, simplequery, true);
         break;
+        //SLICE only
+        case 4:
+        query = getNoDiceSparqlQuery(endpoint, datacube, simplequery, true);
+        break;
         default:
+        
     }
     callback('', query);
 };
@@ -339,23 +347,17 @@ function getNoDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
         sparqlIPO.addPattern("?o","qb:dataSet",escapeAbsoluteIRI(datacube.dataset));
     };
 
-    
-
     sparqlIPO.addFrom(datacube.instancegraph);                      
     sparqlIPO.addFrom(datacube.schemagraph);
 
     //PROCESS MEASURES
-    
-    //TOD if there is a slice do not include measure in the query
     datacube.measures.forEach(function(m){
-
         //if exists, get the only SLICE on that measure
         var sm = simplequery.query.filter(function(oper){
             return (oper.measure == m.uri && oper.qloperator == "SLICE");
         });
-        
 
-        //if doesnt exists a SLICE
+        //if doesnt exist a SLICE
         if (sm.length == 0 ){
             var mi = sparqlIPO.getNewVariable(measureSeed, measureCounter);
             measureCounter++;
@@ -378,7 +380,11 @@ function getNoDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
                 sparqlIPO.addExpresionToResult("("+m.aggfunc+"("+mi+") as "+agi+")");
             }
             //associate the variable with the expresion to generate the table
-            meascolumns.push({colvar:agi.substr(1), colname:m.aggfunc+"("+m.name+")"});
+            meascolumns.push({
+                colvar:agi.substr(1),
+                colname:m.aggfunc+"("+m.name+")",
+                colmeas:m.uri
+            });
         }
     });
 
@@ -414,59 +420,73 @@ function getNoDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
         //exists a rollup on this dimension and not exists slice
         if (r.length>0 && s.length==0){
             var rollup = r[0];
-            //console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
+            console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
             var targetLevel = rollup.targetLevel;
             var bottomLevel = rollup.bottomLevel.uri;
-            if (optimize){
-                sparqlIPO.addPatternToGroup(levelMemSeed+levelMemCounter,false,lmi,"qb4o:memberOf",escapeAbsoluteIRI(dimBottomLevel));
-            }else{
-                sparqlIPO.addPattern(lmi,"qb4o:memberOf",escapeAbsoluteIRI(dimBottomLevel));
-            };
-            
+
             if (bottomLevel != targetLevel){
-                //find the shortest path between this 2 levels
-                //var levelPath = dim.getShortestPath(bottomLevel, targetLevel);
+                //find the longest path between this 2 levels
                 var levelPath = dim.getLongestPath(bottomLevel, targetLevel);
                 //console.log("------longest PATH: "+util.inspect(levelPath, { showHidden: false, depth: null, colors:true }));
-
                 levelPath.path.forEach(function(actual){
+                    console.log("------qb4olap-operators   actualnode: "+util.inspect(actual, { showHidden: false, depth: null, colors:true }));
                     var actualLevel = actual.level;
+                    var parentLevel = actual.parent;
+                    var actualRollup = "<"+actual.rollupfunction+">";
                     var plmi = sparqlIPO.getNewVariable(parentLevelMemSeed, parentLevelMemCounter);
-                    if(actualLevel != bottomLevel){
+
+                    if (parentLevel != targetLevel) {
                         parentLevelMemCounter++;
-                        if (optimize){
-                            sparqlIPO.addPatternToGroup(levelMemSeed+levelMemCounter,false,lmi,"skos:broader",plmi);
-                            sparqlIPO.addPatternToGroup(levelMemSeed+levelMemCounter,false,plmi,"qb4o:memberOf",escapeAbsoluteIRI(actualLevel));
-                        }else{
-                            sparqlIPO.addPattern(lmi,"skos:broader",plmi);
-                            sparqlIPO.addPattern(plmi,"qb4o:memberOf",escapeAbsoluteIRI(actualLevel));
-                        };
-                        
-                        lmi = plmi;
                     }
+                    if (optimize){
+                        sparqlIPO.addPatternToGroup(levelMemSeed+levelMemCounter,false,lmi,"qb4o:memberOf",escapeAbsoluteIRI(actualLevel));
+                    }else{
+                        sparqlIPO.addPattern(lmi,"qb4o:memberOf",escapeAbsoluteIRI(actualLevel));
+                    };
+                    //only add rollup if target level is not reached    
+                    if(actualLevel != targetLevel){ 
+                        if (optimize){
+                            sparqlIPO.addPatternToGroup(levelMemSeed+levelMemCounter,false,lmi,actualRollup,plmi);
+                        }else{
+                            sparqlIPO.addPattern(lmi,actualRollup,plmi);
+                        };
+                    };
+                    lmi = plmi;
+
                     if(actualLevel == targetLevel){
                         sparqlIPO.addVariableToResult(plmi);
                         sparqlIPO.addVariableToGroupBy(plmi);
                         //associate the variable with the expresion to generate the table
-                        varcolumns.push({colvar:plmi.substr(1), colname:dim.getLevel(actualLevel).name});
+                        varcolumns.push({
+                            colvar:plmi.substr(1), 
+                            colname:dim.getLevel(actualLevel).name
+                        });
                     }
-                });
+                }); //end traversing path
+
+            //rollup from bottom to bottom
             }else{
                 sparqlIPO.addVariableToResult(lmi);
                 //associate the variable with the expresion to generate the table
-                varcolumns.push({colvar:lmi.substr(1), colname:dim.getBottomLevel().name});
+                varcolumns.push({
+                    colvar:lmi.substr(1), 
+                    colname:dim.getBottomLevel().name});
                 sparqlIPO.addVariableToGroupBy(lmi);
             }
-        //doesnt exist a rollup on this dimension    
-        }else if (s.length==0){
+        //doesnt exist a rollup or a slice on this dimension    
+        }else if (r.length==0 && s.length==0){
             sparqlIPO.addVariableToResult(lmi);
             //associate the variable with the expresion to generate the table
-            varcolumns.push({colvar:lmi.substr(1), colname:dim.getBottomLevel().name});
+            varcolumns.push({
+                colvar:lmi.substr(1), 
+                colname:dim.getBottomLevel().name
+            });
             sparqlIPO.addVariableToGroupBy(lmi);
         }
     });//end processing dimensions
+
     sparqlstr = sparqlIPO.toString(false);
-    //console.log("QUERY in qb4olap-operators: "+sparqlStr);
+    console.log("QUERY in qb4olap-operators: "+sparqlstr);
 
     var query = {sparqlquery:sparqlstr, columns:varcolumns.concat(meascolumns)};
 
@@ -507,58 +527,51 @@ function getDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
         sparqlIPO.addPattern("?o","qb:dataSet",escapeAbsoluteIRI(datacube.dataset));
     };
 
-    
 
     sparqlIPO.addFrom(datacube.instancegraph);                      
     sparqlIPO.addFrom(datacube.schemagraph);
 
     //PROCESS MEASURES
-    //TODO if there is no rollup do not aggregate
     datacube.measures.forEach(function(m){
-        var mi = sparqlIPO.getNewVariable(measureSeed, measureCounter);
-        measureCounter++;
-        var agi = sparqlIPO.getNewVariable(agSeed, agCounter);
-        agCounter++;
-        //link observations with measure values
-        if (optimize){
-            sparqlIPO.addPatternToGroup("o",true,"?o",escapeAbsoluteIRI(m.uri),mi);
-        }else{
-            sparqlIPO.addPattern("?o",escapeAbsoluteIRI(m.uri),mi);
-        };
-        //add the aggregation function to the result
-        //also add cast
-        var measuretype = m.datatype;
-        if (measuretype){
-            sparqlIPO.addExpresionToResult("("+m.aggfunc+"(<"+measuretype+">("+mi+")) as "+agi+")");    
-        }else{
-            sparqlIPO.addExpresionToResult("("+m.aggfunc+"("+mi+") as "+agi+")");
-        }
-        //add the calculated var to the outer query
-        sparqlDICE.addVariableToResult(agi);
-        
-        //associate the variable with the expresion to generate the table
-        meascolumns.push({
-            colvar:agi.substr(1), 
-            colname:m.aggfunc+"("+m.name+")",
-            colmeas:m.uri
+        //if exists, get the only SLICE on that measure
+        var sm = simplequery.query.filter(function(oper){
+            return (oper.measure == m.uri && oper.qloperator == "SLICE");
         });
+        if (sm.length == 0 ){
+            var mi = sparqlIPO.getNewVariable(measureSeed, measureCounter);
+            measureCounter++;
+            var agi = sparqlIPO.getNewVariable(agSeed, agCounter);
+            agCounter++;
+            //link observations with measure values
+            if (optimize){
+                sparqlIPO.addPatternToGroup("o",true,"?o",escapeAbsoluteIRI(m.uri),mi);
+            }else{
+                sparqlIPO.addPattern("?o",escapeAbsoluteIRI(m.uri),mi);
+            };
+            //add the aggregation function to the result
+            //also add cast
+            var measuretype = m.datatype;
+            if (measuretype){
+                sparqlIPO.addExpresionToResult("("+m.aggfunc+"(<"+measuretype+">("+mi+")) as "+agi+")");    
+            }else{
+                sparqlIPO.addExpresionToResult("("+m.aggfunc+"("+mi+") as "+agi+")");
+            }
+            //add the calculated var to the outer query
+            sparqlDICE.addVariableToResult(agi);
+            
+            //associate the variable with the expresion to generate the table
+            meascolumns.push({
+                colvar:agi.substr(1), 
+                colname:m.aggfunc+"("+m.name+")",
+                colmeas:m.uri
+            });
+        }
     });
 
 
     //PROCESS DIMENSIONS
     datacube.dimensions.forEach(function(d){
         var dim = new Dimension(d.uri, d.name, d.levels, d.hierarchies);
-        
-        var lmi = sparqlIPO.getNewVariable(levelMemSeed, levelMemCounter);
-        levelMemCounter++;
-        //get the bottom level in the dimension
-        var dimBottomLevel = dim.getBottomLevel().uri;
-        //link observations with values at the bottomLevel
-        if (optimize){
-            sparqlIPO.addPatternToGroup("o",true,"?o",escapeAbsoluteIRI(dimBottomLevel),lmi);
-        }else{
-            sparqlIPO.addPattern("?o",escapeAbsoluteIRI(dimBottomLevel),lmi);
-        };       
         
         //if exists, get the only ROLLUP on that dimension
         var r = simplequery.query.filter(function(oper){
@@ -570,49 +583,84 @@ function getDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
             return (oper.dimension == dim.uri && oper.qloperator == "SLICE");
         });
 
-
+        //keep the dimension, even if a slice exists, due to the possible dice
+        var lmi = sparqlIPO.getNewVariable(levelMemSeed, levelMemCounter);
+        levelMemCounter++;
+        //get the bottom level in the dimension
+        var dimBottomLevel = dim.getBottomLevel().uri;
+        //link observations with values at the bottomLevel
+        if (optimize){
+            sparqlIPO.addPatternToGroup("o",true,"?o",escapeAbsoluteIRI(dimBottomLevel),lmi);
+        }else{
+            sparqlIPO.addPattern("?o",escapeAbsoluteIRI(dimBottomLevel),lmi);
+        };       
+        
+        
         //exists a rollup on this dimension and not exists slice
         if (r.length>0 && s.length==0){
             var rollup = r[0];
             //console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
             var targetLevel = rollup.targetLevel;
             var bottomLevel = rollup.bottomLevel.uri;
-            if (optimize){
-                sparqlIPO.addPatternToGroup(levelMemSeed+levelMemCounter,false,lmi,"qb4o:memberOf",escapeAbsoluteIRI(dimBottomLevel));
-            }else{
-                sparqlIPO.addPattern(lmi,"qb4o:memberOf",escapeAbsoluteIRI(dimBottomLevel));
-            };
             
-            //find the shortest path between this 2 levels
-            var levelPath = dim.getShortestPath(bottomLevel, targetLevel);
-            levelPath.path.forEach(function(actual){
-                var actualLevel = actual.level;
-                var plmi = sparqlDICE.getNewVariable(parentLevelMemSeed, parentLevelMemCounter);
-                if(actualLevel != bottomLevel){
-                    parentLevelMemCounter++;
+            if (bottomLevel != targetLevel){
+            //find the longest path between this 2 levels
+                var levelPath = dim.getLongestPath(bottomLevel, targetLevel);
+
+                levelPath.path.forEach(function(actual){
+                    console.log("------qb4olap-operators   actualnode: "+util.inspect(actual, { showHidden: false, depth: null, colors:true }));
+                    var actualLevel = actual.level;
+                    var parentLevel = actual.parent;
+                    var actualRollup = "<"+actual.rollupfunction+">";
+                    var plmi = sparqlDICE.getNewVariable(parentLevelMemSeed, parentLevelMemCounter);
+
+                    if (parentLevel != targetLevel) {
+                        parentLevelMemCounter++;
+                    }
                     if (optimize){
-                        sparqlIPO.addPatternToGroup(levelMemSeed+levelMemCounter,false,lmi,"skos:broader",plmi);
-                        sparqlIPO.addPatternToGroup(levelMemSeed+levelMemCounter,false,plmi,"qb4o:memberOf",escapeAbsoluteIRI(actualLevel));
+                        sparqlIPO.addPatternToGroup(levelMemSeed+levelMemCounter,false,lmi,"qb4o:memberOf",escapeAbsoluteIRI(actualLevel));
                     }else{
-                        sparqlIPO.addPattern(lmi,"skos:broader",plmi);
-                        sparqlIPO.addPattern(plmi,"qb4o:memberOf",escapeAbsoluteIRI(actualLevel));
+                        sparqlIPO.addPattern(lmi,"qb4o:memberOf",escapeAbsoluteIRI(actualLevel));
                     };
-                    
+
+                    //only add rollup if target level is not reached    
+                    if(actualLevel != targetLevel){ 
+                        if (optimize){
+                            sparqlIPO.addPatternToGroup(levelMemSeed+levelMemCounter,false,lmi,actualRollup,plmi);
+                        }else{
+                            sparqlIPO.addPattern(lmi,actualRollup,plmi);
+                        };
+                    };
                     lmi = plmi;
-                }
-                if(actualLevel == targetLevel){
-                    sparqlIPO.addVariableToResult(plmi);
-                    sparqlIPO.addVariableToGroupBy(plmi);
-                    //add variable to outer query
-                    sparqlDICE.addVariableToResult(plmi);
-                    //associate the variable with the expresion to generate the table
-                    varcolumns.push({
-                        colvar:plmi.substr(1), 
-                        colname:dim.getLevel(actualLevel).name,
-                        collevel:dim.getLevel(actualLevel).uri
-                    });
-                }
+
+                    if(actualLevel == targetLevel){
+                        sparqlIPO.addVariableToResult(plmi);
+                        sparqlIPO.addVariableToGroupBy(plmi);
+                        //add variable to outer query
+                        sparqlDICE.addVariableToResult(plmi);
+                        //associate the variable with the expresion to generate the table
+                        varcolumns.push({
+                            colvar:plmi.substr(1), 
+                            colname:dim.getLevel(actualLevel).name,
+                            collevel:dim.getLevel(actualLevel).uri
+                        });
+                    }
+                });
+        //rollup from bottom to bottom
+        }else{
+            sparqlIPO.addVariableToResult(lmi);
+            //add variable to outer query
+            sparqlDICE.addVariableToResult(lmi);
+            //associate the variable with the expresion to generate the table
+            varcolumns.push({
+                colvar:lmi.substr(1), 
+                colname:dim.getBottomLevel().name,
+                collevel:dim.getBottomLevel().uri
             });
+            sparqlIPO.addVariableToGroupBy(lmi);
+
+        }
+
         //doesnt exist a rollup on this dimension    
         }else if (s.length==0){
             sparqlIPO.addVariableToResult(lmi);
@@ -856,6 +904,7 @@ function getQueryType(inputquery){
     if (ipo && !slice && !dice) {ret = 1};
     if (ipo && slice && !dice) {ret = 2};
     if (dice) {ret = 3};
+    if (slice && !ipo && !dice) {ret = 4};
     
     return ret;
     

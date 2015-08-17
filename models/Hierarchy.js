@@ -13,11 +13,11 @@ Array.prototype.diff = function(a) {
 //example (l1,l2,card1), (l1,l3,card1)   is represented as [(l1,[(l2,card1),(l3,card1)]]
 
 
-function Hierarchy(uri,name,lattice){
+function Hierarchy(uri,name,lattice,steps){
     this.uri = uri;
     this.name = name;
     this.lattice = lattice;
-    this.steps = [];
+    this.steps = steps;
 }
 
 
@@ -137,13 +137,15 @@ Hierarchy.prototype.getTopLevel = function(){
 
 //post: if exists a step in the hierarchy from childuri to parenturi, returns the rollup function associated
 //to that step, otherwise returns null
-Hierarchy.prototype.getRollupFunction = function (childuri,parenturi){
+var getRollupFunction = function (steps, childuri, parenturi){
     var rollup = null;
-    var s = this.steps.filter(function(step){
-        return (step.childuri === childLevel.uri)&&
-               (step.parenturi === parentLevel.uri);});
-    if (s){
-        rollup = s[0].rup;
+    if (steps.length > 0) {
+        var s = steps.filter(function(step){
+            return (step.childuri == childuri)&&
+                   (step.parenturi == parenturi);});
+        if (s.length>0){
+            rollup = s[0].rup;
+        }
     }
     return rollup;
 }
@@ -199,7 +201,7 @@ Hierarchy.prototype.traverse = function(){
 
 Hierarchy.prototype.getPaths = function(){
 
-    var getPathsRec = function (lattice, actuallevel, position, allpaths){       
+    var getPathsRec = function (lattice, steps, actuallevel, position, allpaths){       
     
         //obtain the node in the lattice where the level to process is the child level    
         var actualNode = lattice.filter(function(lnode){
@@ -207,15 +209,25 @@ Hierarchy.prototype.getPaths = function(){
         });
 
         if (actualNode.length>0){
-            //call the function recursively for each of the parents on the actual level.
+            //call the function recursively for each of the parents of the actual level.
             actualNode[0].pclist.forEach(function(parent){
-                getPathsRec(lattice, parent.parenturi,position+1,allpaths);
+                getPathsRec(lattice, steps, parent.parenturi,position+1,allpaths);
                 allpaths.forEach(function(p){
+                   
                     var isinpath = p.filter(function(n){
                         return n.level == actualNode[0].childuri;
                     }).length>0;
                     if (!isinpath){
-                        p.unshift({level:actualNode[0].childuri, pos:position});
+                        //for each parent add to the path the rollup function to reach it
+                        //console.log("GETPATHSREC ----- actual: "+actualNode[0].childuri);
+                        //console.log("GETPATHSREC ----- parent: "+parent.parenturi);  
+                        //console.log(util.inspect(steps, { showHidden: false, depth: null, colors:true }));
+                        var rollup = getRollupFunction(steps, actualNode[0].childuri,parent.parenturi);
+                        var newnode = {level:actualNode[0].childuri,parent:parent.parenturi,rollupfunction:rollup,pos:position};
+                        //console.log("GETPATHSREC ----- rollup: "+rollup);
+                        //console.log("GETPATHSREC ----- newnode: ");
+                        //console.log(util.inspect(newnode, { showHidden: false, depth: null, colors:true }));
+                        p.unshift(newnode);
                     }
                 });
             });
@@ -231,10 +243,10 @@ Hierarchy.prototype.getPaths = function(){
     var toplevel = this.getTopLevel();
     var position = 1;     
 
-    getPathsRec(this.lattice,actualevel,position, allpaths);
+    getPathsRec(this.lattice, this.steps,actualevel,position, allpaths);
     allpaths.forEach(function(p){
         pos = p[p.length-1].pos+1;
-        p.push({level:toplevel, pos:pos});
+        p.push({level:toplevel,parent:null, rollupfunction:null, pos:pos});
     });
     return  allpaths; 
    }

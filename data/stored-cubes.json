@@ -1,5 +1,5 @@
 {
-    "timestamp": 1438952331371,
+    "timestamp": 1439845673351,
     "cubes": [
         {
             "schemagraph": "http://www.fing.edu.uy/inco/cubes/schemas/wbld",
@@ -7,6 +7,7 @@
             "uri": "http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#QB4O_CM_MKT_LCAP_CD",
             "name": "Market capitalization of listed companies (current US dollars)",
             "instancegraph": "http://www.fing.edu.uy/inco/cubes/instances/wbld",
+            "qb4olapversion": "v1.2",
             "numobs": "2904",
             "selected": false
         },
@@ -16,6 +17,7 @@
             "uri": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#migr_asyappctzmQB4O",
             "name": "Asylum and first time asylum applicants to European countries by citizenship, age and sex Monthly data",
             "instancegraph": "http://www.fing.edu.uy/inco/cubes/instances/migr_asyapp_clean",
+            "qb4olapversion": "v1.2",
             "numobs": "78594",
             "selected": false
         },
@@ -25,6 +27,7 @@
             "uri": "http://dwbook.org/cubes/schemas/northwind#Northwind",
             "name": "Nortwind DW example",
             "instancegraph": "http://www.fing.edu.uy/inco/cubes/instances/northwind",
+            "qb4olapversion": "v1.2",
             "numobs": "2027",
             "selected": false
         },
@@ -34,6 +37,7 @@
             "uri": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#migr_asyappctzmQB4O13",
             "name": "Asylum and first time asylum applicants to European countries by citizenship, age and sex Monthly data",
             "instancegraph": "http://www.fing.edu.uy/inco/cubes/instances/migr_asyapp_clean",
+            "qb4olapversion": "v1.3",
             "numobs": "78594",
             "selected": false
         }

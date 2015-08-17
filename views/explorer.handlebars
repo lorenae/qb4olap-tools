@@ -24,18 +24,26 @@
                 <button type="submit" class="btn btn-xs btn-primary getcubes-btn">Get cubes</button>
             </div>
         </form>
-
-        
-        
+ 
           
         {{#if session.cubes}}
-        <form role="form" method="get" action="getcompletecube">
-                <i class="fa fa-cubes fa-fw"></i>   
-                <label>Pick a QB4OLAP cube to explore</label>
-                {{#showCubes session.cubes "explorer"}}
-                    {{name}}
-                {{/showCubes}}
-        </form>
+        <div class="panel panel-default" id="cubespanel">
+             <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <a data-toggle="collapse" href="#collapseCubes">
+                            <i class="fa fa-cubes fa-fw"></i>   
+                            Pick a QB4OLAP cube to explore
+                        </a>
+                    </h3>
+                </div>
+                <div id="collapseCubes" class="panel-collapse collapse in">
+                    <form role="form" method="get" action="getcompletecube">                     
+                            {{#showCubes session.cubes "explorer"}}
+                                {{name}}
+                            {{/showCubes}}
+                    </form>
+                </div>
+        </div>
         {{/if}}
 
         {{#if session.schema}}
@@ -132,7 +140,13 @@
     <script>
       $(document).ready(function () {
         
-
+/*
+        //schema panel tooltips
+        $('li.schema').tooltip({
+            placement : 'top',
+            delay: { "show": 500, "hide": 100 },
+        });
+*/
          //get cubes 
         $('.getcubes-btn').on ("click",(function () {
             $('.working').show();
@@ -203,6 +217,8 @@
             $content.removeClass('col-lg-12');
             }
         });
+
+        //nodes tooltip
         $('.bs-tooltip').tooltip();
 
 

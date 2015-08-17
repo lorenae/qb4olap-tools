@@ -30,13 +30,23 @@
         </div>
           
         {{#if session.cubes}}
-        <form role="form" method="get" action="getcompletecube">
-                <i class="fa fa-cubes fa-fw"></i>   
-                <label>Pick a QB4OLAP cube to explore</label>
-                {{#showCubes session.cubes "queries"}}
-                    {{name}}
-                {{/showCubes}}
-        </form>
+        <div class="panel panel-default" id="cubespanel">
+             <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <a data-toggle="collapse" href="#collapseCubes">
+                            <i class="fa fa-cubes fa-fw"></i>   
+                            Pick a QB4OLAP cube to query
+                        </a>
+                    </h3>
+                </div>
+                <div id="collapseCubes" class="panel-collapse collapse in">
+                    <form role="form" method="get" action="getcompletecube">                     
+                            {{#showCubes session.cubes "queries"}}
+                                {{name}}
+                            {{/showCubes}}
+                    </form>
+                </div>
+        </div>
         {{/if}}
 
         {{#if session.schema}}
@@ -83,7 +93,6 @@
                         <a data-toggle="collapse" data-parent="#accordionQL" href="#collapseQueries">
                             <i class="fa fa-cogs fa-fw"></i> 
                             Pick a sample QL query
-                            <i class="fa fa-fw fa-chevron-down"></i>
                         </a>
                     </h3>
                 </div>
@@ -110,7 +119,6 @@
                             <a data-toggle="collapse" data-parent="#accordionQL" href="#collapseQLEditor">
                                 <i class="fa fa-pencil-square-o fa-fw"></i> 
                                QL editor
-                                <i class="fa fa-fw fa-chevron-down"></i>
                             </a>
                         </h3>
                 </div>
@@ -171,7 +179,6 @@
                         <a data-toggle="collapse" data-parent="#accordionSPARQL" href="#collapseSparql">
                             <i class="fa fa-share-alt fa-fw"></i> 
                             SPARQL query
-                            <i class="fa fa-fw fa-chevron-down"></i>
                         </a>
                     </h3>
                 </div>
@@ -208,7 +215,6 @@
                         <a data-toggle="collapse" data-parent="#accordionSPARQL" href="#collapseResults">
                             <i class="fa fa-share-alt fa-fw"></i> 
                             SPARQL Query results
-                            <i class="fa fa-fw fa-chevron-down"></i>
                         </a>
                     </h3>
                 </div>
@@ -244,11 +250,7 @@
    {{#section 'jquery'}}
     <script>
 
-/*
-      $(function() {
-        $( document ).tooltip();
-        });
-*/
+
       function queryParams() {
             return {
                 type: 'owner',
@@ -261,9 +263,12 @@
 
       $(document).ready(function () {
 
-        //$(document).tooltip();
-        $('li.schema').tooltip(); 
-
+/*
+        //schema panel tooltips
+        $('li.schema').tooltip({
+            placement : 'right'
+        });
+*/
          //get cubes 
         $('.getcubes-btn').on ("click",(function () {
             $('#gettingcubes').show();
@@ -272,15 +277,7 @@
         ));
 
 
-        /*
-        $('li.schema').on ("click",(function () {
-            console.log("tt"+$(this).attr("title"));
-            $('#querypanel').val($('#querypanel').val()+$(this).attr("title"));
-        }
-        ));
-        */
-
-        //simplify query 
+          //simplify query 
          $('.simplify-btn').on ("click",(function () {
             $('.alert-danger').hide();
             $('.alert-success').hide();
@@ -378,15 +375,6 @@
                          $('#resultstable').bootstrapTable('hideLoading');
                          $('#resultstable').bootstrapTable('load',JSON.parse(res));
                          $('#gettingresults').hide();
-
-                        /*
-                        $('#resultstable').bootstrapTable({
-                            data: JSON.parse(res),
-                            columns: cols
-                        });
-                        
-                        */
-                        //$('#accordionSPARQL .in').collapse('hide');
                         
                     });
                 
@@ -471,7 +459,8 @@
             $content.removeClass('col-lg-12');
             }
         });
-        $('.bs-tooltip').tooltip();
+        
+        //$('.bs-tooltip').tooltip();
 
       });
     </script>  
