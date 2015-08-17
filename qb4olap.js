@@ -61,10 +61,12 @@ var hbs = expressHandlebars.create({
 	
 	showDimensions: function(dimensions, options) {
 
-
 		var prettyprinttype = function(type){
-			var t = type.replace('http://www.w3.org/2001/XMLSchema#', 'xsd:');
-			return t;
+			if (type == null){
+				return type;
+			}else{
+				return type.replace('http://www.w3.org/2001/XMLSchema#', 'xsd:');
+			}
 		}
 
 		var renderDimension = function(dimension, dimordinal ,options) {
