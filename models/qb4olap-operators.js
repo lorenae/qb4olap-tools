@@ -420,7 +420,7 @@ function getNoDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
         //exists a rollup on this dimension and not exists slice
         if (r.length>0 && s.length==0){
             var rollup = r[0];
-            console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
+            //console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
             var targetLevel = rollup.targetLevel;
             var bottomLevel = rollup.bottomLevel.uri;
 
@@ -486,7 +486,7 @@ function getNoDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
     });//end processing dimensions
 
     sparqlstr = sparqlIPO.toString(false);
-    console.log("QUERY in qb4olap-operators: "+sparqlstr);
+    //console.log("QUERY in qb4olap-operators: "+sparqlstr);
 
     var query = {sparqlquery:sparqlstr, columns:varcolumns.concat(meascolumns)};
 
