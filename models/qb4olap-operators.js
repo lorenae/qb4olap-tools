@@ -429,7 +429,7 @@ function getNoDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
                 var levelPath = dim.getLongestPath(bottomLevel, targetLevel);
                 //console.log("------longest PATH: "+util.inspect(levelPath, { showHidden: false, depth: null, colors:true }));
                 levelPath.path.forEach(function(actual){
-                    console.log("------qb4olap-operators   actualnode: "+util.inspect(actual, { showHidden: false, depth: null, colors:true }));
+                    //console.log("------qb4olap-operators   actualnode: "+util.inspect(actual, { showHidden: false, depth: null, colors:true }));
                     var actualLevel = actual.level;
                     var parentLevel = actual.parent;
                     var actualRollup = "<"+actual.rollupfunction+">";
