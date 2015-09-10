@@ -60,12 +60,13 @@ exports.getCubes = function(endpoint, callback){
             GRAPH ?schemagraph { \
                 ?cubeuri a qb:DataStructureDefinition.\
                 ?dataset qb:structure ?cubeuri. \
-                OPTIONAL {?dataset dct:title ?cname}\
+                ?dataset dct:title ?cname.\
                 OPTIONAL {?cubeuri dct:conformsTo ?version}} .\
                 {   SELECT distinct ?instancegraph ?dataset (count(?o) AS ?numobs)\
                     WHERE { \
                         GRAPH ?instancegraph{ \
                             ?o qb:dataSet ?dataset}\
+                        FILTER (?instancegraph != <http://lod2.eu/schemas/rdfh-inst#ssb1_ttl_qb>)\
                 }}}";
        
     //console.log(query);
