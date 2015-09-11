@@ -49,13 +49,13 @@
 
         {{#if session.schema}}
         <div class="panel panel-default">
-        <div class="panel-heading">
-            <h3 class="panel-title">
+        <div class="panel-heading" data-toggle="collapse" data-target="#collapseStructure">
+            <h3 class="panel-title accordion-toggle">
                 <i class="fa fa-cube fa-fw"></i>
                 Cube structure           
             </h3>
         </div>
-        <div class="panel-body">
+        <div id="collapseStructure" class="panel-collapse collapse in">
             <ul class="list-group">
                 <li class="list-group-item">
                     <p class="list-group-item-text">

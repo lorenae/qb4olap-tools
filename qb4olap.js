@@ -174,13 +174,15 @@ var hbs = expressHandlebars.create({
 				var style = "class=\"list-group-item\">";
 			};
 			var out = "<a href=\""+href+"\""+style;
-			out+= "<h3 class=\"list-group-item-heading\">"+cube.name+"</h3>";
-			out+= "<p class=\"list-group-item-text\"> <b>Schema URI: </b>"+cube.uri+"</p>";
-			out+= "<p class=\"list-group-item-text\"> <b>Dataset URI:</b>"+cube.dataset+"</p>";
-			out+= "<p class=\"list-group-item-text\"> <b>Schema graph:</b>"+cube.schemagraph+"</p>";
-			out+= "<p class=\"list-group-item-text\"> <b>Instance graph:</b>"+cube.instancegraph+"</p>";
-			out+= "<p class=\"list-group-item-text\"> <b>QB4OLAP version:</b>"+cube.qb4olapversion+"</p>";
-			out+= "<p class=\"list-group-item-text\"> <b>Number of observations:</b>"+cube.numobs+"</p>";
+			out+= "<h4 class=\"list-group-item-heading\"><i class=\"fa fa-shield fa-rotate-270\"></i> "+cube.name+"</h4>";
+			out+= "<p class=\"list-group-item-text\"> <b>Schema: </b>"+cube.uri+"</p>";
+			out+= "<p class=\"list-group-item-text\"> <b>Dataset: </b>"+cube.dataset+"</p>";
+			/*
+			out+= "<p class=\"list-group-item-text\"> <b>Schema graph: </b>"+cube.schemagraph+"</p>";
+			out+= "<p class=\"list-group-item-text\"> <b>Instance graph: </b>"+cube.instancegraph+"</p>";
+			*/
+			out+= "<p class=\"list-group-item-text\"> <b>QB4OLAP version: </b>"+cube.qb4olapversion+"</p>";
+			out+= "<p class=\"list-group-item-text\"> <b>Number of observations: </b>"+cube.numobs+"</p>";
 			out+= "</a>"
 			return out;
 		};
@@ -484,8 +486,8 @@ app.get('/getcompletecube', function(req, res) {
 	   		sess.schema = cubeschema;
 	   		//set the queries
 	   		
-	   		//if(cubeuri != 'http://dwbook.org/cubes/schemas/northwind#Northwind'){
-	   		if (true){	
+	   		if(cubeuri != 'http://www.fing.edu.uy/inco/cubes/schemas/ssb_qb4olapdsd'){
+	   		//if (true){	
 		   		//console.log("SCHEMA:" +util.inspect(cubeschema, { showHidden: false, depth: null, colors:true }));
 		   		//console.log("version en ppal "+sess.state.qb4olapversion);
 		   		backend.getCubeInstances(sess.state.endpoint, sess.state.cube,sess.state.schemagraph,sess.state.instancegraph,sess.state.qb4olapversion, 
@@ -507,8 +509,12 @@ app.get('/getcompletecube', function(req, res) {
 					});
 		   		
 			}else{
+				   var instances = {
+            		nodes:[],
+            		links:[]	
+        			};
 				    //set the instances
-		   			sess.instances = {};
+		   			sess.instances = instances;
 		   			var toSession = {schema:sess.schema,instances:{}};
 		   			if (!completecubes){
 		   				completecubes = {};	
