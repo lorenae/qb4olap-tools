@@ -28,12 +28,10 @@
           
         {{#if session.cubes}}
         <div class="panel panel-default" id="cubespanel">
-             <div class="panel-heading">
-                    <h3 class="panel-title">
-                        <a data-toggle="collapse" href="#collapseCubes">
+             <div class="panel-heading" data-toggle="collapse" data-target="#collapseCubes">
+                    <h3 class="panel-title accordion-toggle">
                             <i class="fa fa-cubes fa-fw"></i>   
-                            Pick a QB4OLAP cube to explore
-                        </a>
+                            Pick a QB4OLAP cube to query
                     </h3>
                 </div>
                 <div id="collapseCubes" class="panel-collapse collapse in">
@@ -48,13 +46,13 @@
 
         {{#if session.schema}}
         <div class="panel panel-default">
-        <div class="panel-heading">
-            <h3 class="panel-title">
+        <div class="panel-heading" data-toggle="collapse" data-target="#collapseStructure">
+            <h3 class="panel-title accordion-toggle">
                 <i class="fa fa-cube fa-fw"></i>
                 Cube structure           
             </h3>
         </div>
-        <div class="panel-body">
+        <div id="collapseStructure" class="panel-collapse collapse in">
             <ul class="list-group">
                 <li class="list-group-item">
                     <p class="list-group-item-text">
@@ -93,7 +91,7 @@
                     Dimension Instances
                 </h3>
             </div>
-            <div class="panel-body">
+            <div id="instancesPanel" class="panel-body" style="display: none">
                 <div id="controls">
                     <div id="layouts" class="control">
                         <a id="radial_dim" class="active">Group Dimensions</a>
@@ -102,6 +100,15 @@
                     </div>
                 </div>    
                 <div id="vis"></div>
+            <div class="row">
+                <div id="info">
+                    Built with <a target="_blank" href="http://d3js.org/">D3</a>       
+                </div>
+            </div>
+            </div>
+            </div>
+            <div id="instancesError" class="panel-body" style="display: none">
+                <div>Ups! too many instances to render them correctly </div>
             </div>
             </div>
         </div>  
@@ -123,11 +130,7 @@
 
 
 
-        <div class="row">
-            <div id="info">
-                Built with <a target="_blank" href="http://d3js.org/">D3</a>       
-            </div>
-        </div>
+        
              
         
         {{/if}}
@@ -223,7 +226,7 @@
 
 
         //render cube instance data
-        if(typeof cubeinstance !== 'undefined' ){
+        if(typeof cubeinstance !== 'undefined'  && cubeinstance.nodes.length>0){
 
             var myNetwork;
               myNetwork = Network();
@@ -252,7 +255,11 @@
                 return myNetwork.updateSearch(searchTerm);
               });
              
+             $('#instancesPanel').show();
              return myNetwork("#vis", cubeinstance);
+        }else{
+            $('#instancesError').show();
+
         }
 
       });

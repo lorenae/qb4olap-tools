@@ -31,12 +31,10 @@
           
         {{#if session.cubes}}
         <div class="panel panel-default" id="cubespanel">
-             <div class="panel-heading">
-                    <h3 class="panel-title">
-                        <a data-toggle="collapse" href="#collapseCubes">
+             <div class="panel-heading" data-toggle="collapse" data-target="#collapseCubes">
+                    <h3 class="panel-title accordion-toggle">
                             <i class="fa fa-cubes fa-fw"></i>   
                             Pick a QB4OLAP cube to query
-                        </a>
                     </h3>
                 </div>
                 <div id="collapseCubes" class="panel-collapse collapse in">
@@ -88,17 +86,22 @@
     {{#if session.schema}} 
         <div class="panel-group" id="accordionQL">
             <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">
-                        <a data-toggle="collapse" data-parent="#accordionQL" href="#collapseQueries">
+                
+                {{#if queriesaccordion}}
+                <div class="panel-heading" data-toggle="collapse" data-parent="#accordionQL" data-target="#collapseQueries">
+                    <h3 class="panel-title accordion-toggle">
                             <i class="fa fa-cogs fa-fw"></i> 
                             Pick a sample QL query
-                        </a>
                     </h3>
                 </div>
-                {{#if queriesaccordion}}
                 <div id="collapseQueries" class="panel-collapse collapse in">
                 {{else}}
+                <div class="panel-heading collapsed" data-toggle="collapse" data-parent="#accordionQL" data-target="#collapseQueries">
+                    <h3 class="panel-title accordion-toggle">
+                            <i class="fa fa-cogs fa-fw"></i> 
+                            Pick a sample QL query
+                    </h3>
+                </div>
                 <div id="collapseQueries" class="panel-collapse collapse">
                 {{/if}}
                
@@ -114,17 +117,21 @@
                 </div>
             </div>
             <div class="panel panel-default">
-                <div class="panel-heading">
-                        <h3 class="panel-title">
-                            <a data-toggle="collapse" data-parent="#accordionQL" href="#collapseQLEditor">
+                {{#if editoraccordion}}
+                <div class="panel-heading" data-toggle="collapse" data-parent="#accordionQL" data-target="#collapseQLEditor">
+                        <h3 class="panel-title accordion-toggle">
                                 <i class="fa fa-pencil-square-o fa-fw"></i> 
                                QL editor
-                            </a>
                         </h3>
                 </div>
-                {{#if editoraccordion}}
                 <div id="collapseQLEditor" class="panel-collapse collapse in">
                 {{else}}
+                <div class="panel-heading collapsed" data-toggle="collapse" data-parent="#accordionQL" data-target="#collapseQLEditor">
+                        <h3 class="panel-title accordion-toggle">
+                                <i class="fa fa-pencil-square-o fa-fw"></i> 
+                               QL editor
+                        </h3>
+                </div>
                 <div id="collapseQLEditor" class="panel-collapse collapse">
                 {{/if}}
                     <div class="panel-body">
@@ -173,18 +180,22 @@
             </div>                    
         </div>
         <div class="panel-group" id="accordionSPARQL">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">
-                        <a data-toggle="collapse" data-parent="#accordionSPARQL" href="#collapseSparql">
+            <div class="panel panel-default">              
+                 {{#if sparqlaccordion}}
+                 <div class="panel-heading" data-toggle="collapse" data-parent="#accordionSPARQL" data-target="#collapseSparql">
+                    <h3 class="panel-title accordion-toggle">
                             <i class="fa fa-share-alt fa-fw"></i> 
                             SPARQL query
-                        </a>
                     </h3>
                 </div>
-                 {{#if sparqlaccordion}}
                 <div id="collapseSparql" class="panel-collapse collapse in">
                 {{else}}
+                <div class="panel-heading collapsed" data-toggle="collapse" data-parent="#accordionSPARQL" data-target="#collapseSparql">
+                    <h3 class="panel-title accordion-toggle">
+                            <i class="fa fa-share-alt fa-fw"></i> 
+                            SPARQL query
+                    </h3>
+                </div>
                 <div id="collapseSparql" class="panel-collapse collapse">
                 {{/if}}
                     <div class="panel-body">
@@ -210,12 +221,10 @@
                     {{#saveResultColumns session.sparqlcols}}
                     {{/saveResultColumns}} 
                 {{/if}}
-                <div class="panel-heading">
-                    <h3 class="panel-title">
-                        <a data-toggle="collapse" data-parent="#accordionSPARQL" href="#collapseResults">
+                <div class="panel-heading collapsed" data-toggle="collapse" data-parent="#accordionSPARQL" data-target="#collapseResults">
+                    <h3 class="panel-title accordion-toggle">
                             <i class="fa fa-share-alt fa-fw"></i> 
                             SPARQL Query results
-                        </a>
                     </h3>
                 </div>
                 <div id="collapseResults" class="panel-collapse collapse">

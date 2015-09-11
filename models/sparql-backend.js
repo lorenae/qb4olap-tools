@@ -69,11 +69,12 @@ exports.getCubes = function(endpoint, callback){
                         FILTER (?instancegraph != <http://lod2.eu/schemas/rdfh-inst#ssb1_ttl_qb>)\
                 }}}";
        
+       
     //console.log(query);
        
     return this.runSparql(endpoint, query, 30000,function processCubes(error,content){
         var cubelist = [];
-        var ver = "v1.2";
+        var ver = null;
         if (content){
             content.results.bindings.forEach(function(row){
                 var schemagraph = row.schemagraph.value;
@@ -84,11 +85,13 @@ exports.getCubes = function(endpoint, callback){
                 var instancegraph = row.instancegraph.value;
                 var numobs = row.numobs.value;
 
- //console.log("qb4olapversion"+qb4olapversion);
-                if (qb4olapversion === "http://purl.org/qb4olap/cubes"){
+                if (qb4olapversion == "http://purl.org/qb4olap/cubes_v1.2"){
+                    ver = "v1.2";
+                }else{
                     ver = "v1.3";
                 }
 
+    //console.log("qb4olapversion "+qb4olapversion+", Ver: "+ver);
                 cubelist.push({
                     schemagraph:schemagraph,
                     dataset:dataset, 
@@ -260,7 +263,7 @@ exports.getCubeInstances = function(endpoint, cubeuri, schemagraph, instancegrap
     var query;
     //console.log("version "+qb4olapversion);
 
-    if (qb4olapversion === "v1.3"){
+    if (qb4olapversion == "v1.3"){
         query = "prefix qb: <http://purl.org/linked-data/cube#> prefix qb4o: <http://purl.org/qb4olap/cubes#> \
                 SELECT ?d ?dname ?h ?hname ?l1 ?l1name ?l2 ?l2name ?lm1 ?lm1name ?lm2 ?lm2name \
                 FROM <"+schemagraph+"> \

@@ -12,39 +12,33 @@
 
 /* Global Styles */ 
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-.h1,
-.h2,
-.h3,
-.h4,
-.h5,
-.h6 {
-    font-family: "Alfa Slab One",Georgia, "Times New Roman", Times, serif;  
-    text-align: center; 
-    color:white;
-}
-
-h1{font-weight: 700;
-    font-size: 40px;}
-
-h2{font-family: "Open Sans", Arimo, Helvetica, Arial, sans-serif!important;
-font-weight: 500;
-    font-size: 30px;}
-
-
 body {
-    font-family: "Open Sans", Arimo, Helvetica, Arial, sans-serif!important;
+    font-family: "Open Sans", Arimo, Helvetica, Arial, sans-serif;
     margin-top: 100px;
     background: url('../img/qb4olap.jpg') no-repeat 0 0 scroll;
     background-color:#0C0C0C;
     background-size: cover;
     height:500px;
+    color:white;
 }
+h1
+ {
+    font-family: "Alfa Slab One",Georgia, "Times New Roman", Times, serif;  
+    text-align: center; 
+    
+    font-weight: 700;
+    font-size: 40px;
+}
+
+h2{
+    font-family: "Open Sans", Arimo, Helvetica, Arial, sans-serif;
+    font-weight: 500;
+    font-size: 30px;
+    
+    text-align: center;}
+
+
+
 
 a.button {
     position: relative;

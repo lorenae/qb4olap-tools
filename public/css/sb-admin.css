@@ -8,21 +8,30 @@
 
 h1,
 h2,
-h3,
-h4,
-h5,
-h6,
-label,
 .h1,
-.h2,
-.h3,
-.h4,
-.h5,
-.h6 {
+.h2
+ {
     font-family: "Alfa Slab One",Georgia, "Times New Roman", Times, serif;  
 }
 
 
+/* CSS Method for adding Font Awesome Chevron Icons */
+ .accordion-toggle {
+    font-weight: 900;
+}
+
+
+ .accordion-toggle:after {
+    /* symbol for "opening" panels */
+    font-family:'FontAwesome';
+    content:"\f077";
+    float: right;
+    color: inherit;
+}
+.panel-heading.collapsed .accordion-toggle:after {
+    /* symbol for "collapsed" panels */
+    content:"\f078";
+}
 
 body {
     font-family: "Open Sans", Arimo, Helvetica, Arial, sans-serif!important;
