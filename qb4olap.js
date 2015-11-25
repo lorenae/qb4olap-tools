@@ -80,7 +80,7 @@ var hbs = expressHandlebars.create({
 			out +="<i class=\"fa fa-fw fa-chevron-down\"></i></a>";
 			out += "<ul id=\""+danchor+"\" class=\"collapse\" style=\"height: 0px; list-style: none; padding-left: 1;\" aria-expanded=\"false\">";
 			dimension.hierarchies.forEach(function (hierarchy){
-				var h = new Hierarchy(hierarchy.uri, hierarchy.name, hierarchy.lattice);
+				var h = new Hierarchy(hierarchy.uri, hierarchy.name, hierarchy.lattice, hierarchy.steps);
 				var orderedLevels = h.traverse();
 				var hanchor = "hier"+dimordinal*10+hordinal;
 				hordinal++;
@@ -483,10 +483,11 @@ app.get('/getcompletecube', function(req, res) {
 			cubeschema.instancegraph = instancegraph;
 			cubeschema.schemagraph = schemagraph;
 	    	//set the schema
+
 	   		sess.schema = cubeschema;
 	   		//set the queries
 	   		
-	   		if(cubeuri != 'http://www.fing.edu.uy/inco/cubes/schemas/ssb_qb4olapdsd'){
+	   		if(cubeuri != 'http://www.fing.edu.uy/inco/cubes/schemas/ssb_qb4olap#dsd'){
 	   		//if (true){	
 		   		//console.log("SCHEMA:" +util.inspect(cubeschema, { showHidden: false, depth: null, colors:true }));
 		   		//console.log("version en ppal "+sess.state.qb4olapversion);

@@ -44,6 +44,10 @@ Datacube.prototype.setMeasures = function(measures){
 }
 
 
+Datacube.prototype.getAllDimensions = function(){
+    return this.dimensions;
+}
+
 //pre: the dimension exists
 Datacube.prototype.getDimension = function(dimuri){
     return this.dimensions.filter(function(d){

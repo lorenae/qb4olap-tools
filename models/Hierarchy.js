@@ -217,7 +217,11 @@ Hierarchy.prototype.getPaths = function(){
                     var isinpath = p.filter(function(n){
                         return n.level == actualNode[0].childuri;
                     }).length>0;
-                    if (!isinpath){
+                    var existspos = p.filter(function(n){
+                        return n.pos == position;
+                    }).length>0;
+
+                    if (!isinpath && !existspos){
                         //for each parent add to the path the rollup function to reach it
                         //console.log("GETPATHSREC ----- actual: "+actualNode[0].childuri);
                         //console.log("GETPATHSREC ----- parent: "+parent.parenturi);  
@@ -226,8 +230,11 @@ Hierarchy.prototype.getPaths = function(){
                         var newnode = {level:actualNode[0].childuri,parent:parent.parenturi,rollupfunction:rollup,pos:position};
                         //console.log("GETPATHSREC ----- rollup: "+rollup);
                         //console.log("GETPATHSREC ----- newnode: ");
-                        //console.log(util.inspect(newnode, { showHidden: false, depth: null, colors:true }));
+                        //console.log("GETPATHSREC path before: "+util.inspect(p, { showHidden: false, depth: null, colors:true }));
+                        //console.log("GETPATHSREC newnode: "+util.inspect(newnode, { showHidden: false, depth: null, colors:true }));
+                        
                         p.unshift(newnode);
+                        //console.log("GETPATHSREC path after: "+util.inspect(p, { showHidden: false, depth: null, colors:true }));
                     }
                 });
             });

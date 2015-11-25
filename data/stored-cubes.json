@@ -1,16 +1,6 @@
 {
-    "timestamp": 1439845673351,
+    "timestamp": 1448466187843,
     "cubes": [
-        {
-            "schemagraph": "http://www.fing.edu.uy/inco/cubes/schemas/wbld",
-            "dataset": "http://worldbank.270a.info/dataset/CM.MKT.LCAP.CD",
-            "uri": "http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#QB4O_CM_MKT_LCAP_CD",
-            "name": "Market capitalization of listed companies (current US dollars)",
-            "instancegraph": "http://www.fing.edu.uy/inco/cubes/instances/wbld",
-            "qb4olapversion": "v1.2",
-            "numobs": "2904",
-            "selected": false
-        },
         {
             "schemagraph": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyappctzmQB4O",
             "dataset": "http://eurostat.linked-statistics.org/data/migr_asyappctzm",
@@ -19,6 +9,36 @@
             "instancegraph": "http://www.fing.edu.uy/inco/cubes/instances/migr_asyapp_clean",
             "qb4olapversion": "v1.2",
             "numobs": "78594",
+            "selected": false
+        },
+        {
+            "schemagraph": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyappctzmQB4O13",
+            "dataset": "http://eurostat.linked-statistics.org/data/migr_asyappctzm",
+            "uri": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#migr_asyappctzmQB4O13",
+            "name": "Asylum and first time asylum applicants to European countries by citizenship, age and sex Monthly data",
+            "instancegraph": "http://www.fing.edu.uy/inco/cubes/instances/migr_asyapp_clean",
+            "qb4olapversion": "v1.3",
+            "numobs": "78594",
+            "selected": false
+        },
+        {
+            "schemagraph": "http://www.fing.edu.uy/inco/cubes/schemas/wbld2",
+            "dataset": "http://worldbank.270a.info/dataset/CM.MKT.LCAP.CD",
+            "uri": "http://example.com/2015/09/28/08/13/08/cube#structure",
+            "name": "Market Capitalization",
+            "instancegraph": "http://www.fing.edu.uy/inco/cubes/instances/wbld",
+            "qb4olapversion": "v1.2",
+            "numobs": "2904",
+            "selected": false
+        },
+        {
+            "schemagraph": "http://www.fing.edu.uy/inco/cubes/schemas/wbld",
+            "dataset": "http://worldbank.270a.info/dataset/CM.MKT.LCAP.CD",
+            "uri": "http://www.fing.edu.uy/inco/cubes/schemas/world-bank-indicators#QB4O_CM_MKT_LCAP_CD",
+            "name": "Market capitalization of listed companies (current US dollars)",
+            "instancegraph": "http://www.fing.edu.uy/inco/cubes/instances/wbld",
+            "qb4olapversion": "v1.2",
+            "numobs": "2904",
             "selected": false
         },
         {
@@ -32,13 +52,13 @@
             "selected": false
         },
         {
-            "schemagraph": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyappctzmQB4O13",
-            "dataset": "http://eurostat.linked-statistics.org/data/migr_asyappctzm",
-            "uri": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#migr_asyappctzmQB4O13",
-            "name": "Asylum and first time asylum applicants to European countries by citizenship, age and sex Monthly data",
-            "instancegraph": "http://www.fing.edu.uy/inco/cubes/instances/migr_asyapp_clean",
+            "schemagraph": "http://www.fing.edu.uy/inco/cubes/schemas/ssb_qb4olap",
+            "dataset": "http://lod2.eu/schemas/rdfh-inst#ds",
+            "uri": "http://www.fing.edu.uy/inco/cubes/schemas/ssb_qb4olap#dsd",
+            "name": "Star Schema Benchmark Dataset",
+            "instancegraph": "http://www.fing.edu.uy/inco/cubes/instances/ssb_qb4olap",
             "qb4olapversion": "v1.3",
-            "numobs": "78594",
+            "numobs": "6001171",
             "selected": false
         }
     ]

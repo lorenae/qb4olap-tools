@@ -4,7 +4,7 @@ var util = require('util');
 var SparqlClient = require('sparql-client');
 
 // if set to true uses proxySrv as proxy
-var withProxy= true;
+var withProxy= false;
 var proxySrv = "http://httpproxy.fing.edu.uy:3128";
 
 
@@ -67,7 +67,7 @@ exports.getCubes = function(endpoint, callback){
                         GRAPH ?instancegraph{ \
                             ?o qb:dataSet ?dataset}\
                         FILTER (?instancegraph != <http://lod2.eu/schemas/rdfh-inst#ssb1_ttl_qb>)\
-                }}}";
+                }}} order by ?cname";
        
        
     //console.log(query);
@@ -115,7 +115,7 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
        var query = "PREFIX qb: <http://purl.org/linked-data/cube#> \
                 PREFIX qb4o: <http://purl.org/qb4olap/cubes#> \
                 PREFIX dct: <http://purl.org/dc/terms/>\
-                SELECT ?cname ?d ?dname ?h ?hname ?l ?lname ?la ?laname ?larange ?l1 ?l1name ?la1 ?la1name ?la1range ?l2 ?l2name ?rup ?card ?m ?f ?mrange\
+                SELECT ?cname ?d ?dname ?h ?hname ?l ?lname ?la ?laname ?larange ?l1 ?l1name ?la1 ?la1name ?la1range ?l2 ?l2name ?la2 ?la2name ?la2range ?rup ?card ?m ?f ?mrange\
                 FROM <"+schemagraph+">   WHERE { <"+cubeuri+"> qb:component ?c1,?c2.\
                 ?ds qb:structure <"+cubeuri+"> . ?c1 qb4o:level ?l.\
 				?c2 qb:measure ?m. ?c2 qb4o:aggregateFunction ?f .\
@@ -130,10 +130,11 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
 				OPTIONAL {?ih1 qb4o:rollup ?rup}\
 				OPTIONAL {?l qb4o:hasAttribute ?la. ?la rdfs:label ?laname. ?la rdfs:range ?larange}\
                 OPTIONAL {?l1 qb4o:hasAttribute ?la1. ?la1 rdfs:label ?la1name. ?la1 rdfs:range ?la1range}\
+                OPTIONAL {?l2 qb4o:hasAttribute ?la2. ?la2 rdfs:label ?la2name. ?la2 rdfs:range ?la2range}\
                 OPTIONAL { ?l1 rdfs:label ?l1name }\
                 OPTIONAL { ?l2 rdfs:label ?l2name }\
                 }";
-    //console.log("schema query: "+ query);
+                //console.log("schema query: "+ query);
     
     return this.runSparql(endpoint, query, 0, function processStructure(error,content){
         // assign values to empty variables
@@ -181,7 +182,6 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
                 dc.addMeasure(measure);
             }          
 
-            
             var cardinality;
             switch(c){
                 case "http://purl.org/qb4olap/cubes#OneToMany": cardinality= ONE_TO_MANY; break;
@@ -234,22 +234,31 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
             if (!child.existsAttribute(atr)){
                 child.addAttribute(new Attribute(atrname, atr, atrrange));
             }
-            
 
             if (l2uri != null){
                 if (!dimension.existsLevel(l2uri)){
                     parent = new Level(l2uri, l2name);
-                    //parent.addAttribute(new Attribute(la2name, la2uri, la2range)); 
+                    parent.addAttribute(new Attribute(la2name, la2uri, la2range)); 
                     dimension.addLevel(parent);
                 }else{
-                    //parent = dimension.getLevel(l2uri);
-                    //parent.addAttribute(new Attribute(la2name, la2uri, la2range)); 
+                    parent = dimension.getLevel(l2uri);
+                    if(!parent.existsAttribute(la2uri)){
+                        parent.addAttribute(new Attribute(la2name, la2uri, la2range)); 
+                    }
                 }
             }
-
         });
+        //compute the bottom level of each dimension and store it
 
-
+        var alldims = dc.getAllDimensions();
+        alldims.forEach(function(dim){
+            var h = dim.getAllHierarchies()[0];
+            var hier = new Hierarchy(h.uri,h.name,h.lattice,h.steps);
+            var bottom = hier.traverse()[0].level;
+            console.log("DIM "+dim.name+" bottom "+bottom);
+            dim.bottomLevel = bottom;
+        });
+        
     callback(error, dc);
     });              
 }
