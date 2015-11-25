@@ -187,7 +187,11 @@ SPARQLquery.prototype.toString = function(reduce){
         if(this.subquery){
             var strsubq = this.subquery.toString();
             strbgps =obtainWhereClause(this.patterns,this.patterngroups,reduce);
-            strwhere = " WHERE \{\{ "+strbgps+"\}.\{"+strsubq+"\}"+strfilter+" \} \n";
+            if(strbgps){
+                strwhere = " WHERE \{\{ "+strbgps+"\}.\{"+strsubq+"\}"+strfilter+" \} \n";    
+            }else{
+                strwhere = " WHERE \{\{"+strsubq+"\}"+strfilter+" \} \n";
+            }
         }else{
             strbgps =obtainWhereClause(this.patterns,this.patterngroups,reduce);
             strwhere = " WHERE \{ "+strbgps+strfilter+" \}\n";

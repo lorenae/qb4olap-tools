@@ -7,11 +7,12 @@ var Hierarchy = require('../models/Hierarchy');
 // Constructor
 
 //pre: levels is a set of Levels, hierarchies is a set of Hierarchy.
-function Dimension(uri, name, levels, hierarchies){
+function Dimension(uri, name, levels, hierarchies, bottomLevel){
     this.uri = uri;
     this.name = name;
     this.levels = levels;
     this.hierarchies = hierarchies;
+    this.bottomLevel = bottomLevel;
 }
 
 //adds a hierarchy 
@@ -33,6 +34,10 @@ Dimension.prototype.getHierarchy = function(huri){
         )[0];
 };
 
+Dimension.prototype.getAllHierarchies = function(){
+    return this.hierarchies;
+};
+
 //pre: the level exists
 Dimension.prototype.getLevel = function(luri){
     return this.levels.filter(function(l){
@@ -40,8 +45,12 @@ Dimension.prototype.getLevel = function(luri){
         )[0];
 };
 
+Dimension.prototype.setBottomLevel = function(luri){
+    this.bottomLevel = luri;
+};
+
 Dimension.prototype.getBottomLevel = function(){
-    return this.levels[this.levels.length-1];
+    return this.bottomLevel;
 };
 
 
@@ -111,6 +120,7 @@ Dimension.prototype.getLongestPath = function(originLevel, targetLevel){
         var h = new Hierarchy(hier.uri, hier.name, hier.lattice, hier.steps);
         if (h.existsLevel(originLevel) && h.existsLevel(targetLevel)){
             allpaths = h.getPaths(); 
+            //console.log("ALPATHS: "+ util.inspect(allpaths, { showHidden: false, depth: null, colors:true }));
             //compute the difference in the positions, and return the path with maximum diff
             var maxlength = 0;
             allpaths.forEach(function(path){
@@ -140,5 +150,56 @@ Dimension.prototype.getLongestPath = function(originLevel, targetLevel){
     return result;
 };
 
+//receives a set of levels and returns those levels with the longest path from bottom
+Dimension.prototype.getMaxLevel =function(levels){
+
+    //compute the length of the path from the bottom to each level
+    //find the max
+    var result = "";   
+    var lengths = [];
+    var bottom = this.bottomLevel;
+    this.hierarchies.forEach(function(hier){
+        var h = new Hierarchy(hier.uri, hier.name, hier.lattice, hier.steps);
+        levels.forEach(function(current){
+            //console.log("current: "+ util.inspect(current, { showHidden: false, depth: null, colors:true }));
+            //console.log("bottom: "+ util.inspect(bottom, { showHidden: false, depth: null, colors:true }));
+            if (h.existsLevel(bottom) && h.existsLevel(current)){
+            allpaths = h.getPaths(); 
+            //console.log("ALPATHS: "+ util.inspect(allpaths, { showHidden: false, depth: null, colors:true }));
+            //compute the difference in the positions, and return the path with maximum diff
+            var maxlength = 0;
+            allpaths.forEach(function(path){
+                var originnode = path.filter(function(node){
+                    return node.level == bottom;
+                });
+                var targetnode = path.filter(function(node){
+                    return node.level == current;
+                });
+                //if the path connects both levels
+                if (originnode.length>0 && targetnode.length>0){
+                    var posorigin = originnode[0].pos;
+                    var postarget = targetnode[0].pos;
+                    if (postarget - posorigin >= maxlength){
+                        maxlength = postarget - posorigin;
+             
+                    }
+                }
+            });
+            lengths.push({
+                level:current,
+                length:maxlength
+            });
+            }
+        });
+    });
+    //console.log("LENGTHS: "+ util.inspect(lengths, { showHidden: false, depth: null, colors:true }));
+    lengths.sort(function(a,b){
+        return ( a.length < b.length);
+    });
+    //console.log("sorted LENGTHS: "+ util.inspect(lengths, { showHidden: false, depth: null, colors:true }));
+
+    return lengths[0].level;
+
+}
 
 module.exports=Dimension;
