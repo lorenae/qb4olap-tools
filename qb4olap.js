@@ -630,6 +630,7 @@ function getSampleQueries(cube){
 
 // keep stored cubes updated
 function reloadStoredCubes(){
+	
     var stored = storedcubes.timestamp;
     //console.log(stored);
     //console.log(Date.now());

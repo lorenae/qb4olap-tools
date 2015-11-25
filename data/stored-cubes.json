@@ -1,5 +1,5 @@
 {
-    "timestamp": 1448466187843,
+    "timestamp": 1448484863068,
     "cubes": [
         {
             "schemagraph": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyappctzmQB4O",
@@ -39,16 +39,6 @@
             "instancegraph": "http://www.fing.edu.uy/inco/cubes/instances/wbld",
             "qb4olapversion": "v1.2",
             "numobs": "2904",
-            "selected": false
-        },
-        {
-            "schemagraph": "http://www.fing.edu.uy/inco/cubes/schemas/northwind",
-            "dataset": "http://dwbook.org/cubes/instances/northwind#dataset1",
-            "uri": "http://dwbook.org/cubes/schemas/northwind#Northwind",
-            "name": "Nortwind DW example",
-            "instancegraph": "http://www.fing.edu.uy/inco/cubes/instances/northwind",
-            "qb4olapversion": "v1.2",
-            "numobs": "2027",
             "selected": false
         },
         {

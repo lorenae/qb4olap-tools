@@ -67,10 +67,12 @@ exports.getCubes = function(endpoint, callback){
                         GRAPH ?instancegraph{ \
                             ?o qb:dataSet ?dataset}\
                         FILTER (?instancegraph != <http://lod2.eu/schemas/rdfh-inst#ssb1_ttl_qb>)\
-                }}} order by ?cname";
+                }}\
+            FILTER (?schemagraph != <http://www.fing.edu.uy/inco/cubes/schemas/northwind>)\
+        } order by ?cname";
        
        
-    //console.log(query);
+    console.log(query);
        
     return this.runSparql(endpoint, query, 30000,function processCubes(error,content){
         var cubelist = [];
@@ -134,7 +136,7 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
                 OPTIONAL { ?l1 rdfs:label ?l1name }\
                 OPTIONAL { ?l2 rdfs:label ?l2name }\
                 }";
-                //console.log("schema query: "+ query);
+                console.log("schema query: "+ query);
     
     return this.runSparql(endpoint, query, 0, function processStructure(error,content){
         // assign values to empty variables
