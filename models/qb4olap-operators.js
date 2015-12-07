@@ -1138,7 +1138,7 @@ function getSliceOnlySparqlQuery(endpoint, datacube, simplequery, optimize){
     //PROCESS DIMENSIONS
     datacube.dimensions.forEach(function(d){
         var dim = new Dimension(d.uri, d.name, d.levels, d.hierarchies, d.bottomLevel);
-        
+        console.log("DIM "+d.name);
         //if exists, get the only SLICE on that dimension
         var s = simplequery.query.filter(function(oper){
             return (oper.dimension == dim.uri && oper.qloperator == "SLICE");
@@ -1152,6 +1152,7 @@ function getSliceOnlySparqlQuery(endpoint, datacube, simplequery, optimize){
             levelMemCounter++;
             //get the bottom level in the dimension
             var dimBottomLevel = dim.getBottomLevel();
+           
             //link observations with values at the bottomLevel
             if (optimize){
                 sparqlSLICE.addPatternToGroup("o",true,"?o",escapeAbsoluteIRI(dimBottomLevel),lmi);
@@ -1162,10 +1163,11 @@ function getSliceOnlySparqlQuery(endpoint, datacube, simplequery, optimize){
             sparqlSLICE.addVariableToResult(lmi);
             sparqlSLICE.addVariableToGroupBy(lmi);
             //associate the variable with the expresion to generate the table
+            var lev = dim.getLevel(d.bottomLevel);
             varcolumns.push({
                 colvar:lmi.substr(1), 
-                colname:dim.getLevel(dimBottomLevel).name,
-                collevel:dim.getLevel(dimBottomLevel).uri
+                colname:dim.getLevel(d.bottomLevel).name,
+                collevel:dimBottomLevel
             });
         }
     });//end processing dimensions

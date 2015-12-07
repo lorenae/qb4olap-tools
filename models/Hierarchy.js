@@ -111,7 +111,9 @@ Hierarchy.prototype.getBottomLevel = function(){
     var childs = getChilds(this.lattice);
     var parents = getParents(this.lattice);
 
-    if (arraysEqual(childs,parents)) {
+    if (parents.length == 0){
+        return childs[0];
+    }else if (arraysEqual(childs,parents)) {
         return childs[0];
     }else{
         return childs.diff(parents)[0];    
