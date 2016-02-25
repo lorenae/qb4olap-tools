@@ -15,6 +15,7 @@ INSTALLATION
 
 3) open console, go to qb4olap-tools directory (obtained in step 1)
 
-4) install nom packages  (`npm install`)
+4) install npm packages needed by the application  (`npm install` command, which install the packages liste in packages.json)
 
-5) run the application  (`node qb4olap.js`)
+5) run the application  (`node qb4olap.js`)!!
+
