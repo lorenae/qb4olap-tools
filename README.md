@@ -11,7 +11,7 @@ INSTALLATION
 
 1) download [zip] (https://github.com/lorenae/qb4olap-tools/archive/master.zip) file and extract it 
 
-2) install nodejs `https://nodejs.org/en/`
+2) install [nodejs] (https://nodejs.org/en/)
 
 3) open console, go to qb4olap-tools directory (obtained in step 1)
 
