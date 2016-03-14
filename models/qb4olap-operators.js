@@ -510,6 +510,9 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
                     //splitDice(inputquery.query, beforedice, afterdice);
                     var stcount = 1;
                     var IPOs = [];
+
+                    //console.log("input query:" +util.inspect(inputquery.query, { showHidden: false, depth: null, colors:true }));
+
                     //first push SLICE operations over measures.
                     var slicemeas = inputquery.query.filter(function(operation){
                         return ((operation.qloperator == "SLICE") && (operation.condType == "measure"));
@@ -555,7 +558,7 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
                     
 
                     datacube.dimensions.forEach(function(dim){
-                        //console.log("----------------DIM: "+dim.uri);
+                        //console.log("--------DIM: "+dim.uri);
                         var slicedim = inputquery.query.filter(function(operation){
                             return ((operation.qloperator == "SLICE") && (operation.dimension == dim.uri));
                         });
@@ -565,8 +568,10 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
 
                         //no dice over dim
                         if (dicedim.length==0){
+                            //console.log("-------dice:NO");
                             // if exists a slice over a dimension, only keep the slice
                             if (slicedim.length>0){
+                                //console.log("-------slice:YES");    
                                 var newSLICE = new Object();
                                     newSLICE.statement = "$C"+stcount++;
                                     newSLICE.qloperator = "SLICE";
@@ -580,10 +585,14 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
                                     simplequery.query.push(newSLICE);
                             }else{
                                 // group IPO operations by dimension, preserving order
-                                var ipodim = simplequery.query.filter(function(operation){
+                                //console.log("-------slice:NO");    
+                                var ipodim = inputquery.query.filter(function(operation){
                                 return (((operation.qloperator == "ROLLUP")||(operation.qloperator == "DRILLDOWN")) && (operation.dimension == dim.uri));
                                 });
+                                console.log("ipos on dim:" +util.inspect(ipodim, { showHidden: false, depth: null, colors:true }));
                                 if (ipodim.length>0){
+                                    //console.log("-------ipo:YES");    
+                                    //console.log("ipo en dim sin dice o slice: "+dim.uri);
                                     // consider the level reached by the last operation for each dimension (target level)
                                     ////console.log("DIM:" +util.inspect(dim, { showHidden: false, depth: null, colors:true }));
                                     var bottomLevel = dim.bottomLevel;
@@ -603,6 +612,8 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
                                         newIPO.level = targetLevel;
                                         IPOs.push(newIPO);
                                     }                           
+                                }else{
+                                   //console.log("-------ipo:NO");     
                                 }
                             }
                         }
@@ -613,7 +624,9 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
                         only simplify consecutive RUPs (optional)
                         */
                         else{
+                            //console.log("-------dice:YES");
                             if (slicedim.length>0){
+                                //console.log("-------slice:YES");    
                                 var newSLICE = new Object();
                                     newSLICE.statement = "$C"+stcount++;
                                     newSLICE.qloperator = "SLICE";
@@ -682,7 +695,7 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
                             });
                             } 
                     }); 
-                    
+                    console.log("IPOs:" +util.inspect(IPOs, { showHidden: false, depth: null, colors:true }));
                     IPOs.forEach(function(ipo){
                         ipo.statement = "$C"+stcount++;
                         if(simplequery.query.length==0){

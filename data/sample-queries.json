@@ -82,14 +82,20 @@
             "querydesc": "EXAMPLE 3: (Rollup and Slice) Total asylum applications per year (by sex, time, age, destination, application type)",
             "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>;\r\nPREFIX data: <http://eurostat.linked-statistics.org/data/>; \r\nQUERY\r\n$C1 := ROLLUP (data:migr_asyappctzm, schema:citizenshipDim,schema:continent);\r\n$C2 := SLICE ($C1, schema:citizenshipDim);\r\n$C3 := ROLLUP ($C2, schema:timeDim, schema:year);"
         },
+        {
+            "cube": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#migr_asyappctzmQB4O13",
+            "queryid": 54,
+            "querydesc": "EXAMPLE 4: (Rollup, Slice and Dice) Total asylum applications by Females in 2013 (by sex, time, age, destination, application type)",
+            "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>;\r\nPREFIX data: <http://eurostat.linked-statistics.org/data/>; \r\nPREFIX property: <http://eurostat.linked-statistics.org/property#>;\r\nQUERY\r\n$C1 := ROLLUP (data:migr_asyappctzm, schema:citizenshipDim,schema:continent);\r\n$C2 := SLICE ($C1, schema:citizenshipDim);\r\n$C3 := ROLLUP ($C2, schema:timeDim, schema:year);\r\n$C4 := DICE ($C5, schema:timeDim|schema:year|schema:yearNum = 2013 AND schema:sex|property:sex|schema:sexName = \"F\");"
+        },
         {   "cube": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#migr_asyappctzmQB4O13",
             "queryid": 541,
-            "querydesc": "EXAMPLE 4: (Rollup, Drilldown, Slice and Dice over level attributes) Total asylum applications submitted by African citizens to France in 2013, (by sex, time, age, and citizenship country)",
+            "querydesc": "EXAMPLE 5: (Rollup, Drilldown, Slice and Dice over level attributes) Total asylum applications submitted by African citizens to France in 2013, (by sex, time, age, and citizenship country)",
             "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>;\r\nPREFIX data: <http://eurostat.linked-statistics.org/data/>;\r\nPREFIX property: <http://eurostat.linked-statistics.org/property#>;\r\nQUERY\r\n$C1 := ROLLUP (data:migr_asyappctzm, schema:citizenshipDim,schema:continent);\r\n$C2 := SLICE ($C1, schema:asylappDim);\r\n$C3 := ROLLUP ($C2, schema:timeDim, schema:year);\r\n$C4 := DICE ($C3, (schema:citizenshipDim|schema:continent|schema:continentName = \"Africa\"));\r\n$C5 := DICE ($C4, schema:destinationDim|property:geo|schema:countryName = \"France\" AND schema:timeDim|schema:year|schema:yearNum = 2013);\r\n$C6 := DRILLDOWN ($C5, schema:citizenshipDim,property:citizen);\r\n$C7 := SLICE ($C6, schema:destinationDim);"
         },
         {   "cube": "http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#migr_asyappctzmQB4O13",
             "queryid": 55,
-            "querydesc": "EXAMPLE 5: (Rollup, Drilldown, Slice and Dice (over level attributes and measures)) Total asylum applications submitted by Asian citizens to France or Germany per year, where applications count > 5000  (sex, time, age, citizenship, destination)",
+            "querydesc": "EXAMPLE 6: (Rollup, Drilldown, Slice and Dice (over level attributes and measures)) Total asylum applications submitted by Asian citizens to France or Germany per year, where applications count > 5000  (sex, time, age, citizenship, destination)",
             "query": "PREFIX schema: <http://www.fing.edu.uy/inco/cubes/schemas/migr_asyapp#>;\r\nPREFIX data: <http://eurostat.linked-statistics.org/data/>;\r\nPREFIX property: <http://eurostat.linked-statistics.org/property#>;\r\nPREFIX sdmx-measure:<http://purl.org/linked-data/sdmx/2009/measure#> ;\r\nQUERY\r\n$C1 := ROLLUP (data:migr_asyappctzm, schema:citizenshipDim,schema:citAll);\r\n$C2 := ROLLUP ($C1, schema:timeDim, schema:year);\r\n$C3 := DRILLDOWN ($C2, schema:citizenshipDim,schema:continent);\r\n$C4 := DICE ($C3, (schema:citizenshipDim|schema:continent|schema:continentName = \"Asia\"));\r\n$C5 := DICE ($C4, ( sdmx-measure:obsValue > 5000 AND (schema:destinationDim|property:geo|schema:countryName = \"France\") OR (schema:destinationDim|property:geo|schema:countryName = \"Germany\")));"
         },
         {   "cube": "http://www.fing.edu.uy/inco/cubes/schemas/ssb_qb4olap#dsd",
