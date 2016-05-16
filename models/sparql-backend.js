@@ -55,7 +55,7 @@ exports.runSparql = function(endpoint, query, timeout, callback){
 exports.getCubes = function(endpoint, callback){
     var query = "PREFIX qb: <http://purl.org/linked-data/cube#> \
         PREFIX dct:      <http://purl.org/dc/terms/>\
-        select ?schemagraph ?cubeuri ?cname ?dataset ?instancegraph ?numobs ?version \
+        select distinct ?schemagraph ?cubeuri ?cname ?dataset ?instancegraph ?numobs ?version \
         where {\
             GRAPH ?schemagraph { \
                 ?cubeuri a qb:DataStructureDefinition.\

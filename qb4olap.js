@@ -26,8 +26,15 @@ var sampleQueries = require('./data/sample-queries.json');
 var storedcubes = require('./data/stored-cubes.json');
 var storedcompletecubes = require('./data/stored-completecubes.json');
 
+var defendpoint = "http://www.fing.edu.uy/inco/grupos/csi/sparql";
+var cubesFile = './data/stored-cubes.json';
+var completeCubesFile = './data/stored-completecubes.json';
 
 var app = express();
+
+//time in ms to keep cubes in local cache
+//1 hour
+var cubetimeout = 3600000;
 
 //use compression
 app.use(compress());
@@ -175,12 +182,12 @@ var hbs = expressHandlebars.create({
 			};
 			var out = "<a href=\""+href+"\""+style;
 			out+= "<h4 class=\"list-group-item-heading\"><i class=\"fa fa-shield fa-rotate-270\"></i> "+cube.name+"</h4>";
-			out+= "<p class=\"list-group-item-text\"> <b>Schema: </b>"+cube.uri+"</p>";
-			out+= "<p class=\"list-group-item-text\"> <b>Dataset: </b>"+cube.dataset+"</p>";
-			/*
+			out+= "<p class=\"list-group-item-text\"> <b>Schema IRI: </b>"+cube.uri+"</p>";
+			out+= "<p class=\"list-group-item-text\"> <b>Dataset IRI: </b>"+cube.dataset+"</p>";
+			
 			out+= "<p class=\"list-group-item-text\"> <b>Schema graph: </b>"+cube.schemagraph+"</p>";
 			out+= "<p class=\"list-group-item-text\"> <b>Instance graph: </b>"+cube.instancegraph+"</p>";
-			*/
+			
 			out+= "<p class=\"list-group-item-text\"> <b>QB4OLAP version: </b>"+cube.qb4olapversion+"</p>";
 			out+= "<p class=\"list-group-item-text\"> <b>Number of observations: </b>"+cube.numobs+"</p>";
 			out+= "</a>"
@@ -349,48 +356,89 @@ app.get('/queries', function(req, res){
 
 app.get('/getcubes', function(req, res) {
 
-	sess=req.session;
-	//default endpoint
-	var endpoint = "http://www.fing.edu.uy/inco/grupos/csi/sparql";
+	//flag to check if the endpoint has changed
+	var endpchanged = true;
+	//target, either query or explorer	
 	var target = req.query.target;
-	if(req.query.endpoint) 	{endpoint = req.query.endpoint;}
-	sess.state.endpoint = endpoint;			
+	//force refresh cubes if true
+	var refresh = req.query.refresh;
 
-	//if cubes are in session, use them
-	if (sess.cubes){
-		res.render(target,{ layout: target });
+	
+	sess=req.session;
+	//console.log("query endp: "+req.query.endpoint);
+	//console.log("session endp: "+sess.state.endpoint);
+	//console.log("refresh:"+req.query.refresh);
+	if(req.query.endpoint) 	{
+		if (sess.state.endpoint){
+			endpchanged = (sess.state.endpoint != req.query.endpoint);
+		}
+		//console.log("change: "+endpchanged);
+		sess.state.endpoint = req.query.endpoint;
 	}else{
-		//get the cubes from cache
-		c = cache.get('cubes');
-		if (c){
-			sess.cubes = c;
-			res.render(target);
-		//if cubes are not cached yet, try to get from file	
+		sess.state.endpoint = defendpoint;	
+	}
+
+	var actualendpoint = sess.state.endpoint;
+	//console.log("session endp: "+sess.state.endpoint);
+	if (!refresh){
+		if(!endpchanged && sess.cubes){
+			//if cubes are in session, use them
+			res.render(target,{ layout: target });
 		}else{
-			if(storedcubes.cubes && !reloadStoredCubes()){
-				//if file is not old enough use it
-					sess.cubes = storedcubes.cubes;
-					cache.put('cubes',storedcubes.cubes,43200000);
-					res.render(target,{ layout: target });
+			//get the cubes from cache
+			//use the endpoint URL as key
+			c = cache.get(actualendpoint);
+			if (c){
+				sess.cubes = c;
+				res.render(target);
+			//if cubes are not in memory-cache or timeout has passed, try to get from file-cache
 			}else{
-				backend.getCubes(endpoint, function (err, cubelist) {
-				if (cubelist)
-					{	
-						//console.log(util.inspect(cubelist, { showHidden: false, depth: null, colors:true }));
-						cache.put('cubes',cubelist,43200000);
-						storeCubes(Date.now(),cubelist);
-						sess.cubes = cubelist;
-						res.render(target,{layout: target });
-					}
-					else
-					{	res.render(target, {layout:target, error:err});
-					}
-				});
+				if(storedcubes[actualendpoint] && !reloadStoredCubes(storedcubes[actualendpoint].timestamp)){
+					//if file is not old enough use it
+						sess.cubes = storedcubes[actualendpoint].cubes;
+						cache.put(actualendpoint,storedcubes[actualendpoint].cubes,cubetimeout);
+						res.render(target,{ layout: target });
+				}else{
+					backend.getCubes(actualendpoint, function (err, cubelist) {
+					if (cubelist)
+						{	
+							//console.log(util.inspect(cubelist, { showHidden: false, depth: null, colors:true }));
+							cache.put(actualendpoint,cubelist,cubetimeout);
+							storeCubes(storedcubes,Date.now(),actualendpoint,cubelist);
+							removeCompleteCubes(storedcompletecubes,actualendpoint);
+							sess.cubes = cubelist;
+							res.render(target,{layout: target });
+						}
+						else{
+							//console.log("error: "+err);
+							res.render(target, {layout:target, error:err});
+						}
+					});
+				}
 			}
 		}
+	}else{
+		//force refresh 
+		backend.getCubes(actualendpoint, function (err, cubelist) {
+		if (cubelist)
+			{	
+				//console.log(util.inspect(cubelist, { showHidden: false, depth: null, colors:true }));
+				cache.put(actualendpoint,cubelist,cubetimeout);
+				storeCubes(storedcubes,Date.now(),actualendpoint,cubelist);
+				removeCompleteCubes(storedcompletecubes,actualendpoint);
+				sess.cubes = cubelist;
+				res.render(target,{layout: target });
+			}
+			else{
+				//console.log("error: "+err);
+				res.render(target, {layout:target, error:err});
+			}
+		});
+
 	}
 });
 
+/*
 
 app.get('/getcubestructure', function(req, res) {
 	sess=req.session;
@@ -421,7 +469,7 @@ app.get('/getcubestructure', function(req, res) {
 	});
 	}	
 });
-
+*/
 
 app.get('/getcompletecube', function(req, res) {
 	sess=req.session;
@@ -449,6 +497,7 @@ app.get('/getcompletecube', function(req, res) {
 	sess.state.instancegraph = instancegraph;
 	sess.state.qb4olapversion = qb4olapversion;
 	sess.queries = getSampleQueries(cubeuri);
+	var actualendpoint = sess.state.endpoint;
 
 	var completecubes = sess.state.completecubes;
 
@@ -457,8 +506,9 @@ app.get('/getcompletecube', function(req, res) {
 	}
 
 	//if is in the session, use it
-	if (completecubes && contains(Object.keys(completecubes),cubeuri) ){  
-		var thisCube = sess.state.completecubes[cubeuri];
+	if (completecubes && completecubes[actualendpoint] && completecubes[actualendpoint][cubeuri] && !reloadCompleteStoredCubes(completecubes[actualendpoint][cubeuri].timestamp) ){  
+		//console.log("GET COMPLETE CUBE: getting from session");
+		var thisCube = sess.state.completecubes[actualendpoint][cubeuri];
 		sess.schema = thisCube.schema;
 		sess.instances = thisCube.instances;
 		if (target == 'queries'){
@@ -467,8 +517,9 @@ app.get('/getcompletecube', function(req, res) {
 			res.render(target,{ layout: target });
 		}
 	//if is not in the session but is in the stored file and is still fresh, use it	
-	}else if(storedcompletecubes && !reloadCompleteStoredCubes() && contains(Object.keys(storedcompletecubes.completecubes),cubeuri)){
-		sess.state.completecubes= storedcompletecubes.completecubes;
+	}else if(storedcompletecubes[actualendpoint] && storedcompletecubes[actualendpoint][cubeuri] &&!reloadCompleteStoredCubes(storedcompletecubes[actualendpoint][cubeuri].timestamp)){
+		//console.log("GET COMPLETE CUBE: getting from file cache");
+		sess.state.completecubes= storedcompletecubes[actualendpoint];
 		var thisCube = sess.state.completecubes[cubeuri];
 		sess.schema = thisCube.schema;
 		sess.instances = thisCube.instances;
@@ -479,6 +530,7 @@ app.get('/getcompletecube', function(req, res) {
 		}
 	//else, go to the SPARQL backend	
 	}else if(sess.state.endpoint && sess.state.cube){
+		    //console.log("GET COMPLETE CUBE: going to backend");
 	    	backend.getCubeSchema(sess.state.endpoint, sess.state.cube,sess.state.dataset,sess.state.schemagraph, function (err, cubeschema) {
 			cubeschema.instancegraph = instancegraph;
 			cubeschema.schemagraph = schemagraph;
@@ -488,20 +540,20 @@ app.get('/getcompletecube', function(req, res) {
 	   		//set the queries
 	   		
 	   		if(cubeuri != 'http://www.fing.edu.uy/inco/cubes/schemas/ssb_qb4olap#dsd'){
-	   		//if (true){	
 		   		//console.log("SCHEMA:" +util.inspect(cubeschema, { showHidden: false, depth: null, colors:true }));
 		   		//console.log("version en ppal "+sess.state.qb4olapversion);
 		   		backend.getCubeInstances(sess.state.endpoint, sess.state.cube,sess.state.schemagraph,sess.state.instancegraph,sess.state.qb4olapversion, 
 		   			function (err, cubeinstances) {
 		   			//set the instances
 		   			sess.instances = cubeinstances;
-		   			var toSession = {schema:sess.schema,instances:cubeinstances};
+		   			var toSession = {timestamp:Date.now(),schema:sess.schema,instances:cubeinstances};
 		   			if (!completecubes){
 		   				completecubes = {};	
+		   				completecubes[actualendpoint] ={};
 		   			}
-		   			completecubes[cubeuri]= toSession;
+		   			completecubes[actualendpoint][cubeuri]= toSession;
 		   			sess.state.completecubes= completecubes; 
-		   			storeCompleteCubes(Date.now(),completecubes);
+		   			storeCompleteCubes(completecubes,Date.now(),actualendpoint,cubeuri,toSession);
 		   			if (target == 'queries'){
 		   				res.render('queries', {layout:'queries',queriesaccordion:true});
 		   			}else{
@@ -628,65 +680,65 @@ function getSampleQueries(cube){
         );
 }
 
-// keep stored cubes updated
-function reloadStoredCubes(){
-	
-    var stored = storedcubes.timestamp;
-    //console.log(stored);
-    //console.log(Date.now());
-	var age = Math.abs(Date.now() - stored) / 3600000;
+// checks if the cube list stored in the file-cache for a certain endpoint needs tobe updated
+function reloadStoredCubes(timestamp){
+    //computes the age in milliseconds
+	var age = Math.abs(Date.now() - timestamp);
 	//console.log("AGE:"+age);
-	return (age>10);
+	return (age>cubetimeout);
 }
 
-//TODO improve speed
-// keep stored cubes updated
-function reloadCompleteStoredCubes(){
-	/*
-    var stored = storedcompletecubes.timestamp;
-    //console.log(stored);
-    //console.log(Date.now());
-	var age = Math.abs(Date.now() - stored) / 3600000;
+// checks if the cube instances stored in the file-cache for a certain endpoint needs tobe updated
+function reloadCompleteStoredCubes(timestamp){
+    
+	var age = Math.abs(Date.now() - timestamp);
 	//console.log("AGE:"+age);
-	return (age>2);
-	*/
-	return false
+	return (age>cubetimeout);
 }
 
+//stores or updates complete cubes (schema and instances) associated to an endpoint in the file-cache
+function storeCompleteCubes(completecubes,timestamp,endpoint,cubeuri,update){
+	completecubes[endpoint][cubeuri] = update;
 
-function storeCompleteCubes(timestamp,completecubes){
-	var toStore = {
-		timestamp:timestamp,
-		completecubes:completecubes
-	}
-	var outputFilename = './data/stored-completecubes.json';
-
-	fs.writeFile(outputFilename, JSON.stringify(toStore, null, 4), function(err) {
+	fs.writeFile(completeCubesFile, JSON.stringify(completecubes, null, 2), function(err) {
 	    if(err) {
-	      console.log(err);
+	      //console.log(err);
 	    } else {
-	      console.log("JSON saved to " + outputFilename);
+	      //console.log("JSON saved to " + completeCubesFile);
 	    }
 	}); 
-
 }
 
-function storeCubes(timestamp,cubelist){
-	var toStore = {
+//stores or updates cube list associated to an endpoint in the file-cache
+function storeCubes(storedcubes,timestamp,endpoint,cubelist){
+	storedcubes[endpoint] ={
 		timestamp:timestamp,
 		cubes:cubelist
 	}
-	var outputFilename = './data/stored-cubes.json';
 
-	fs.writeFile(outputFilename, JSON.stringify(toStore, null, 4), function(err) {
+	fs.writeFile(cubesFile, JSON.stringify(storedcubes, null, 2), function(err) {
 	    if(err) {
-	      console.log(err);
+	      //console.log(err);
 	    } else {
-	      console.log("JSON saved to " + outputFilename);
+	      //console.log("JSON saved to " + cubesFile);
+	    }
+	}); 
+}
+
+//removes all stored complete cubes for a certain endpoint
+function removeCompleteCubes(completecubes,endpoint){
+	completecubes[endpoint]={};
+
+	fs.writeFile(completeCubesFile, JSON.stringify(completecubes, null, 2), function(err) {
+	    if(err) {
+	      //console.log(err);
+	    } else {
+	      //console.log("JSON saved to " + completeCubesFile);
 	    }
 	}); 
 
 }
+
 
 
 /*
