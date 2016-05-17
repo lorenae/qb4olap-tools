@@ -60,8 +60,7 @@ exports.getCubes = function(endpoint, callback){
             GRAPH ?schemagraph { \
                 ?cubeuri a qb:DataStructureDefinition.\
                 ?dataset qb:structure ?cubeuri. \
-                ?dataset dct:title ?cname.\
-                OPTIONAL {?cubeuri dct:conformsTo ?version}} .\
+                ?dataset dct:title ?cname} .\
                 {   SELECT distinct ?instancegraph ?dataset (count(?o) AS ?numobs)\
                     WHERE { \
                         GRAPH ?instancegraph{ \
