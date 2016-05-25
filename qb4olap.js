@@ -405,7 +405,10 @@ app.get('/getcubes', function(req, res) {
 							//console.log(util.inspect(cubelist, { showHidden: false, depth: null, colors:true }));
 							cache.put(actualendpoint,cubelist,cubetimeout);
 							storeCubes(storedcubes,Date.now(),actualendpoint,cubelist);
-							removeCompleteCubes(storedcompletecubes,actualendpoint);
+							if(sess.state.completecubes){
+								sess.state.completecubes =removeCompleteCubesFromSession(sess.state.completecubes,actualendpoint);	
+							}
+							removeCompleteCubesFromFile(storedcompletecubes,actualendpoint);
 							sess.cubes = cubelist;
 							res.render(target,{layout: target });
 						}
@@ -425,7 +428,10 @@ app.get('/getcubes', function(req, res) {
 				//console.log(util.inspect(cubelist, { showHidden: false, depth: null, colors:true }));
 				cache.put(actualendpoint,cubelist,cubetimeout);
 				storeCubes(storedcubes,Date.now(),actualendpoint,cubelist);
-				removeCompleteCubes(storedcompletecubes,actualendpoint);
+				if(sess.state.completecubes){
+					sess.state.completecubes =removeCompleteCubesFromSession(sess.state.completecubes,actualendpoint);	
+				}
+				removeCompleteCubesFromFile(storedcompletecubes,actualendpoint);
 				sess.cubes = cubelist;
 				res.render(target,{layout: target });
 			}
@@ -549,6 +555,8 @@ app.get('/getcompletecube', function(req, res) {
 		   			var toSession = {timestamp:Date.now(),schema:sess.schema,instances:cubeinstances};
 		   			if (!completecubes){
 		   				completecubes = {};	
+		   			}
+		   			if (!completecubes[actualendpoint]){
 		   				completecubes[actualendpoint] ={};
 		   			}
 		   			completecubes[actualendpoint][cubeuri]= toSession;
@@ -572,9 +580,12 @@ app.get('/getcompletecube', function(req, res) {
 		   			if (!completecubes){
 		   				completecubes = {};	
 		   			}
-		   			completecubes[cubeuri]= toSession;
+		   			if (!completecubes[actualendpoint]){
+		   				completecubes[actualendpoint] ={};
+		   			}
+		   			completecubes[actualendpoint][cubeuri]= toSession;
 		   			sess.state.completecubes= completecubes; 
-		   			storeCompleteCubes(Date.now(),completecubes);
+		   			storeCompleteCubes(completecubes,Date.now(),actualendpoint,cubeuri,toSession);
 		   			if (target == 'queries'){
 		   				res.render('queries', {layout:'queries', queriesaccordion:true});
 		   			}else{
@@ -698,6 +709,7 @@ function reloadCompleteStoredCubes(timestamp){
 
 //stores or updates complete cubes (schema and instances) associated to an endpoint in the file-cache
 function storeCompleteCubes(completecubes,timestamp,endpoint,cubeuri,update){
+
 	completecubes[endpoint][cubeuri] = update;
 
 	fs.writeFile(completeCubesFile, JSON.stringify(completecubes, null, 2), function(err) {
@@ -726,20 +738,27 @@ function storeCubes(storedcubes,timestamp,endpoint,cubelist){
 }
 
 //removes all stored complete cubes for a certain endpoint
-function removeCompleteCubes(completecubes,endpoint){
-	completecubes[endpoint]={};
+function removeCompleteCubesFromFile(completecubes,endpoint){
+	if (completecubes[endpoint]){
+		completecubes[endpoint]={};
 
-	fs.writeFile(completeCubesFile, JSON.stringify(completecubes, null, 2), function(err) {
-	    if(err) {
-	      //console.log(err);
-	    } else {
-	      //console.log("JSON saved to " + completeCubesFile);
-	    }
-	}); 
-
+		fs.writeFile(completeCubesFile, JSON.stringify(completecubes, null, 2), function(err) {
+		    if(err) {
+		      //console.log(err);
+		    } else {
+		      //console.log("JSON saved to " + completeCubesFile);
+		    }
+		}); 	
+	}
 }
 
-
+//removes all stored complete cubes for a certain endpoint
+function removeCompleteCubesFromSession(completecubes,endpoint){
+	if (completecubes[endpoint]){
+		completecubes[endpoint]={};	
+	}
+	return completecubes;
+}
 
 /*
 // middleware to add weather data to context

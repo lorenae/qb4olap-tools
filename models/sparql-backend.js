@@ -39,7 +39,7 @@ var AVG ="AVG";
 exports.runSparql = function(endpoint, query, timeout, callback){
     var client;
     if(withProxy){
-        //console.log("with proxy. endpoint: "+endpoint);
+        ////console.log("with proxy. endpoint: "+endpoint);
         client = new SparqlClient(endpoint,{proxy:proxySrv, timeout:timeout});
     }else{
         client = new SparqlClient(endpoint,{timeout:timeout});
@@ -60,7 +60,8 @@ exports.getCubes = function(endpoint, callback){
             GRAPH ?schemagraph { \
                 ?cubeuri a qb:DataStructureDefinition.\
                 ?dataset qb:structure ?cubeuri. \
-                ?dataset dct:title ?cname} .\
+                ?dataset dct:title ?cname. \
+                ?cubeuri dct:conformsTo ?version } .\
                 {   SELECT distinct ?instancegraph ?dataset (count(?o) AS ?numobs)\
                     WHERE { \
                         GRAPH ?instancegraph{ \
@@ -92,7 +93,7 @@ exports.getCubes = function(endpoint, callback){
                     ver = "v1.3";
                 }
 
-    //console.log("qb4olapversion "+qb4olapversion+", Ver: "+ver);
+    ////console.log("qb4olapversion "+qb4olapversion+", Ver: "+ver);
                 cubelist.push({
                     schemagraph:schemagraph,
                     dataset:dataset, 
@@ -127,13 +128,13 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
                 ?d rdfs:label ?dname.\
                 ?h rdfs:label ?hname .\
                 ?l rdfs:label ?lname .\
-                OPTIONAL {?ih1 a qb4o:HierarchyStep;qb4o:inHierarchy ?h; qb4o:childLevel ?l1; qb4o:parentLevel ?l2 ; qb4o:pcCardinality ?card.\
-                ?l1 qb4o:hasAttribute ?la1. ?la1 rdfs:label ?la1name. ?la1 rdfs:range ?la1range.?l2 qb4o:hasAttribute ?la2. ?la2 rdfs:label ?la2name.\
-                ?la2 rdfs:range ?la2range.?l1 rdfs:label ?l1name. ?l2 rdfs:label ?l2name. }\
+                OPTIONAL {?ih1 a qb4o:HierarchyStep;qb4o:inHierarchy ?h; qb4o:childLevel ?l1; qb4o:parentLevel ?l2 ; qb4o:pcCardinality ?card.}\
+                OPTIONAL {?l1 qb4o:hasAttribute ?la1. ?la1 rdfs:label ?la1name. ?la1 rdfs:range ?la1range.?l1 rdfs:label ?l1name.}\
+                OPTIONAL {?l2 qb4o:hasAttribute ?la2. ?la2 rdfs:label ?la2name. ?la2 rdfs:range ?la2range. ?l2 rdfs:label ?l2name. }\
                 OPTIONAL {?ih1 qb4o:rollup ?rup}\
                 OPTIONAL {?l qb4o:hasAttribute ?la. ?la rdfs:label ?laname. ?la rdfs:range ?larange}\
                 }";
-                //console.log("schema query: "+ query);
+                ////console.log("schema query: "+ query);
     
     return this.runSparql(endpoint, query, 0, function processStructure(error,content){
         // assign values to empty variables
@@ -328,7 +329,7 @@ exports.getCubeInstances = function(endpoint, cubeuri, schemagraph, instancegrap
                 order by ?d ?h";    
     }
     
-    //console.log(query);
+    ////console.log(query);
     return this.runSparql(endpoint, query, 0,function processInstances(error,content){
                           
         var instances = {
@@ -430,8 +431,8 @@ exports.getCubeInstances = function(endpoint, cubeuri, schemagraph, instancegrap
             }
         });
 
-    //console.log("INSTANCES en el server: ");
-    //console.log(instances);
+    ////console.log("INSTANCES en el server: ");
+    ////console.log(instances);
     callback(error, instances);
     });              
 }
@@ -446,14 +447,14 @@ exports.processResults= function(content){
             //length ++;
             var newRow ={};
             Object.getOwnPropertyNames(row).forEach(function(prop){
-                //console.log("prop"+prop);
-                //console.log(util.inspect(row, { showHidden: false, depth: null, colors:true }));
+                ////console.log("prop"+prop);
+                ////console.log(util.inspect(row, { showHidden: false, depth: null, colors:true }));
                 newRow[prop] = row[prop].value;
             });
             results.push(newRow);
         });    
     }
-    //console.log("RESULT size:"+length);
+    ////console.log("RESULT size:"+length);
     return results;
 }
 
