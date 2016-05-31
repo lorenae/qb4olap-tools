@@ -42,7 +42,7 @@ Hierarchy.prototype.addEdgeToLatticeByuri = function(childuri, parenturi, cardin
             this.addStep(childuri, parenturi, cardinality, rollup);
         }
         this.lattice.push(newNode);
-        //console.log('agrego un hijo');
+        ////console.log('agrego un hijo');
     }
     //find the node for this level and add the pair (parentLevel,cardinality)
     else{
@@ -225,24 +225,24 @@ Hierarchy.prototype.getPaths = function(){
 
                     if (!isinpath && !existspos){
                         //for each parent add to the path the rollup function to reach it
-                        //console.log("GETPATHSREC ----- actual: "+actualNode[0].childuri);
-                        //console.log("GETPATHSREC ----- parent: "+parent.parenturi);  
-                        //console.log(util.inspect(steps, { showHidden: false, depth: null, colors:true }));
+                        ////console.log("GETPATHSREC ----- actual: "+actualNode[0].childuri);
+                        ////console.log("GETPATHSREC ----- parent: "+parent.parenturi);  
+                        ////console.log(util.inspect(steps, { showHidden: false, depth: null, colors:true }));
                         var rollup = getRollupFunction(steps, actualNode[0].childuri,parent.parenturi);
                         var newnode = {level:actualNode[0].childuri,parent:parent.parenturi,rollupfunction:rollup,pos:position};
-                        //console.log("GETPATHSREC ----- rollup: "+rollup);
-                        //console.log("GETPATHSREC ----- newnode: ");
-                        //console.log("GETPATHSREC path before: "+util.inspect(p, { showHidden: false, depth: null, colors:true }));
-                        //console.log("GETPATHSREC newnode: "+util.inspect(newnode, { showHidden: false, depth: null, colors:true }));
+                        ////console.log("GETPATHSREC ----- rollup: "+rollup);
+                        ////console.log("GETPATHSREC ----- newnode: ");
+                        ////console.log("GETPATHSREC path before: "+util.inspect(p, { showHidden: false, depth: null, colors:true }));
+                        ////console.log("GETPATHSREC newnode: "+util.inspect(newnode, { showHidden: false, depth: null, colors:true }));
                         
                         p.unshift(newnode);
-                        //console.log("GETPATHSREC path after: "+util.inspect(p, { showHidden: false, depth: null, colors:true }));
+                        ////console.log("GETPATHSREC path after: "+util.inspect(p, { showHidden: false, depth: null, colors:true }));
                     }
                 });
             });
         }else{
             //todo change pclist is empty
-            //console.log("llegue arriba");
+            ////console.log("llegue arriba");
             allpaths.push([]);
         }
     };

@@ -80,6 +80,7 @@ var hbs = expressHandlebars.create({
 			var danchor = "dim"+dimordinal;
 
 			var d = new Dimension (dimension.uri, dimension.name, dimension.levels, dimension.hierarchies);
+			////console.log("Dimension : "+util.inspect(d, { showHidden: false, depth: null, colors:true }));
 			var hordinal = 0
 			var out = "<li class=\"schema\" title=\""+ d.uri+"\"><a class=\"collapsed\" data-toggle=\"collapse\" data-target=\"#"+danchor+"\" aria-expanded=\"false\" href=\"javascript:;\">";                  
 			out += "<i class=\"fa fa-fw fa-circle\"></i>";
@@ -89,6 +90,7 @@ var hbs = expressHandlebars.create({
 			dimension.hierarchies.forEach(function (hierarchy){
 				var h = new Hierarchy(hierarchy.uri, hierarchy.name, hierarchy.lattice, hierarchy.steps);
 				var orderedLevels = h.traverse();
+				
 				var hanchor = "hier"+dimordinal*10+hordinal;
 				hordinal++;
 				out += "<li class=\"schema\" title=\""+ h.uri+"\"><a class=\"collapsed\" data-toggle=\"collapse\" data-target=\"#"+hanchor+"\" aria-expanded=\"false\" href=\"javascript:;\">";
@@ -99,7 +101,10 @@ var hbs = expressHandlebars.create({
 				var lordinal = 0;
 
 				orderedLevels.forEach(function (ol){
+					////console.log("ol : "+util.inspect(ol, { showHidden: false, depth: null, colors:true }));
+					
 					var level = d.getLevel(ol.level);
+					////console.log("level : "+util.inspect(level, { showHidden: false, depth: null, colors:true }));
 					var attribs = level.attribs;
 					if(attribs.length>0){
 						var lanchor = "lev"+dimordinal*100+hordinal*10+lordinal;
@@ -204,7 +209,7 @@ var hbs = expressHandlebars.create({
 
 	saveInstance: function(instance, options){
 		instanceJSON = JSON.stringify(instance);
-		//console.log("INSTANCES en el server: "+instanceJSON);
+		////console.log("INSTANCES en el server: "+instanceJSON);
 		script = "<script type='text/javascript'> var cubeinstance="+instanceJSON+"</script>";
 		return new Handlebars.SafeString(script);	
 
@@ -246,7 +251,7 @@ var hbs = expressHandlebars.create({
 		columns.forEach(function(column){
 			hs += "<th data-field=\""+column.colvar+"\" data-sortable=\"true\">"+column.colname+"</th>";
 		});
-		//console.log("TABLE HEADERS: "+ util.inspect(hs, { showHidden: false, depth: null, colors:true }));
+		////console.log("TABLE HEADERS: "+ util.inspect(hs, { showHidden: false, depth: null, colors:true }));
 		return new Handlebars.SafeString(hs);
 	},
 	showQuery: function(query, options) {
@@ -287,7 +292,7 @@ var hbs = expressHandlebars.create({
 				}
 			}
 			if(operation.qloperator=="DICE"){
-				//console.log("DICE  "+util.inspect(operation.dicecondition, { showHidden: false, depth: null, colors:true }));
+				////console.log("DICE  "+util.inspect(operation.dicecondition, { showHidden: false, depth: null, colors:true }));
 				// TODO aux function that transforms the condition tree into a string
 				querytext += operation.statement+"= DICE("+operation.source+","+renderCondition(operation.dicecondition)+");\n";
 			}
@@ -298,7 +303,7 @@ var hbs = expressHandlebars.create({
 		return new Handlebars.SafeString(query.replace(/^\s\s*/, '')); 
 	},
 	showSparqlQuery: function(query, options){
-			//console.log("showsparql in handle");
+			////console.log("showsparql in handle");
 			return new Handlebars.SafeString(query);
 	}
 	}
@@ -365,21 +370,21 @@ app.get('/getcubes', function(req, res) {
 
 	
 	sess=req.session;
-	//console.log("query endp: "+req.query.endpoint);
-	//console.log("session endp: "+sess.state.endpoint);
-	//console.log("refresh:"+req.query.refresh);
+	////console.log("query endp: "+req.query.endpoint);
+	////console.log("session endp: "+sess.state.endpoint);
+	////console.log("refresh:"+req.query.refresh);
 	if(req.query.endpoint) 	{
 		if (sess.state.endpoint){
 			endpchanged = (sess.state.endpoint != req.query.endpoint);
 		}
-		//console.log("change: "+endpchanged);
+		////console.log("change: "+endpchanged);
 		sess.state.endpoint = req.query.endpoint;
 	}else{
 		sess.state.endpoint = defendpoint;	
 	}
 
 	var actualendpoint = sess.state.endpoint;
-	//console.log("session endp: "+sess.state.endpoint);
+	////console.log("session endp: "+sess.state.endpoint);
 	if (!refresh){
 		if(!endpchanged && sess.cubes){
 			//if cubes are in session, use them
@@ -402,7 +407,7 @@ app.get('/getcubes', function(req, res) {
 					backend.getCubes(actualendpoint, function (err, cubelist) {
 					if (cubelist)
 						{	
-							//console.log(util.inspect(cubelist, { showHidden: false, depth: null, colors:true }));
+							////console.log(util.inspect(cubelist, { showHidden: false, depth: null, colors:true }));
 							cache.put(actualendpoint,cubelist,cubetimeout);
 							storeCubes(storedcubes,Date.now(),actualendpoint,cubelist);
 							if(sess.state.completecubes){
@@ -413,7 +418,7 @@ app.get('/getcubes', function(req, res) {
 							res.render(target,{layout: target });
 						}
 						else{
-							//console.log("error: "+err);
+							////console.log("error: "+err);
 							res.render(target, {layout:target, error:err});
 						}
 					});
@@ -425,7 +430,7 @@ app.get('/getcubes', function(req, res) {
 		backend.getCubes(actualendpoint, function (err, cubelist) {
 		if (cubelist)
 			{	
-				//console.log(util.inspect(cubelist, { showHidden: false, depth: null, colors:true }));
+				////console.log(util.inspect(cubelist, { showHidden: false, depth: null, colors:true }));
 				cache.put(actualendpoint,cubelist,cubetimeout);
 				storeCubes(storedcubes,Date.now(),actualendpoint,cubelist);
 				if(sess.state.completecubes){
@@ -436,7 +441,7 @@ app.get('/getcubes', function(req, res) {
 				res.render(target,{layout: target });
 			}
 			else{
-				//console.log("error: "+err);
+				////console.log("error: "+err);
 				res.render(target, {layout:target, error:err});
 			}
 		});
@@ -469,7 +474,7 @@ app.get('/getcubestructure', function(req, res) {
     {	backend.getCubeSchema(sess.state.endpoint, sess.state.cube,sess.state.schemagraph, function (err, datacube) {
    		sess.schema = datacube;
    		sess.queries = getSampleQueries(dataset);
-   		//console.log(req.originalUrl);
+   		////console.log(req.originalUrl);
 
     	res.render('queries');
 	});
@@ -494,7 +499,7 @@ app.get('/getcompletecube', function(req, res) {
 	var instancegraph = selectedcube[0].instancegraph; 
 	var qb4olapversion = selectedcube[0].qb4olapversion; 
 	
-	//console.log("CUBE:" +util.inspect(selectedcube[0], { showHidden: false, depth: null, colors:true }));
+	////console.log("CUBE:" +util.inspect(selectedcube[0], { showHidden: false, depth: null, colors:true }));
 
 	sess=req.session;
 	sess.state.cube = cubeuri;
@@ -513,7 +518,7 @@ app.get('/getcompletecube', function(req, res) {
 
 	//if is in the session, use it
 	if (completecubes && completecubes[actualendpoint] && completecubes[actualendpoint][cubeuri] && !reloadCompleteStoredCubes(completecubes[actualendpoint][cubeuri].timestamp) ){  
-		//console.log("GET COMPLETE CUBE: getting from session");
+		////console.log("GET COMPLETE CUBE: getting from session");
 		var thisCube = sess.state.completecubes[actualendpoint][cubeuri];
 		sess.schema = thisCube.schema;
 		sess.instances = thisCube.instances;
@@ -524,7 +529,7 @@ app.get('/getcompletecube', function(req, res) {
 		}
 	//if is not in the session but is in the stored file and is still fresh, use it	
 	}else if(storedcompletecubes[actualendpoint] && storedcompletecubes[actualendpoint][cubeuri] &&!reloadCompleteStoredCubes(storedcompletecubes[actualendpoint][cubeuri].timestamp)){
-		//console.log("GET COMPLETE CUBE: getting from file cache");
+		////console.log("GET COMPLETE CUBE: getting from file cache");
 		sess.state.completecubes= storedcompletecubes[actualendpoint];
 		var thisCube = sess.state.completecubes[cubeuri];
 		sess.schema = thisCube.schema;
@@ -536,8 +541,8 @@ app.get('/getcompletecube', function(req, res) {
 		}
 	//else, go to the SPARQL backend	
 	}else if(sess.state.endpoint && sess.state.cube){
-		    //console.log("GET COMPLETE CUBE: going to backend");
-	    	backend.getCubeSchema(sess.state.endpoint, sess.state.cube,sess.state.dataset,sess.state.schemagraph, function (err, cubeschema) {
+		    ////console.log("GET COMPLETE CUBE: going to backend");
+	    	backend.getCubeSchema(sess.state.endpoint, sess.state.cube,sess.state.qb4olapversion,sess.state.dataset,sess.state.schemagraph, function (err, cubeschema) {
 			cubeschema.instancegraph = instancegraph;
 			cubeschema.schemagraph = schemagraph;
 	    	//set the schema
@@ -546,8 +551,8 @@ app.get('/getcompletecube', function(req, res) {
 	   		//set the queries
 	   		
 	   		if(cubeuri != 'http://www.fing.edu.uy/inco/cubes/schemas/ssb_qb4olap#dsd'){
-		   		//console.log("SCHEMA:" +util.inspect(cubeschema, { showHidden: false, depth: null, colors:true }));
-		   		//console.log("version en ppal "+sess.state.qb4olapversion);
+		   		////console.log("SCHEMA:" +util.inspect(cubeschema, { showHidden: false, depth: null, colors:true }));
+		   		////console.log("version en ppal "+sess.state.qb4olapversion);
 		   		backend.getCubeInstances(sess.state.endpoint, sess.state.cube,sess.state.schemagraph,sess.state.instancegraph,sess.state.qb4olapversion, 
 		   			function (err, cubeinstances) {
 		   			//set the instances
@@ -606,7 +611,7 @@ app.get('/simplifyquery', function(req, res) {
 	if(sess.schema){
 		sess.querytext = querytext.replace(/^\s\s*/, '');
 		sess.originalquery = query;
-		//console.log("original query:" +util.inspect(query, { showHidden: false, depth: null, colors:true }));
+		////console.log("original query:" +util.inspect(query, { showHidden: false, depth: null, colors:true }));
 		operators.getSimplifiedQuery(sess.state.endpoint, sess.schema, query, function (err, simplified) {
 			sess.simplequery = simplified;
 			res.render('queries', {layout:'queries', editoraccordion:true});
@@ -621,7 +626,7 @@ app.get('/getsparqlquery', function(req, res) {
 	if(sess.schema && sess.simplequery){
 		operators.getSparqlQuery(sess.state.endpoint, sess.schema, sess.simplequery, function (err,spquery) {
 			sess.sparqlcols = spquery.columns;
-			//console.log("QUERY COLS FROM GETSPQUERY:" +util.inspect(spquery.columns, { showHidden: false, depth: null, colors:true }));
+			////console.log("QUERY COLS FROM GETSPQUERY:" +util.inspect(spquery.columns, { showHidden: false, depth: null, colors:true }));
 			sess.sparqlquery = spquery.sparqlquery;
 			res.render('queries', {layout:'queries', sparqlaccordion:true});
 		});
@@ -636,7 +641,7 @@ app.get('/getbettersparqlquery', function(req, res) {
 	if(sess.schema && sess.simplequery){
 		operators.getBetterSparqlQuery(sess.state.endpoint, sess.schema, sess.simplequery, function (err,spquery) {
 			sess.sparqlcols = spquery.columns;
-			//console.log("QUERY COLS FROM GETSPQUERY:" +util.inspect(spquery.columns, { showHidden: false, depth: null, colors:true }));
+			////console.log("QUERY COLS FROM GETSPQUERY:" +util.inspect(spquery.columns, { showHidden: false, depth: null, colors:true }));
 			sess.sparqlquery = spquery.sparqlquery;
 			res.render('queries', {layout:'queries', sparqlaccordion:true});
 		});
@@ -651,8 +656,8 @@ app.get('/runsparql', function(req, res) {
 	sess=req.session;
 	var sparqlquery = req.query.sparqlquery;
 	
-	//console.log("QUERY: "+sparqlquery);
-	//console.log(sess.state.endpoint);
+	////console.log("QUERY: "+sparqlquery);
+	////console.log(sess.state.endpoint);
 
 	if(sparqlquery && sess.state.endpoint){
 		backend.runSparql(sess.state.endpoint,sparqlquery,0, function (err, content) {		
@@ -678,7 +683,7 @@ app.get('/runsparqlquery', function(req, res) {
 
 
 app.listen(app.get('port'), function(){
-	console.log( 'Express started on http://localhost:' +
+	//console.log( 'Express started on http://localhost:' +
 		app.get('port') + '; press Ctrl-C to terminate.' );
 });
 
@@ -695,7 +700,7 @@ function getSampleQueries(cube){
 function reloadStoredCubes(timestamp){
     //computes the age in milliseconds
 	var age = Math.abs(Date.now() - timestamp);
-	//console.log("AGE:"+age);
+	////console.log("AGE:"+age);
 	return (age>cubetimeout);
 }
 
@@ -703,7 +708,7 @@ function reloadStoredCubes(timestamp){
 function reloadCompleteStoredCubes(timestamp){
     
 	var age = Math.abs(Date.now() - timestamp);
-	//console.log("AGE:"+age);
+	////console.log("AGE:"+age);
 	return (age>cubetimeout);
 }
 
@@ -714,9 +719,9 @@ function storeCompleteCubes(completecubes,timestamp,endpoint,cubeuri,update){
 
 	fs.writeFile(completeCubesFile, JSON.stringify(completecubes, null, 2), function(err) {
 	    if(err) {
-	      //console.log(err);
+	      ////console.log(err);
 	    } else {
-	      //console.log("JSON saved to " + completeCubesFile);
+	      ////console.log("JSON saved to " + completeCubesFile);
 	    }
 	}); 
 }
@@ -730,9 +735,9 @@ function storeCubes(storedcubes,timestamp,endpoint,cubelist){
 
 	fs.writeFile(cubesFile, JSON.stringify(storedcubes, null, 2), function(err) {
 	    if(err) {
-	      //console.log(err);
+	      ////console.log(err);
 	    } else {
-	      //console.log("JSON saved to " + cubesFile);
+	      ////console.log("JSON saved to " + cubesFile);
 	    }
 	}); 
 }
@@ -744,9 +749,9 @@ function removeCompleteCubesFromFile(completecubes,endpoint){
 
 		fs.writeFile(completeCubesFile, JSON.stringify(completecubes, null, 2), function(err) {
 		    if(err) {
-		      //console.log(err);
+		      ////console.log(err);
 		    } else {
-		      //console.log("JSON saved to " + completeCubesFile);
+		      ////console.log("JSON saved to " + completeCubesFile);
 		    }
 		}); 	
 	}

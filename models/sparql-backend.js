@@ -39,7 +39,7 @@ var AVG ="AVG";
 exports.runSparql = function(endpoint, query, timeout, callback){
     var client;
     if(withProxy){
-        ////console.log("with proxy. endpoint: "+endpoint);
+        //////console.log("with proxy. endpoint: "+endpoint);
         client = new SparqlClient(endpoint,{proxy:proxySrv, timeout:timeout});
     }else{
         client = new SparqlClient(endpoint,{timeout:timeout});
@@ -72,7 +72,7 @@ exports.getCubes = function(endpoint, callback){
         } order by ?cname";
        
        
-    //console.log(query);
+    ////console.log(query);
        
     return this.runSparql(endpoint, query, 30000,function processCubes(error,content){
         var cubelist = [];
@@ -93,7 +93,7 @@ exports.getCubes = function(endpoint, callback){
                     ver = "v1.3";
                 }
 
-    ////console.log("qb4olapversion "+qb4olapversion+", Ver: "+ver);
+    //////console.log("qb4olapversion "+qb4olapversion+", Ver: "+ver);
                 cubelist.push({
                     schemagraph:schemagraph,
                     dataset:dataset, 
@@ -113,28 +113,52 @@ exports.getCubes = function(endpoint, callback){
 // pre: endpoint is the URL of a SPARQL endpoint, cubeuri is the URI of a datacube in the endpoint, schemagraph is the named graph where the schema is stored
 // post: returns a Datacube and a Cuboid object that represents the structure of the datacube.
 
-exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callback){
-       var query = "PREFIX qb: <http://purl.org/linked-data/cube#> \
-                PREFIX qb4o: <http://purl.org/qb4olap/cubes#> \
-                PREFIX dct: <http://purl.org/dc/terms/>\
-                SELECT ?cname ?d ?dname ?h ?hname ?l ?lname ?la ?laname ?larange ?l1 ?l1name ?la1 ?la1name ?la1range ?l2 ?l2name ?la2 ?la2name ?la2range ?rup ?card ?m ?f ?mrange \
-                FROM <"+schemagraph+">  WHERE { <"+cubeuri+"> qb:component ?c1,?c2 .\
-                ?ds qb:structure <"+cubeuri+"> . ?c1 qb4o:level ?l .\
-                ?c2 qb:measure ?m. ?c2 qb4o:aggregateFunction ?f .\
-                OPTIONAL {?m rdfs:range ?mrange }\
-                ?h qb4o:hasLevel ?l.\
-                ?h qb4o:inDimension ?d.\
-                ?ds dct:title ?cname .\
-                ?d rdfs:label ?dname.\
-                ?h rdfs:label ?hname .\
-                ?l rdfs:label ?lname .\
-                OPTIONAL {?ih1 a qb4o:HierarchyStep;qb4o:inHierarchy ?h; qb4o:childLevel ?l1; qb4o:parentLevel ?l2 ; qb4o:pcCardinality ?card.}\
-                OPTIONAL {?l1 qb4o:hasAttribute ?la1. ?la1 rdfs:label ?la1name. ?la1 rdfs:range ?la1range.?l1 rdfs:label ?l1name.}\
-                OPTIONAL {?l2 qb4o:hasAttribute ?la2. ?la2 rdfs:label ?la2name. ?la2 rdfs:range ?la2range. ?l2 rdfs:label ?l2name. }\
-                OPTIONAL {?ih1 qb4o:rollup ?rup}\
-                OPTIONAL {?l qb4o:hasAttribute ?la. ?la rdfs:label ?laname. ?la rdfs:range ?larange}\
-                }";
-                ////console.log("schema query: "+ query);
+exports.getCubeSchema = function(endpoint, cubeuri, version,dataset, schemagraph, callback){
+
+        if(version == "v1.3"){
+           var query = "PREFIX qb: <http://purl.org/linked-data/cube#> \
+                    PREFIX qb4o: <http://purl.org/qb4olap/cubes#> \
+                    PREFIX dct: <http://purl.org/dc/terms/>\
+                    SELECT ?cname ?d ?dname ?h ?hname ?l ?lname ?la ?laname ?larange ?l1 ?l1name ?la1 ?la1name ?la1range ?l2 ?l2name ?la2 ?la2name ?la2range ?rup ?card ?m ?f ?mrange \
+                    FROM <"+schemagraph+">  WHERE { <"+cubeuri+"> qb:component ?c1,?c2 .\
+                    ?ds qb:structure <"+cubeuri+"> . ?c1 qb4o:level ?l .\
+                    ?c2 qb:measure ?m. ?c2 qb4o:aggregateFunction ?f .\
+                    OPTIONAL {?m rdfs:range ?mrange }\
+                    ?h qb4o:hasLevel ?l.\
+                    ?h qb4o:inDimension ?d.\
+                    ?ds dct:title ?cname .\
+                    ?d rdfs:label ?dname.\
+                    ?h rdfs:label ?hname .\
+                    ?l rdfs:label ?lname .\
+                    OPTIONAL {?l qb4o:hasAttribute ?la. ?la rdfs:label ?laname. ?la rdfs:range ?larange}.\
+                    OPTIONAL {?ih1 a qb4o:HierarchyStep;qb4o:inHierarchy ?h; qb4o:childLevel ?l1; qb4o:parentLevel ?l2 ; qb4o:pcCardinality ?card.\
+                    ?l1 qb4o:hasAttribute ?la1. ?la1 rdfs:label ?la1name. ?la1 rdfs:range ?la1range.?l1 rdfs:label ?l1name.\
+                    ?l2 qb4o:hasAttribute ?la2. ?la2 rdfs:label ?la2name. ?la2 rdfs:range ?la2range. ?l2 rdfs:label ?l2name. \
+                    ?ih1 qb4o:rollup ?rup}\
+                    }";
+        }else if(version == "v1.2"){
+            var query = "PREFIX qb: <http://purl.org/linked-data/cube#> \
+                    PREFIX qb4o: <http://purl.org/qb4olap/cubes#> \
+                    PREFIX dct: <http://purl.org/dc/terms/>\
+                    SELECT distinct ?cname ?d ?dname ?h ?hname ?l ?lname ?la ?laname ?larange ?l1 ?l1name ?la1 ?la1name ?la1range ?l2 ?l2name ?la2 ?la2name ?la2range ?card ?m ?f ?mrange \
+                    FROM <"+schemagraph+">  WHERE { <"+cubeuri+"> qb:component ?c1,?c2 .\
+                    ?ds qb:structure <"+cubeuri+"> . ?c1 qb4o:level ?l .\
+                    ?c2 qb:measure ?m. ?c2 qb4o:aggregateFunction ?f .\
+                    OPTIONAL {?m rdfs:range ?mrange }\
+                    ?h qb4o:hasLevel ?l.\
+                    ?h qb4o:inDimension ?d.\
+                    ?ds dct:title ?cname .\
+                    ?d rdfs:label ?dname.\
+                    ?h rdfs:label ?hname .\
+                    ?l rdfs:label ?lname .\
+                    OPTIONAL {?l qb4o:hasAttribute ?la. ?la rdfs:label ?laname. ?la rdfs:range ?larange}.\
+                    OPTIONAL {?ih1 a qb4o:HierarchyStep;qb4o:inHierarchy ?h; qb4o:childLevel ?l1; qb4o:parentLevel ?l2 ; qb4o:pcCardinality ?card}.\
+                    OPTIONAL {?l1 qb4o:hasAttribute ?la1. ?la1 rdfs:label ?la1name. ?la1 rdfs:range ?la1range.?l1 rdfs:label ?l1name}.\
+                    OPTIONAL {?l2 qb4o:hasAttribute ?la2. ?la2 rdfs:label ?la2name. ?la2 rdfs:range ?la2range. ?l2 rdfs:label ?l2name.}\
+                    }";
+        }
+        //console.log("version: "+ version);
+        //console.log("schema query: "+ query);
     
     return this.runSparql(endpoint, query, 0, function processStructure(error,content){
         // assign values to empty variables
@@ -236,6 +260,7 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
             }
 
             if (l2uri != null){
+                //hierarchy.addEdgeToLatticeByuri(childuri, l2uri, cardinality,rup);
                 if (!dimension.existsLevel(l2uri)){
                     parent = new Level(l2uri, l2name);
                     parent.addAttribute(new Attribute(la2name, la2uri, la2range)); 
@@ -254,10 +279,11 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
         alldims.forEach(function(dim){
             var h = dim.getAllHierarchies()[0];
             var hier = new Hierarchy(h.uri,h.name,h.lattice,h.steps);
+            ////console.log("hierarchy: "+util.inspect(hier, { showHidden: false, depth: null, colors:true }));
             var bottom = hier.getBottomLevel();
             dim.bottomLevel = bottom;
         });
-        
+    ////console.log("------DATA CUBE: "+util.inspect(dc, { showHidden: false, depth: null, colors:true }));
     callback(error, dc);
     });              
 }
@@ -269,7 +295,7 @@ exports.getCubeSchema = function(endpoint, cubeuri, dataset, schemagraph, callba
 exports.getCubeInstances = function(endpoint, cubeuri, schemagraph, instancegraph, qb4olapversion, callback){
 
     var query;
-    //console.log("version "+qb4olapversion);
+    ////console.log("version "+qb4olapversion);
 
     if (qb4olapversion == "v1.3"){
         query = "prefix qb: <http://purl.org/linked-data/cube#> prefix qb4o: <http://purl.org/qb4olap/cubes#> \
@@ -329,7 +355,7 @@ exports.getCubeInstances = function(endpoint, cubeuri, schemagraph, instancegrap
                 order by ?d ?h";    
     }
     
-    ////console.log(query);
+    //////console.log(query);
     return this.runSparql(endpoint, query, 0,function processInstances(error,content){
                           
         var instances = {
@@ -431,8 +457,8 @@ exports.getCubeInstances = function(endpoint, cubeuri, schemagraph, instancegrap
             }
         });
 
-    ////console.log("INSTANCES en el server: ");
-    ////console.log(instances);
+    //////console.log("INSTANCES en el server: ");
+    //////console.log(instances);
     callback(error, instances);
     });              
 }
@@ -447,14 +473,14 @@ exports.processResults= function(content){
             //length ++;
             var newRow ={};
             Object.getOwnPropertyNames(row).forEach(function(prop){
-                ////console.log("prop"+prop);
-                ////console.log(util.inspect(row, { showHidden: false, depth: null, colors:true }));
+                //////console.log("prop"+prop);
+                //////console.log(util.inspect(row, { showHidden: false, depth: null, colors:true }));
                 newRow[prop] = row[prop].value;
             });
             results.push(newRow);
         });    
     }
-    ////console.log("RESULT size:"+length);
+    //////console.log("RESULT size:"+length);
     return results;
 }
 

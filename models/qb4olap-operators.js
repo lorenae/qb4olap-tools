@@ -28,7 +28,7 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
     //apply simplification rules in each case
     var queryType = getQueryType(inputquery);
 
-    //console.log("QUERY TYPE:"+queryType);
+    ////console.log("QUERY TYPE:"+queryType);
     simplequery.type = queryType;
     switch(queryType){
                 
@@ -145,11 +145,11 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
                             // if exists IPO operations for a dimension and there is no slice over it
                             if (ipodim.length>0){
                                 // consider the level reached by the last operation for each dimension (target level)
-                                //////console.log("DIM:" +util.inspect(dim, { showHidden: false, depth: null, colors:true }));
+                                ////////console.log("DIM:" +util.inspect(dim, { showHidden: false, depth: null, colors:true }));
                                 var bottomLevel = dim.bottomLevel;
                                 var targetLevel = ipodim[ipodim.length-1].level;
-                                //////console.log("bottom:" +util.inspect(bottomLevel, { showHidden: false, depth: null, colors:true }));
-                                //////console.log("target:" +util.inspect(targetLevel, { showHidden: false, depth: null, colors:true }));
+                                ////////console.log("bottom:" +util.inspect(bottomLevel, { showHidden: false, depth: null, colors:true }));
+                                ////////console.log("target:" +util.inspect(targetLevel, { showHidden: false, depth: null, colors:true }));
 
                                 // if target level is different than the bottom level for that dimension, 
                                 // rewrite the sequence of IPOs as a ROLLUP from bottom up to target level
@@ -333,9 +333,9 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
 
                     splitRollupWSlice(inputquery.query, firstops, rollups,lastops);
 
-                    //////console.log("FIRST:" +util.inspect(firstops, { showHidden: false, depth: null, colors:true }));
-                    //////console.log("ROLLUPS:" +util.inspect(rollups, { showHidden: false, depth: null, colors:true }));
-                    //////console.log("LAST:" +util.inspect(lastops, { showHidden: false, depth: null, colors:true }));
+                    ////////console.log("FIRST:" +util.inspect(firstops, { showHidden: false, depth: null, colors:true }));
+                    ////////console.log("ROLLUPS:" +util.inspect(rollups, { showHidden: false, depth: null, colors:true }));
+                    ////////console.log("LAST:" +util.inspect(lastops, { showHidden: false, depth: null, colors:true }));
 
                     var stcount = 1;
                     var RUPs = [];
@@ -362,11 +362,11 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
                         //  simplify rollups
                         if (rupdim.length>0  ){
                             // consider the level reached by the last operation for each dimension (target level)
-                            //////console.log("DIM:" +util.inspect(dim, { showHidden: false, depth: null, colors:true }));
+                            ////////console.log("DIM:" +util.inspect(dim, { showHidden: false, depth: null, colors:true }));
                             var bottomLevel = dim.bottomLevel;
                             var targetLevel = rupdim[rupdim.length-1].level;
-                            //////console.log("bottom:" +util.inspect(bottomLevel, { showHidden: false, depth: null, colors:true }));
-                            //////console.log("target:" +util.inspect(targetLevel, { showHidden: false, depth: null, colors:true }));
+                            ////////console.log("bottom:" +util.inspect(bottomLevel, { showHidden: false, depth: null, colors:true }));
+                            ////////console.log("target:" +util.inspect(targetLevel, { showHidden: false, depth: null, colors:true }));
 
                             // if target level is different than the bottom level for that dimension, 
                             // rewrite the sequence of ROLLUPS as ROLLUP from bottom up to target level
@@ -417,9 +417,9 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
 
                     splitRollupWSlice(inputquery.query, firstops, rollups,lastops);
 
-                    //////console.log("FIRST:" +util.inspect(firstops, { showHidden: false, depth: null, colors:true }));
-                    //////console.log("ROLLUPS:" +util.inspect(rollups, { showHidden: false, depth: null, colors:true }));
-                    //////console.log("LAST:" +util.inspect(lastops, { showHidden: false, depth: null, colors:true }));
+                    ////////console.log("FIRST:" +util.inspect(firstops, { showHidden: false, depth: null, colors:true }));
+                    ////////console.log("ROLLUPS:" +util.inspect(rollups, { showHidden: false, depth: null, colors:true }));
+                    ////////console.log("LAST:" +util.inspect(lastops, { showHidden: false, depth: null, colors:true }));
 
                     var stcount = 1;
                     var RUPs = [];
@@ -446,11 +446,11 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
                         //  simplify rollups
                         if (rupdim.length>0  ){
                             // consider the level reached by the last operation for each dimension (target level)
-                            //////console.log("DIM:" +util.inspect(dim, { showHidden: false, depth: null, colors:true }));
+                            ////////console.log("DIM:" +util.inspect(dim, { showHidden: false, depth: null, colors:true }));
                             var bottomLevel = dim.bottomLevel;
                             var targetLevel = rupdim[rupdim.length-1].level;
-                            //////console.log("bottom:" +util.inspect(bottomLevel, { showHidden: false, depth: null, colors:true }));
-                            //////console.log("target:" +util.inspect(targetLevel, { showHidden: false, depth: null, colors:true }));
+                            ////////console.log("bottom:" +util.inspect(bottomLevel, { showHidden: false, depth: null, colors:true }));
+                            ////////console.log("target:" +util.inspect(targetLevel, { showHidden: false, depth: null, colors:true }));
 
                             // if target level is different than the bottom level for that dimension, 
                             // rewrite the sequence of ROLLUPS as ROLLUP from bottom up to target level
@@ -511,7 +511,7 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
                     var stcount = 1;
                     var IPOs = [];
 
-                    ////console.log("input query:" +util.inspect(inputquery.query, { showHidden: false, depth: null, colors:true }));
+                    //////console.log("input query:" +util.inspect(inputquery.query, { showHidden: false, depth: null, colors:true }));
 
                     //first push SLICE operations over measures.
                     var slicemeas = inputquery.query.filter(function(operation){
@@ -553,12 +553,12 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
                         splitDiceAtoms(dice.dicecondition, dice.statement, atommeasdices, atomleveldices);
                     });
 
-                    ////console.log("dice level atoms:" +util.inspect(atomleveldices, { showHidden: false, depth: null, colors:true }));
-                    ////console.log("dice meas atoms:" +util.inspect(atommeasdices, { showHidden: false, depth: null, colors:true }));
+                    //////console.log("dice level atoms:" +util.inspect(atomleveldices, { showHidden: false, depth: null, colors:true }));
+                    //////console.log("dice meas atoms:" +util.inspect(atommeasdices, { showHidden: false, depth: null, colors:true }));
                     
 
                     datacube.dimensions.forEach(function(dim){
-                        ////console.log("--------DIM: "+dim.uri);
+                        //////console.log("--------DIM: "+dim.uri);
                         var slicedim = inputquery.query.filter(function(operation){
                             return ((operation.qloperator == "SLICE") && (operation.dimension == dim.uri));
                         });
@@ -568,10 +568,10 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
 
                         //no dice over dim
                         if (dicedim.length==0){
-                            ////console.log("-------dice:NO");
+                            //////console.log("-------dice:NO");
                             // if exists a slice over a dimension, only keep the slice
                             if (slicedim.length>0){
-                                ////console.log("-------slice:YES");    
+                                //////console.log("-------slice:YES");    
                                 var newSLICE = new Object();
                                     newSLICE.statement = "$C"+stcount++;
                                     newSLICE.qloperator = "SLICE";
@@ -585,20 +585,20 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
                                     simplequery.query.push(newSLICE);
                             }else{
                                 // group IPO operations by dimension, preserving order
-                                ////console.log("-------slice:NO");    
+                                //////console.log("-------slice:NO");    
                                 var ipodim = inputquery.query.filter(function(operation){
                                 return (((operation.qloperator == "ROLLUP")||(operation.qloperator == "DRILLDOWN")) && (operation.dimension == dim.uri));
                                 });
-                                //console.log("ipos on dim:" +util.inspect(ipodim, { showHidden: false, depth: null, colors:true }));
+                                ////console.log("ipos on dim:" +util.inspect(ipodim, { showHidden: false, depth: null, colors:true }));
                                 if (ipodim.length>0){
-                                    ////console.log("-------ipo:YES");    
-                                    ////console.log("ipo en dim sin dice o slice: "+dim.uri);
+                                    //////console.log("-------ipo:YES");    
+                                    //////console.log("ipo en dim sin dice o slice: "+dim.uri);
                                     // consider the level reached by the last operation for each dimension (target level)
-                                    //////console.log("DIM:" +util.inspect(dim, { showHidden: false, depth: null, colors:true }));
+                                    ////////console.log("DIM:" +util.inspect(dim, { showHidden: false, depth: null, colors:true }));
                                     var bottomLevel = dim.bottomLevel;
                                     var targetLevel = ipodim[ipodim.length-1].level;
-                                    //////console.log("bottom:" +util.inspect(bottomLevel, { showHidden: false, depth: null, colors:true }));
-                                    //////console.log("target:" +util.inspect(targetLevel, { showHidden: false, depth: null, colors:true }));
+                                    ////////console.log("bottom:" +util.inspect(bottomLevel, { showHidden: false, depth: null, colors:true }));
+                                    ////////console.log("target:" +util.inspect(targetLevel, { showHidden: false, depth: null, colors:true }));
 
                                     // if target level is different than the bottom level for that dimension, 
                                     // rewrite the sequence of IPOs as a ROLLUP from bottom up to target level
@@ -613,7 +613,7 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
                                         IPOs.push(newIPO);
                                     }                           
                                 }else{
-                                   ////console.log("-------ipo:NO");     
+                                   //////console.log("-------ipo:NO");     
                                 }
                             }
                         }
@@ -624,9 +624,9 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
                         only simplify consecutive RUPs (optional)
                         */
                         else{
-                            ////console.log("-------dice:YES");
+                            //////console.log("-------dice:YES");
                             if (slicedim.length>0){
-                                ////console.log("-------slice:YES");    
+                                //////console.log("-------slice:YES");    
                                 var newSLICE = new Object();
                                     newSLICE.statement = "$C"+stcount++;
                                     newSLICE.qloperator = "SLICE";
@@ -656,13 +656,13 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
                             //copy all the dices derived from a dice at a certain position
                             var i = 0;
                             var d = 0;
-                            ////console.log("ipodim:" +util.inspect(ipodim, { showHidden: false, depth: null, colors:true }));
-                            ////console.log("dicedim:" +util.inspect(dicedim, { showHidden: false, depth: null, colors:true }));
+                            //////console.log("ipodim:" +util.inspect(ipodim, { showHidden: false, depth: null, colors:true }));
+                            //////console.log("dicedim:" +util.inspect(dicedim, { showHidden: false, depth: null, colors:true }));
 
                             //merge
                             while (i<ipodim.length && d<dicedim.length){
-                                ////console.log("ipo st:"+ipodim[i].statement);
-                                ////console.log("dice st:"+dicedim[d].statement);
+                                //////console.log("ipo st:"+ipodim[i].statement);
+                                //////console.log("dice st:"+dicedim[d].statement);
                                 while(i<ipodim.length && d<dicedim.length && ipodim[i].statement<dicedim[d].statement){
                                     sortedops.push(ipodim[i]);
                                     i++;
@@ -682,7 +682,7 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
                                 d++;
                             }
 
-                            ////console.log("sortedops:" +util.inspect(sortedops, { showHidden: false, depth: null, colors:true }));
+                            //////console.log("sortedops:" +util.inspect(sortedops, { showHidden: false, depth: null, colors:true }));
 
                             sortedops.forEach(function(o){
                                 o.statement = "$C"+stcount++;
@@ -695,7 +695,7 @@ exports.getSimplifiedQuery = function(endpoint, datacube, query, callback){
                             });
                             } 
                     }); 
-                    //console.log("IPOs:" +util.inspect(IPOs, { showHidden: false, depth: null, colors:true }));
+                    ////console.log("IPOs:" +util.inspect(IPOs, { showHidden: false, depth: null, colors:true }));
                     IPOs.forEach(function(ipo){
                         ipo.statement = "$C"+stcount++;
                         if(simplequery.query.length==0){
@@ -812,8 +812,8 @@ exports.getSparqlQuery = function(endpoint, datacube, simplequery, callback){
 
     var stubquery = "SELECT *  WHERE { ?s ?p ?o } LIMIT 2";
 
-    //////console.log("QUERY TYPE: "+simplequery.type);
-    //////console.log("simplequery: "+util.inspect(simplequery, { showHidden: false, depth: null, colors:true }));
+    //console.log("QUERY TYPE: "+simplequery.type);
+    ////////console.log("simplequery: "+util.inspect(simplequery, { showHidden: false, depth: null, colors:true }));
 
     switch(simplequery.type){
         //IPO only
@@ -869,7 +869,7 @@ exports.getBetterSparqlQuery = function(endpoint, datacube, simplequery, callbac
     var query = {sparqlquery:stubquery, variables:variables};
 
     var stubquery = "SELECT *  WHERE { ?s ?p ?o } LIMIT 2";
-    //console.log("QUERY TYPE:"+simplequery.type);
+    ////console.log("QUERY TYPE:"+simplequery.type);
 
 switch(simplequery.type){
         //IPO only
@@ -1011,17 +1011,19 @@ function getIPOOnlySparqlQuery(endpoint, datacube, simplequery, optimize){
         //exists a rollup on this dimension 
         if (r.length>0){
             var rollup = r[0];
-            //console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
-            //console.log("DIM : "+util.inspect(dim, { showHidden: false, depth: null, colors:true }));
+            ////console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
+            ////console.log("DIM : "+util.inspect(dim, { showHidden: false, depth: null, colors:true }));
             var targetLevel = rollup.targetLevel;
             var bottomLevel = rollup.bottomLevel;
 
             if (bottomLevel != targetLevel){
                 //find the longest path between this 2 levels
                 var levelPath = dim.getLongestPath(bottomLevel, targetLevel);
+                //console.log("bottomlevel: "+bottomLevel);
+                //console.log("targetlevel: "+targetLevel);
                 //console.log("------longest PATH: "+util.inspect(levelPath, { showHidden: false, depth: null, colors:true }));
                 levelPath.path.forEach(function(actual){
-                    //////console.log("------qb4olap-operators   actualnode: "+util.inspect(actual, { showHidden: false, depth: null, colors:true }));
+                    ////////console.log("------qb4olap-operators   actualnode: "+util.inspect(actual, { showHidden: false, depth: null, colors:true }));
                     var actualLevel = actual.level;
                     var parentLevel = actual.parent;
                     var actualRollup = "<"+actual.rollupfunction+">";
@@ -1079,7 +1081,7 @@ function getIPOOnlySparqlQuery(endpoint, datacube, simplequery, optimize){
     });//end processing dimensions
 
     sparqlstr = sparqlIPO.toString(false);
-    //////console.log("QUERY in qb4olap-operators: "+sparqlstr);
+    ////////console.log("QUERY in qb4olap-operators: "+sparqlstr);
 
     var query = {sparqlquery:sparqlstr, columns:varcolumns.concat(meascolumns)};
 
@@ -1162,7 +1164,7 @@ function getSliceOnlySparqlQuery(endpoint, datacube, simplequery, optimize){
     //PROCESS DIMENSIONS
     datacube.dimensions.forEach(function(d){
         var dim = new Dimension(d.uri, d.name, d.levels, d.hierarchies, d.bottomLevel);
-        //console.log("DIM "+d.name);
+        ////console.log("DIM "+d.name);
         //if exists, get the only SLICE on that dimension
         var s = simplequery.query.filter(function(oper){
             return (oper.dimension == dim.uri && oper.qloperator == "SLICE");
@@ -1197,7 +1199,7 @@ function getSliceOnlySparqlQuery(endpoint, datacube, simplequery, optimize){
     });//end processing dimensions
 
     sparqlstr = sparqlSLICE.toString(false);
-    //////console.log("QUERY in qb4olap-operators: "+sparqlStr);
+    ////////console.log("QUERY in qb4olap-operators: "+sparqlStr);
 
     var query = {sparqlquery:sparqlstr, columns:varcolumns.concat(meascolumns)};
     
@@ -1311,16 +1313,16 @@ function getIPOSliceSparqlQuery(endpoint, datacube, simplequery, optimize){
         //exists a rollup on this dimension and not exists slice
         if (r.length>0 && s.length==0){
             var rollup = r[0];
-            //////console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
+            ////////console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
             var targetLevel = rollup.targetLevel;
             var bottomLevel = rollup.bottomLevel;
 
             if (bottomLevel != targetLevel){
                 //find the longest path between this 2 levels
                 var levelPath = dim.getLongestPath(bottomLevel, targetLevel);
-                //////console.log("------longest PATH: "+util.inspect(levelPath, { showHidden: false, depth: null, colors:true }));
+                ////////console.log("------longest PATH: "+util.inspect(levelPath, { showHidden: false, depth: null, colors:true }));
                 levelPath.path.forEach(function(actual){
-                    //////console.log("------qb4olap-operators   actualnode: "+util.inspect(actual, { showHidden: false, depth: null, colors:true }));
+                    ////////console.log("------qb4olap-operators   actualnode: "+util.inspect(actual, { showHidden: false, depth: null, colors:true }));
                     var actualLevel = actual.level;
                     var parentLevel = actual.parent;
                     var actualRollup = "<"+actual.rollupfunction+">";
@@ -1381,7 +1383,7 @@ function getIPOSliceSparqlQuery(endpoint, datacube, simplequery, optimize){
     });//end processing dimensions
 
     sparqlstr = sparqlIPO.toString(false);
-    //////console.log("QUERY in qb4olap-operators: "+sparqlstr);
+    ////////console.log("QUERY in qb4olap-operators: "+sparqlstr);
 
     var query = {sparqlquery:sparqlstr, columns:varcolumns.concat(meascolumns)};
 
@@ -1501,7 +1503,7 @@ function getRollupDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
         //exists a rollup on this dimension
         if (r.length>0 ){
             var rollup = r[0];
-            //////console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
+            ////////console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
             var targetLevel = rollup.targetLevel;
             var bottomLevel = rollup.bottomLevel;
             
@@ -1510,7 +1512,7 @@ function getRollupDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
                 var levelPath = dim.getLongestPath(bottomLevel, targetLevel);
 
                 levelPath.path.forEach(function(actual){
-                    ////console.log("------qb4olap-operators   actualnode: "+util.inspect(actual, { showHidden: false, depth: null, colors:true }));
+                    //////console.log("------qb4olap-operators   actualnode: "+util.inspect(actual, { showHidden: false, depth: null, colors:true }));
                     var actualLevel = actual.level;
                     var parentLevel = actual.parent;
                     var actualRollup = "<"+actual.rollupfunction+">";
@@ -1586,16 +1588,16 @@ function getRollupDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
         var seed = 1;
         var resdice = {bgps : []};
         getFilterFromDice(dice.dicecondition,datacube,varcolumns,meascolumns,seed,resdice);
-        //////console.log("dice condition:");
-        //////console.log(util.inspect(dice.dicecondition, { showHidden: false, depth: null, colors:true }));
-        //////console.log("filter from dice:");
-        //////console.log(util.inspect(resdice, { showHidden: false, depth: null, colors:true }));
+        ////////console.log("dice condition:");
+        ////////console.log(util.inspect(dice.dicecondition, { showHidden: false, depth: null, colors:true }));
+        ////////console.log("filter from dice:");
+        ////////console.log(util.inspect(resdice, { showHidden: false, depth: null, colors:true }));
         seed ++;
         sparqlINNER.addFilter(resdice.filtr);
         resdice.bgps.forEach(function(b){
             if (! sparqlINNER.existsPattern(b.s, b.p, b.o)){
-                //////console.log("bgp:");
-                //////console.log(util.inspect(b, { showHidden: false, depth: null, colors:true }));
+                ////////console.log("bgp:");
+                ////////console.log(util.inspect(b, { showHidden: false, depth: null, colors:true }));
                 sparqlINNER.addPattern(b.s, b.p, b.o);
             }
         });
@@ -1606,16 +1608,16 @@ function getRollupDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
         var seed = 1;
         var resdice = {bgps : []};
         getFilterFromDice(dice.dicecondition,datacube,varcolumns,meascolumns,seed,resdice);
-        //////console.log("dice condition:");
-        //////console.log(util.inspect(dice.dicecondition, { showHidden: false, depth: null, colors:true }));
-        //////console.log("filter from dice:");
-        //////console.log(util.inspect(resdice, { showHidden: false, depth: null, colors:true }));
+        ////////console.log("dice condition:");
+        ////////console.log(util.inspect(dice.dicecondition, { showHidden: false, depth: null, colors:true }));
+        ////////console.log("filter from dice:");
+        ////////console.log(util.inspect(resdice, { showHidden: false, depth: null, colors:true }));
         seed ++;
         sparqlOUTER.addFilter(resdice.filtr);
         resdice.bgps.forEach(function(b){
             if (! sparqlOUTER.existsPattern(b.s, b.p, b.o)){
-                //////console.log("bgp:");
-                //////console.log(util.inspect(b, { showHidden: false, depth: null, colors:true }));
+                ////////console.log("bgp:");
+                ////////console.log(util.inspect(b, { showHidden: false, depth: null, colors:true }));
                 sparqlOUTER.addPattern(b.s, b.p, b.o);
             }
         });
@@ -1636,7 +1638,7 @@ function getRollupDiceSparqlQuery(endpoint, datacube, simplequery, optimize){
         sparqlstr = sparqlINNER.toString(false);
     }
 
-    ////console.log("QUERY in qb4olap-operators: "+sparqlStr);
+    //////console.log("QUERY in qb4olap-operators: "+sparqlStr);
     var query = {sparqlquery:sparqlstr, columns:varcolumns.concat(meascolumns)};
 
     return query;
@@ -1684,8 +1686,8 @@ function getRollupSliceDiceSparqlQuery(endpoint, datacube, simplequery, hasdiceo
         sparqlINNER.addPrefix("skos","http://www.w3.org/2004/02/skos/core#");
     }
 
-    ////console.log("FIRSTOPS:" +util.inspect(firstops, { showHidden: false, depth: null, colors:true }));
-    ////console.log("LASTOPS:" +util.inspect(lastops, { showHidden: false, depth: null, colors:true }));
+    //////console.log("FIRSTOPS:" +util.inspect(firstops, { showHidden: false, depth: null, colors:true }));
+    //////console.log("LASTOPS:" +util.inspect(lastops, { showHidden: false, depth: null, colors:true }));
 
     if (optimize){
         sparqlINNER.addPatternToGroup("o",true, "?o","a","qb:Observation");
@@ -1709,8 +1711,8 @@ function getRollupSliceDiceSparqlQuery(endpoint, datacube, simplequery, hasdiceo
         var sm_outer = lastops.filter(function(oper){
             return (oper.measure == m.uri && oper.qloperator == "SLICE");
         });
-        ////console.log("FIRSTSLICES:" +util.inspect(sm_inner, { showHidden: false, depth: null, colors:true }));
-        ////console.log("LASTSLICES:" +util.inspect(sm_outer, { showHidden: false, depth: null, colors:true }));
+        //////console.log("FIRSTSLICES:" +util.inspect(sm_inner, { showHidden: false, depth: null, colors:true }));
+        //////console.log("LASTSLICES:" +util.inspect(sm_outer, { showHidden: false, depth: null, colors:true }));
 
         //allways add the triples that retrieve the values of measures.        
         var mi = sparqlINNER.getNewVariable(measureSeed, measureCounter);
@@ -1799,15 +1801,15 @@ function getRollupSliceDiceSparqlQuery(endpoint, datacube, simplequery, hasdiceo
             //exists a rollup on this dimension 
             if (r.length>0 ){
                 var rollup = r[0];
-                ////console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
+                //////console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
                 var targetLevel = rollup.targetLevel;
                 var bottomLevel = rollup.bottomLevel;      
                 if (bottomLevel != targetLevel){
                 //find the longest path between this 2 levels
                     var levelPath = dim.getLongestPath(bottomLevel, targetLevel);
-                    ////console.log("------qb4olap-operators   path: "+util.inspect(levelPath, { showHidden: false, depth: null, colors:true }));
+                    //////console.log("------qb4olap-operators   path: "+util.inspect(levelPath, { showHidden: false, depth: null, colors:true }));
                     levelPath.path.forEach(function(actual){
-                        //////console.log("------qb4olap-operators   actualnode: "+util.inspect(actual, { showHidden: false, depth: null, colors:true }));
+                        ////////console.log("------qb4olap-operators   actualnode: "+util.inspect(actual, { showHidden: false, depth: null, colors:true }));
                         var actualLevel = actual.level;
                         var parentLevel = actual.parent;
                         var actualRollup = "<"+actual.rollupfunction+">";
@@ -1940,16 +1942,16 @@ function getRollupSliceDiceSparqlQuery(endpoint, datacube, simplequery, hasdiceo
         var resdice = {bgps : []};
         getFilterFromDice(dice.dicecondition,datacube,alldimvars,allmeasvars,seed,resdice);
         
-        //////console.log("dice condition:");
-        //////console.log(util.inspect(dice.dicecondition, { showHidden: false, depth: null, colors:true }));
-        //////console.log("filter from dice:");
-        //////console.log(util.inspect(resdice, { showHidden: false, depth: null, colors:true }));
+        ////////console.log("dice condition:");
+        ////////console.log(util.inspect(dice.dicecondition, { showHidden: false, depth: null, colors:true }));
+        ////////console.log("filter from dice:");
+        ////////console.log(util.inspect(resdice, { showHidden: false, depth: null, colors:true }));
         seed ++;
         sparqlINNER.addFilter(resdice.filtr);
         resdice.bgps.forEach(function(b){
             if (! sparqlINNER.existsPattern(b.s, b.p, b.o)){
-                //////console.log("bgp:");
-                //////console.log(util.inspect(b, { showHidden: false, depth: null, colors:true }));
+                ////////console.log("bgp:");
+                ////////console.log(util.inspect(b, { showHidden: false, depth: null, colors:true }));
                 sparqlINNER.addPattern(b.s, b.p, b.o);
             }
         });
@@ -1960,12 +1962,12 @@ function getRollupSliceDiceSparqlQuery(endpoint, datacube, simplequery, hasdiceo
         var seed = 1;
         var resdice = {bgps : []};
         
-        ////console.log("dice condition:");
-        ////console.log(util.inspect(dice.dicecondition, { showHidden: false, depth: null, colors:true }));
+        //////console.log("dice condition:");
+        //////console.log(util.inspect(dice.dicecondition, { showHidden: false, depth: null, colors:true }));
         getFilterFromDice(dice.dicecondition,datacube,alldimvars,allmeasvars,seed,resdice);
         
-        ////console.log("filter from dice:");
-        ////console.log(util.inspect(resdice, { showHidden: false, depth: null, colors:true }));
+        //////console.log("filter from dice:");
+        //////console.log(util.inspect(resdice, { showHidden: false, depth: null, colors:true }));
         seed ++;
         if(hasdiceovermeasure){
             sparqlOUTER.addFilter(resdice.filtr);
@@ -1974,8 +1976,8 @@ function getRollupSliceDiceSparqlQuery(endpoint, datacube, simplequery, hasdiceo
         }
         resdice.bgps.forEach(function(b){
             if (hasdiceovermeasure && !sparqlOUTER.existsPattern(b.s, b.p, b.o)){
-                //////console.log("bgp:");
-                //////console.log(util.inspect(b, { showHidden: false, depth: null, colors:true }));
+                ////////console.log("bgp:");
+                ////////console.log(util.inspect(b, { showHidden: false, depth: null, colors:true }));
                 sparqlOUTER.addPattern(b.s, b.p, b.o);
             }else if(!hasdiceovermeasure && !sparqlINNER.existsPattern(b.s, b.p, b.o)){
                 sparqlINNER.addPattern(b.s, b.p, b.o);
@@ -1992,7 +1994,7 @@ function getRollupSliceDiceSparqlQuery(endpoint, datacube, simplequery, hasdiceo
 
     
 
-    ////console.log("QUERY in qb4olap-operators: "+sparqlStr);
+    //////console.log("QUERY in qb4olap-operators: "+sparqlStr);
     var query = {sparqlquery:sparqlstr, columns:varcolumns.concat(meascolumns)};
     return query;
 }
@@ -2001,6 +2003,7 @@ function getRollupSliceDiceSparqlQuery(endpoint, datacube, simplequery, hasdiceo
 //pre: datacube is the cube structure, simplequery is a simplified QL query that contains all the 
 //ops except dice over measures
 //post: returns a SPARQL query that implements a QL query 
+//QUERY TYPE 6
 function getFullNoDiceMeasureSparqlQuery(endpoint, datacube, simplequery,optimize){
     
     var sparqlINNER =  new SPARQLquery([],"select",[],[],[],[],'');
@@ -2044,7 +2047,6 @@ function getFullNoDiceMeasureSparqlQuery(endpoint, datacube, simplequery,optimiz
         var sm = simplequery.query.filter(function(oper){
             return (oper.measure == m.uri && oper.qloperator == "SLICE");
         });
-
         //allways add the triples that retrieve the values of measures.        
         var mi = sparqlINNER.getNewVariable(measureSeed, measureCounter);
         measureCounter++;
@@ -2098,7 +2100,9 @@ function getFullNoDiceMeasureSparqlQuery(endpoint, datacube, simplequery,optimiz
              return (oper.qloperator == "DICE" && oper.dicecondition.args[0].dimension == dim.uri);
         });  
 
+        //dlevels will contain, for each dimension, the levels involved in DICES and IPO's target levels
         var dlevels = [];
+        //obtains the levels that participate in dice conditions
         dd.forEach(function(dice){
             dlevels.push(dice.dicecondition.args[0].level);
         });      
@@ -2107,37 +2111,35 @@ function getFullNoDiceMeasureSparqlQuery(endpoint, datacube, simplequery,optimiz
                    
         levelMemCounter++;
         //get the bottom level in the dimension
-        var dimBottomLevel = dim.bottomLevel;
-        //link observations with values at the bottomLevel
-
-        
+        var bottomLevel = dim.bottomLevel;
+        //link observations with values at the bottomLevel      
         if (optimize){
-            sparqlINNER.addPatternToGroup("o",true,"?o",escapeAbsoluteIRI(dimBottomLevel),lmi);
+            sparqlINNER.addPatternToGroup("o",true,"?o",escapeAbsoluteIRI(bottomLevel),lmi);
         }else{
-            sparqlINNER.addPattern("?o",escapeAbsoluteIRI(dimBottomLevel),lmi);
+            sparqlINNER.addPattern("?o",escapeAbsoluteIRI(bottomLevel),lmi);
         };   
-    
-           
      
         /*
-        find the resulting level from IPOs (the last)
+        find the resulting level from IPOs (the last in the sequence of DD and RU for this dim)
         find the further level from dices
         add bgps to reach the max, but add the variable that corresponds to IPOs last to result
         */
         //exist IPOs on this dimension
         if (r.length>0 ){
-            var bottomLevel = dim.bottomLevel;
+            
             var targetLevel = r[r.length-1].level;
             dlevels.push(targetLevel);
 
-            ////console.log(dlevels);
-            var diceMaxLevel = dim.getMaxLevel(dlevels);
-            ////console.log("MAX level:"+diceMaxLevel);
+            //////console.log(dlevels);
+
+            //top most level reached over the dimension
+            var maxLevel = dim.getMaxLevel(dlevels);
+            //////console.log("MAX level:"+diceMaxLevel);
             //find the longest path between this 2 levels
-            var levelPath = dim.getLongestPath(bottomLevel, diceMaxLevel);
-            ////console.log("------qb4olap-operators   path: "+util.inspect(levelPath, { showHidden: false, depth: null, colors:true }));
+            var levelPath = dim.getLongestPath(bottomLevel, maxLevel);
+            //////console.log("------qb4olap-operators   path: "+util.inspect(levelPath, { showHidden: false, depth: null, colors:true }));
             levelPath.path.forEach(function(actual){
-                //////console.log("------qb4olap-operators   actualnode: "+util.inspect(actual, { showHidden: false, depth: null, colors:true }));
+                ////////console.log("------qb4olap-operators   actualnode: "+util.inspect(actual, { showHidden: false, depth: null, colors:true }));
                 var actualLevel = actual.level;
                 var parentLevel = actual.parent;
                 var actualRollup = "<"+actual.rollupfunction+">";
@@ -2158,8 +2160,8 @@ function getFullNoDiceMeasureSparqlQuery(endpoint, datacube, simplequery,optimiz
                     sparqlINNER.addPattern(lmi,"qb4o:memberOf",escapeAbsoluteIRI(actualLevel));
                 };
 
-                //only add rollup if max level is not reached    
-                if(actualLevel != diceMaxLevel){ 
+                //add triple that navigates via rollup function only when max level is not reached    
+                if(actualLevel != maxLevel){ 
                     parentLevelMemCounter++;
                     if (optimize){
                         sparqlINNER.addPatternToGroup(levelMemSeed+levelMemCounter,false,lmi,actualRollup,plmi);
@@ -2168,54 +2170,51 @@ function getFullNoDiceMeasureSparqlQuery(endpoint, datacube, simplequery,optimiz
                     };
                 };
                 
-
+                //when IPO target level is reached 
                 if(actualLevel == targetLevel){
                     //if there isn't a slice add the variable to the result
                     if(sd.length==0){  
                         sparqlINNER.addVariableToResult(lmi);
                         sparqlINNER.addVariableToGroupBy(lmi);
                         //associate the variable with the expresion to generate the table
-                        varcolumns.push({
+                        newlevelvar = {
                             colvar:lmi.substr(1), 
                             colname:dim.getLevel(actualLevel).name,
                             collevel:dim.getLevel(actualLevel).uri,
                             dimension:dim.uri
-                        });
-                        innervarcolumns.push({
-                            colvar:lmi.substr(1), 
-                            colname:dim.getLevel(actualLevel).name,
-                            collevel:dim.getLevel(actualLevel).uri,
-                            dimension:dim.uri
-                        });
+                        };
+                        varcolumns.push(newlevelvar);
+                        //innervarcolumns.push(newlevelvar);
                     }
                 }
                 lmi = plmi;
             });
-        //r.lenght == 0, rollup from bottom to bottom
+        //there are no IPOs on this dimension (r.lenght == 0), rollup from bottom to bottom
         }else{
-            //add variable to query if there is a dice or there is no slice
+            var newlevelvar ={
+                    colvar:lmi.substr(1), 
+                    colname:dim.getLevel(bottomLevel).name,
+                    collevel:bottomLevel,
+                    dimension:dim.uri
+            };
+
+            //add variable that represents level to aux vector, if there is a dice or there is no slice
             if(dd.length != 0 || sd.length == 0){                   
                 //need to keep the variables to create dice conditions later
-                innervarcolumns.push({
-                    colvar:lmi.substr(1), 
-                    colname:dim.getLevel(dimBottomLevel).name,
-                    collevel:dimBottomLevel,
-                    dimension:dim.uri
-                });
+                innervarcolumns.push(newlevelvar);
             }
             if(sd.length == 0){   
                 sparqlINNER.addVariableToResult(lmi);
                 sparqlINNER.addVariableToGroupBy(lmi);
                 //associate the variable with the expresion to generate the table
-                varcolumns.push({
-                    colvar:lmi.substr(1), 
-                    colname:dim.getLevel(dim.getBottomLevel()).name,
-                    collevel:dim.getBottomLevel(),
-                    dimension:dim.uri
-                });
+                varcolumns.push(newlevelvar);
             }
         } //end processing BGPs on dim
 
+        //console.log("innervars:");
+        //console.log(util.inspect(innervarcolumns, { showHidden: false, depth: null, colors:true }));
+        //console.log("columnvars:");
+        //console.log(util.inspect(varcolumns, { showHidden: false, depth: null, colors:true }));
 
         //process dices on dim
         var alldimvars = innervarcolumns.concat(varcolumns);
@@ -2223,18 +2222,23 @@ function getFullNoDiceMeasureSparqlQuery(endpoint, datacube, simplequery,optimiz
         dd.forEach(function(dice){
             var seed = 1;
             var resdice = {bgps : []};
-            getFilterFromDice(dice.dicecondition,datacube,innervarcolumns,[],seed,resdice);
+
+           ////console.log("vars:");
+           ////console.log(util.inspect(alldimvars, { showHidden: false, depth: null, colors:true }));
+            //console.log("dice condition:");
+            //console.log(util.inspect(dice.dicecondition, { showHidden: false, depth: null, colors:true }));
+
+            getFilterFromDice(dice.dicecondition,datacube,alldimvars,[],seed,resdice);
             
-            //////console.log("dice condition:");
-            //////console.log(util.inspect(dice.dicecondition, { showHidden: false, depth: null, colors:true }));
-            //////console.log("filter from dice:");
-            //////console.log(util.inspect(resdice, { showHidden: false, depth: null, colors:true }));
+            
+            ////////console.log("filter from dice:");
+            ////////console.log(util.inspect(resdice, { showHidden: false, depth: null, colors:true }));
             seed ++;
             sparqlINNER.addFilter(resdice.filtr);
             resdice.bgps.forEach(function(b){
                 if (! sparqlINNER.existsPattern(b.s, b.p, b.o)){
-                    //////console.log("bgp:");
-                    //////console.log(util.inspect(b, { showHidden: false, depth: null, colors:true }));
+                    ////////console.log("bgp:");
+                    ////////console.log(util.inspect(b, { showHidden: false, depth: null, colors:true }));
                     sparqlINNER.addPattern(b.s, b.p, b.o);
                 }
             });
@@ -2247,7 +2251,7 @@ function getFullNoDiceMeasureSparqlQuery(endpoint, datacube, simplequery,optimiz
 
     
 
-    ////console.log("QUERY in qb4olap-operators: "+sparqlStr);
+    //////console.log("QUERY in qb4olap-operators: "+sparqlStr);
     var query = {sparqlquery:sparqlstr, columns:varcolumns.concat(meascolumns)};
     return query;
 }
@@ -2358,7 +2362,7 @@ function getFullSparqlQuery(endpoint, datacube, simplequery, optimize){
         //exists a rollup on this dimension and not exists slice
         if (r.length>0 && s.length==0){
             var rollup = r[0];
-            //////console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
+            ////////console.log("ROLLUP: "+util.inspect(rollup, { showHidden: false, depth: null, colors:true }));
             var targetLevel = rollup.targetLevel;
             var bottomLevel = rollup.bottomLevel;
             
@@ -2367,7 +2371,7 @@ function getFullSparqlQuery(endpoint, datacube, simplequery, optimize){
                 var levelPath = dim.getLongestPath(bottomLevel, targetLevel);
 
                 levelPath.path.forEach(function(actual){
-                    ////console.log("------qb4olap-operators   actualnode: "+util.inspect(actual, { showHidden: false, depth: null, colors:true }));
+                    //////console.log("------qb4olap-operators   actualnode: "+util.inspect(actual, { showHidden: false, depth: null, colors:true }));
                     var actualLevel = actual.level;
                     var parentLevel = actual.parent;
                     var actualRollup = "<"+actual.rollupfunction+">";
@@ -2446,16 +2450,16 @@ function getFullSparqlQuery(endpoint, datacube, simplequery, optimize){
         var seed = 1;
         var resdice = {bgps : []};
         getFilterFromDice(dice.dicecondition,datacube,varcolumns,meascolumns,seed,resdice);
-        //console.log("dice condition:");
-        //console.log(util.inspect(dice.dicecondition, { showHidden: false, depth: null, colors:true }));
-        //console.log("filter from dice:");
-        //console.log(util.inspect(resdice, { showHidden: false, depth: null, colors:true }));
+        ////console.log("dice condition:");
+        ////console.log(util.inspect(dice.dicecondition, { showHidden: false, depth: null, colors:true }));
+        ////console.log("filter from dice:");
+        ////console.log(util.inspect(resdice, { showHidden: false, depth: null, colors:true }));
         seed ++;
         sparqlOUTER.addFilter(resdice.filtr);
         resdice.bgps.forEach(function(b){
             if (! sparqlOUTER.existsPattern(b.s, b.p, b.o)){
-                //console.log("bgp:");
-                //console.log(util.inspect(b, { showHidden: false, depth: null, colors:true }));
+                ////console.log("bgp:");
+                ////console.log(util.inspect(b, { showHidden: false, depth: null, colors:true }));
                 sparqlOUTER.addPattern(b.s, b.p, b.o);
             }
         });
@@ -2463,7 +2467,7 @@ function getFullSparqlQuery(endpoint, datacube, simplequery, optimize){
 
     sparqlOUTER.addSubquery(sparqlINNER);
     sparqlstr = sparqlOUTER.toString(false);
-    //console.log("QUERY in qb4olap-operators: "+sparqlStr);
+    ////console.log("QUERY in qb4olap-operators: "+sparqlStr);
 
     var query = {sparqlquery:sparqlstr, columns:varcolumns.concat(meascolumns)};
 
@@ -2475,8 +2479,8 @@ function getFullSparqlQuery(endpoint, datacube, simplequery, optimize){
 
 function getFilterFromDice(dicecondition,datacube,varcolumns,meascolumns,seed,result){
     var operators = ['AND','OR'];
-    ////console.log("varcolums en getfilterfromdice: "+util.inspect(varcolumns, { showHidden: false, depth: null, colors:true }));
-    ////console.log("COND: "+util.inspect(dicecondition, { showHidden: false, depth: null, colors:true }));
+    //////console.log("varcolums en getfilterfromdice: "+util.inspect(varcolumns, { showHidden: false, depth: null, colors:true }));
+    //////console.log("COND: "+util.inspect(dicecondition, { showHidden: false, depth: null, colors:true }));
     if (dicecondition.nodetype == "leaf"){
         if(dicecondition.args[0].condType == "attribute"){
             //find the variables that correspond to this level
@@ -2499,7 +2503,7 @@ function getFilterFromDice(dicecondition,datacube,varcolumns,meascolumns,seed,re
             dc.setDimensions(datacube.dimensions);
             var attype = dc.getAttributeType(dicecondition.args[0].level, dicecondition.args[0].attribute);
 
-            ////console.log("attype: "+attype+" operator: "+dicecondition.operator);
+            //////console.log("attype: "+attype+" operator: "+dicecondition.operator);
             if (attype == "http://www.w3.org/2001/XMLSchema#string" && dicecondition.operator == "="){
                 var f = "REGEX ("+membervar+","+dicecondition.args[1]+" , \"i\")";
             }else if (attype == "http://www.w3.org/2001/XMLSchema#string" ){
@@ -2513,8 +2517,8 @@ function getFilterFromDice(dicecondition,datacube,varcolumns,meascolumns,seed,re
         }else if (dicecondition.args[0].condType == "measure"){
             //find the variable that corresponds to this measure
             
-            ////console.log("THIS MEASURE: "+dicecondition.args[0].measure);
-            ////console.log("MEASURES: "+util.inspect(meascolumns, { showHidden: false, depth: null, colors:true }));
+            //////console.log("THIS MEASURE: "+dicecondition.args[0].measure);
+            //////console.log("MEASURES: "+util.inspect(meascolumns, { showHidden: false, depth: null, colors:true }));
 
             var measvar = "?"+meascolumns.filter(function(v){
                 return (v.colmeas == dicecondition.args[0].measure);
@@ -2555,12 +2559,12 @@ function escapeAbsoluteIRI(iri){
 function existsConditionOverMeasure(dicecondition) {
   
     var result= false;
-        //////console.log("dicecondition en existsConditionOverMeasure");
-        ////////console.log(util.inspect(dicecondition, { showHidden: false, depth: null, colors:true }));
+        ////////console.log("dicecondition en existsConditionOverMeasure");
+        //////////console.log(util.inspect(dicecondition, { showHidden: false, depth: null, colors:true }));
 
     if (dicecondition.nodetype == "internal"){
         var recCall = dicecondition.args.map(existsConditionOverMeasure);
-        //////console.log("dice checks array: "+recCall);
+        ////////console.log("dice checks array: "+recCall);
         result = recCall.reduce(function(a, b) {
         return a || b;
         });
@@ -2714,7 +2718,7 @@ function getQueryType(inputquery){
     var ret = null;
 
     inputquery.query.forEach(function(row){
-        ////console.log("ROW:" +util.inspect(row, { showHidden: false, depth: null, colors:true }));
+        //////console.log("ROW:" +util.inspect(row, { showHidden: false, depth: null, colors:true }));
         if (row.qloperator == "ROLLUP") {rup= rup||true};
         if (row.qloperator == "DRILLDOWN") {ddw= ddw||true};
         if (row.qloperator == "SLICE") {slc=slc||true};
@@ -2729,11 +2733,11 @@ function getQueryType(inputquery){
     ipo = rup || ddw;
 
 /*
-    //console.log("RUP "+rup);
-    //console.log("DDW "+ddw);
-    //console.log("SLC "+slc);
-    //console.log("DICL "+dicl);
-    //console.log("DICM "+dicm);
+    ////console.log("RUP "+rup);
+    ////console.log("DDW "+ddw);
+    ////console.log("SLC "+slc);
+    ////console.log("DICL "+dicl);
+    ////console.log("DICM "+dicm);
 */
 
     //not valid query

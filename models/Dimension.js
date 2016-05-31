@@ -120,7 +120,7 @@ Dimension.prototype.getLongestPath = function(originLevel, targetLevel){
         var h = new Hierarchy(hier.uri, hier.name, hier.lattice, hier.steps);
         if (h.existsLevel(originLevel) && h.existsLevel(targetLevel)){
             allpaths = h.getPaths(); 
-            //console.log("ALPATHS: "+ util.inspect(allpaths, { showHidden: false, depth: null, colors:true }));
+            ////console.log("ALPATHS: "+ util.inspect(allpaths, { showHidden: false, depth: null, colors:true }));
             //compute the difference in the positions, and return the path with maximum diff
             var maxlength = 0;
             allpaths.forEach(function(path){
@@ -161,11 +161,11 @@ Dimension.prototype.getMaxLevel =function(levels){
     this.hierarchies.forEach(function(hier){
         var h = new Hierarchy(hier.uri, hier.name, hier.lattice, hier.steps);
         levels.forEach(function(current){
-            //console.log("current: "+ util.inspect(current, { showHidden: false, depth: null, colors:true }));
-            //console.log("bottom: "+ util.inspect(bottom, { showHidden: false, depth: null, colors:true }));
+            ////console.log("current: "+ util.inspect(current, { showHidden: false, depth: null, colors:true }));
+            ////console.log("bottom: "+ util.inspect(bottom, { showHidden: false, depth: null, colors:true }));
             if (h.existsLevel(bottom) && h.existsLevel(current)){
             allpaths = h.getPaths(); 
-            //console.log("ALPATHS: "+ util.inspect(allpaths, { showHidden: false, depth: null, colors:true }));
+            ////console.log("ALPATHS: "+ util.inspect(allpaths, { showHidden: false, depth: null, colors:true }));
             //compute the difference in the positions, and return the path with maximum diff
             var maxlength = 0;
             allpaths.forEach(function(path){
@@ -192,11 +192,11 @@ Dimension.prototype.getMaxLevel =function(levels){
             }
         });
     });
-    //console.log("LENGTHS: "+ util.inspect(lengths, { showHidden: false, depth: null, colors:true }));
+    ////console.log("LENGTHS: "+ util.inspect(lengths, { showHidden: false, depth: null, colors:true }));
     lengths.sort(function(a,b){
         return ( a.length < b.length);
     });
-    //console.log("sorted LENGTHS: "+ util.inspect(lengths, { showHidden: false, depth: null, colors:true }));
+    ////console.log("sorted LENGTHS: "+ util.inspect(lengths, { showHidden: false, depth: null, colors:true }));
 
     return lengths[0].level;
 
