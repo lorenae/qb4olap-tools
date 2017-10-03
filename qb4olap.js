@@ -26,7 +26,7 @@ var sampleQueries = require('./data/sample-queries.json');
 var storedcubes = require('./data/stored-cubes.json');
 var storedcompletecubes = require('./data/stored-completecubes.json');
 
-var defendpoint = "http://www.fing.edu.uy/inco/grupos/csi/sparql";
+var defendpoint = "https://www.fing.edu.uy/inco/grupos/csi/sparql";
 var cubesFile = './data/stored-cubes.json';
 var completeCubesFile = './data/stored-completecubes.json';
 
